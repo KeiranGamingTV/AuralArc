@@ -61,7 +61,7 @@ The project combines a modern Jetpack Compose interface with AndroidX Media3 pla
 
 AuralArc is intended to feel equally at home as a straightforward offline music player and as a front end for a self-hosted music library.
 
-> [!NOTE]
+> [!IMPORTANT]
 > This app features a custom type of LRC file called a Duet LRC. It allows multiple singers to have their own lyrics in a column instead of everyone's lyrics being in a singular column. More information can be found on [the official repository page.](https://github.com/KeiranGamingTV/Duet-LRC-Lyric-File)
 
 ---
@@ -181,7 +181,7 @@ Tracks reporting **24-bit or higher** bit depth can display an **HD badge**.
 
 ### Duet LRC (.dlrc) In Action
 
-<img src="docs/images/duet_lrc.jpg" alt="Lyrics screen with Duet lyrics" width="700" />
+<img src="docs/images/duet_lrc.jpg" alt="Lyrics screen with Duet lyrics" width="400" />
 
 ---
 
