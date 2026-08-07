@@ -432,7 +432,7 @@ fun AboutSettingsScreen(
         }
 
     val sourceCodeUrl =
-        "https://github.com/YOUR_USERNAME/AuralArc"
+        "https://github.com/KeiranGamingTV/AuralArc"
 
     var releaseNotesExpanded by remember {
         mutableStateOf(
