@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Fully opaque adaptive icon background, matching the purple/blue preview. -->
+    <path android:pathData="M0,0 H108 V108 H0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="0"
+                android:startY="0"
+                android:endX="108"
+                android:endY="108">
+                <item android:offset="0" android:color="#8F1FA7" />
+                <item android:offset="0.45" android:color="#23114C" />
+                <item android:offset="1" android:color="#003B73" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Subtle lower depth glow, still fully opaque because it sits over the solid gradient. -->
+    <path android:fillColor="#2200487A" android:pathData="M0,66 C28,52 56,74 108,50 L108,108 L0,108 Z" />
+</vector>

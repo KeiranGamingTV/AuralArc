@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Single-color AuralArc mark for Android themed icons. -->
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeWidth="5.2" android:strokeLineCap="round" android:pathData="M22,51 L22,57" />
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeWidth="5.6" android:strokeLineCap="round" android:pathData="M30,45 L30,63" />
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeWidth="5.8" android:strokeLineCap="round" android:pathData="M38,40 L38,68" />
+
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeWidth="7.4" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M42,72 L54,28 L66,72 L69,72" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M48,52 C48,49.8 49.8,48 52,48 L60,48 C62.2,48 64,49.8 64,52 C64,54.2 62.2,56 60,56 L52,56 C49.8,56 48,54.2 48,52 Z" />
+
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeWidth="5.8" android:strokeLineCap="round" android:pathData="M72,40 L72,68" />
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeWidth="5.6" android:strokeLineCap="round" android:pathData="M80,45 L80,63" />
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeWidth="5.2" android:strokeLineCap="round" android:pathData="M88,51 L88,57" />
+</vector>

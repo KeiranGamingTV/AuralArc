@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- AuralArc adaptive icon foreground.
+         Transparent layer. Core mark stays inside the 72dp safe zone: 18..90. -->
+
+    <!-- Left waveform bars: magenta/purple side -->
+    <path android:fillColor="#00000000" android:strokeColor="#C13BFF" android:strokeWidth="5.2" android:strokeLineCap="round" android:pathData="M22,51 L22,57" />
+    <path android:fillColor="#00000000" android:strokeColor="#B43CFF" android:strokeWidth="5.6" android:strokeLineCap="round" android:pathData="M30,45 L30,63" />
+    <path android:fillColor="#00000000" android:strokeColor="#9B50FF" android:strokeWidth="5.8" android:strokeLineCap="round" android:pathData="M38,40 L38,68" />
+
+    <!-- Stylized A mark, split into purple and blue strokes so it resembles the generated preview. -->
+    <path android:fillColor="#00000000" android:strokeColor="#A86BFF" android:strokeWidth="7.4" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M42,72 L54,28" />
+    <path android:fillColor="#00000000" android:strokeColor="#7B68FF" android:strokeWidth="7.4" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M54,28 L66,72" />
+    <path android:fillColor="#00000000" android:strokeColor="#2A8CFF" android:strokeWidth="7.4" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M66,72 L69,72" />
+
+    <!-- A crossbar / play-hole shape. -->
+    <path android:fillColor="#9A69FF" android:pathData="M48,52 C48,49.8 49.8,48 52,48 L60,48 C62.2,48 64,49.8 64,52 C64,54.2 62.2,56 60,56 L52,56 C49.8,56 48,54.2 48,52 Z" />
+
+    <!-- Right waveform bars: blue side -->
+    <path android:fillColor="#00000000" android:strokeColor="#427DFF" android:strokeWidth="5.8" android:strokeLineCap="round" android:pathData="M72,40 L72,68" />
+    <path android:fillColor="#00000000" android:strokeColor="#3494FF" android:strokeWidth="5.6" android:strokeLineCap="round" android:pathData="M80,45 L80,63" />
+    <path android:fillColor="#00000000" android:strokeColor="#31A9FF" android:strokeWidth="5.2" android:strokeLineCap="round" android:pathData="M88,51 L88,57" />
+</vector>
