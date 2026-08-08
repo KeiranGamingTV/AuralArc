@@ -1,10 +1,12 @@
 package com.example.auralarc.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.auralarc.navidrome.NavidromeClient
@@ -152,7 +154,14 @@ fun NavidromeSettingsCard() {
                         text = "Password"
                     )
                 },
-                visualTransformation = PasswordVisualTransformation(),
+                visualTransformation =
+                    PasswordVisualTransformation(),
+                keyboardOptions =
+                    KeyboardOptions(
+                        keyboardType =
+                            KeyboardType.Password,
+                        autoCorrect = false
+                    ),
                 singleLine = true,
                 modifier = Modifier
                     .fillMaxWidth()
