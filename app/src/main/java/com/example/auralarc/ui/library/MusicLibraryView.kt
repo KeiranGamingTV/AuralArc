@@ -1956,11 +1956,16 @@ private fun LibraryTabContent(
                 selectedAlbum != null -> {
                     val albumTracks =
                         sortAlbumSongs(
-                            searchedTracks.filter {
-                                it.album == selectedAlbum &&
+                            searchedTracks.filter { track ->
+                                track.album == selectedAlbum &&
                                         (
                                                 selectedArtist == null ||
-                                                        it.artist == selectedArtist
+                                                        artistCategoryName(
+                                                            track
+                                                        ).equals(
+                                                            selectedArtist,
+                                                            ignoreCase = true
+                                                        )
                                                 )
                             }
                         )
@@ -2034,8 +2039,13 @@ private fun LibraryTabContent(
 
                 selectedArtist != null -> {
                     val artistTracks =
-                        searchedTracks.filter {
-                            it.albumArtist == selectedArtist
+                        searchedTracks.filter { track ->
+                            artistCategoryName(
+                                track
+                            ).equals(
+                                selectedArtist,
+                                ignoreCase = true
+                            )
                         }
 
                     val artistTracksInOrder =
