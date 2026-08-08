@@ -1,1 +1,31 @@
+# Build outputs
 /build
+app/build
+*/build
+
+# Gradle cache
+.gradle
+
+# Local configuration
+local.properties
+
+# IDE files
+.idea
+*.iml
+*.iws
+*.ipr
+
+# Keystore and sensitive files
+*.jks
+*.keystore
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
