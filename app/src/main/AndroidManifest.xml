@@ -19,7 +19,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AuralArc">
         <activity
-            android:name="com.example.auralarc.MainActivity"
+            android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
             android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout">

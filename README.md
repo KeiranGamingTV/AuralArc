@@ -335,7 +335,7 @@ app/src/main/java/com/example/auralarc/
 A simplified overview:
 
 ```text
-com.example.auralarc/
+com.keiranhaas.auralarc/
 ├── data/          # Track, playlist, library-source, and identity models
 ├── navidrome/     # Navidrome API, authentication, library, and playlist logic
 ├── navigation/    # Compose navigation routes

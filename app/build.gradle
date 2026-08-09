@@ -4,15 +4,15 @@ plugins {
 }
 
 android {
-    namespace 'com.example.auralarc'
+    namespace 'com.keiranhaas.auralarc'
     compileSdk 36
 
     defaultConfig {
-        applicationId "com.example.auralarc"
+        applicationId "com.keiranhaas.auralarc"
         minSdk 29
         targetSdk 34
         versionCode 1
-        versionName "1.2.1"
+        versionName "1.2.2"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -32,6 +32,20 @@ android {
 
     kotlinOptions {
         jvmTarget = '17'
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            def buildDate = new Date().format("yyyy.MM.dd")
+
+            def debugSuffix =
+                    variant.buildType.name == "debug"
+                            ? "-debug"
+                            : ""
+
+            output.outputFileName =
+                    "com.keiranhaas.auralarc_${variant.versionName}_${buildDate}${debugSuffix}.apk"
+        }
     }
 }
 
