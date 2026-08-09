@@ -250,6 +250,13 @@ fun AppearanceSettingsScreen(
     val context =
         LocalContext.current
 
+    AppearancePreferences.initializePageAnimations(
+        context
+    )
+
+    val pageAnimationsEnabled by
+    AppearancePreferences.pageAnimationsEnabledState
+
     var compactRows by remember {
         mutableStateOf(
             AppearancePreferences.getCompactRows(
@@ -270,6 +277,18 @@ fun AppearanceSettingsScreen(
         title = "Appearance",
         navController = navController
     ) {
+        SettingsToggleCard(
+            title = "Smooth Page Transitions",
+            subtitle = "Move pages smoothly while navigating. Turn this off to use fade-only transitions.",
+            checked = pageAnimationsEnabled,
+            onCheckedChange = { enabled ->
+                AppearancePreferences.setPageAnimationsEnabled(
+                    context = context,
+                    enabled = enabled
+                )
+            }
+        )
+
         SettingsToggleCard(
             title = "Compact Song Rows",
             subtitle = "Use shorter song rows in library lists.",

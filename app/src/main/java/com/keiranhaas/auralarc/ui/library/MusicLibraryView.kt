@@ -46,7 +46,8 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import com.keiranhaas.auralarc.ui.theme.AuralArcCrossfade
+import com.keiranhaas.auralarc.ui.theme.AuralArcPageDirection
+import com.keiranhaas.auralarc.ui.theme.AuralArcPageTransition
 import com.keiranhaas.auralarc.ui.theme.AuralArcMotion
 import android.app.Activity
 import android.app.PendingIntent
@@ -58,6 +59,30 @@ import com.keiranhaas.auralarc.storage.AudioTagEditResult
 import com.keiranhaas.auralarc.storage.AudioTagEditor
 import androidx.compose.runtime.saveable.rememberSaveable
 import com.keiranhaas.auralarc.storage.NavigationPreferences
+
+private data class LibraryPageTransitionState(
+    val libraryMode: LibraryMode,
+    val selectedAlbum: String?,
+    val selectedArtist: String?,
+    val selectedPlaylistId: String?
+) {
+
+    val depth: Int
+        get() =
+            when {
+                selectedAlbum != null &&
+                        selectedArtist != null ->
+                    2
+
+                selectedAlbum != null ||
+                        selectedArtist != null ||
+                        selectedPlaylistId != null ->
+                    1
+
+                else ->
+                    0
+            }
+}
 
 private fun loadTracksSafely(
     context: Context
@@ -1040,8 +1065,18 @@ fun MusicLibraryView(
                     brush = AuralArcStyle.appBackgroundBrush()
                 )
         ) {
-            AuralArcCrossfade(
-                targetState = rootTab
+            AuralArcPageTransition(
+                targetState = rootTab,
+                directionForTransition = { initialTab, targetTab ->
+                    if (
+                        targetTab.ordinal >
+                        initialTab.ordinal
+                    ) {
+                        AuralArcPageDirection.FORWARD
+                    } else {
+                        AuralArcPageDirection.BACKWARD
+                    }
+                }
             ) { activeRootTab ->
                 when (
                     activeRootTab
@@ -1098,62 +1133,117 @@ fun MusicLibraryView(
                     }
 
                     LibraryRootTab.LIBRARY -> {
-                        LibraryTabContent(
-                            context = context,
-                            navController = navController,
-                            selectedSource = librarySource,
-                            isLibraryLoading = isLibraryLoading,
-                            onSourceSelected = { newSource ->
-                                if (
-                                    newSource != librarySource
-                                ) {
-                                    librarySource =
-                                        newSource
+                        val libraryPageState =
+                            LibraryPageTransitionState(
+                                libraryMode = libraryMode,
+                                selectedAlbum = selectedAlbum,
+                                selectedArtist = selectedArtist,
+                                selectedPlaylistId =
+                                    selectedPlaylistId
+                            )
 
-                                    LibrarySourcePreferences.saveLibrarySource(
-                                        context,
-                                        newSource
-                                    )
+                        AuralArcPageTransition(
+                            targetState = libraryPageState,
+                            directionForTransition = { initialPage, targetPage ->
+                                when {
+                                    targetPage.depth >
+                                            initialPage.depth -> {
+                                        AuralArcPageDirection.FORWARD
+                                    }
+
+                                    targetPage.depth <
+                                            initialPage.depth -> {
+                                        AuralArcPageDirection.BACKWARD
+                                    }
+
+                                    targetPage.libraryMode.ordinal >
+                                            initialPage.libraryMode.ordinal -> {
+                                        AuralArcPageDirection.FORWARD
+                                    }
+
+                                    else -> {
+                                        AuralArcPageDirection.BACKWARD
+                                    }
                                 }
-                            },
-                            tracks = tracks,
-                            searchedTracks = searchedTracks,
-                            libraryMode = libraryMode,
-                            onLibraryModeChange = { newMode ->
-                                selectLibraryMode(
-                                    newMode
-                                )
+                            }
+                        ) { pageState ->
+
+                            LibraryTabContent(
+                                context = context,
+                                navController = navController,
+                                selectedSource = librarySource,
+                                isLibraryLoading =
+                                    isLibraryLoading,
+
+                                onSourceSelected = { newSource ->
+                                    if (
+                                        newSource != librarySource
+                                    ) {
+                                        librarySource =
+                                            newSource
+
+                                        LibrarySourcePreferences.saveLibrarySource(
+                                            context,
+                                            newSource
+                                        )
+                                    }
+                                },
+
+                                tracks = tracks,
+                                searchedTracks =
+                                    searchedTracks,
+
+                                libraryMode =
+                                    pageState.libraryMode,
+
+                                onLibraryModeChange = { newMode ->
+                                    selectLibraryMode(
+                                        newMode
+                                    )
+
+                                    selectedAlbum =
+                                        null
+
+                                    selectedArtist =
+                                        null
+
+                                    selectedPlaylistId =
+                                        null
+                                },
+
+                                onOpenFilter = {
+                                    filterDialogVisible =
+                                        true
+                                },
 
                                 selectedAlbum =
-                                    null
+                                    pageState.selectedAlbum,
+
+                                onSelectedAlbumChange = {
+                                    selectedAlbum =
+                                        it
+                                },
 
                                 selectedArtist =
-                                    null
+                                    pageState.selectedArtist,
+
+                                onSelectedArtistChange = {
+                                    selectedArtist =
+                                        it
+                                },
 
                                 selectedPlaylistId =
-                                    null
-                            },
-                            onOpenFilter = {
-                                filterDialogVisible =
-                                    true
-                            },
-                            selectedAlbum = selectedAlbum,
-                            onSelectedAlbumChange = {
-                                selectedAlbum =
-                                    it
-                            },
-                            selectedArtist = selectedArtist,
-                            onSelectedArtistChange = {
-                                selectedArtist =
-                                    it
-                            },
-                            selectedPlaylistId = selectedPlaylistId,
-                            onSelectedPlaylistChange = {
-                                selectedPlaylistId =
-                                    it
-                            },
-                            librarySource = librarySource
-                        )
+                                    pageState.selectedPlaylistId,
+
+                                onSelectedPlaylistChange = {
+                                    selectedPlaylistId =
+                                        it
+                                },
+
+                                librarySource =
+                                    librarySource
+                            )
+                        }
                     }
                 }
             }
@@ -1387,16 +1477,15 @@ private fun HomeTabContent(
 
     val todaysPicks =
         remember(
+            context,
             navidromeTracks
         ) {
-            navidromeTracks
-                .filter {
-                    it.uri.isNotBlank()
-                }
-                .shuffled()
-                .take(
-                    30
-                )
+            TodaysPicksPreferences.getOrCreateTodaysPicks(
+                context = context,
+                availableTracks =
+                    navidromeTracks,
+                count = 30
+            )
         }
 
     val homeTracks =

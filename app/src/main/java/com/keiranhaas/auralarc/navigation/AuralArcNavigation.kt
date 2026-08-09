@@ -9,13 +9,29 @@ import androidx.compose.runtime.LaunchedEffect
 import com.keiranhaas.auralarc.ui.TrackInfoNavigationState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import com.keiranhaas.auralarc.ui.theme.AuralArcMotion
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
+import com.keiranhaas.auralarc.storage.AppearancePreferences
 
 @Composable
 fun AuralArcNavigation() {
     val navController =
         rememberNavController()
+
+    val context =
+        LocalContext.current
+
+    AppearancePreferences.initializePageAnimations(
+        context
+    )
+
+    val pageAnimationsEnabled by
+    AppearancePreferences.pageAnimationsEnabledState
 
     ListeningStatsTracker()
 
@@ -25,36 +41,127 @@ fun AuralArcNavigation() {
         navController = navController,
         startDestination = Screen.Library.route,
         enterTransition = {
-            fadeIn(
-                animationSpec = tween(
-                    durationMillis =
-                    AuralArcMotion.NORMAL
+            if (
+                pageAnimationsEnabled
+            ) {
+                slideInHorizontally(
+                    initialOffsetX = { width ->
+                        width / 4
+                    },
+                    animationSpec = tween(
+                        durationMillis =
+                            AuralArcMotion.PAGE,
+                        easing =
+                            FastOutSlowInEasing
+                    )
+                ) +
+                        fadeIn(
+                            animationSpec = tween(
+                                durationMillis =
+                                    AuralArcMotion.NORMAL
+                            )
+                        )
+            } else {
+                fadeIn(
+                    animationSpec = tween(
+                        durationMillis =
+                            AuralArcMotion.NORMAL
+                    )
                 )
-            )
+            }
         },
+
         exitTransition = {
-            fadeOut(
-                animationSpec = tween(
-                    durationMillis =
-                    AuralArcMotion.FAST
+            if (
+                pageAnimationsEnabled
+            ) {
+                slideOutHorizontally(
+                    targetOffsetX = { width ->
+                        -width / 4
+                    },
+                    animationSpec = tween(
+                        durationMillis =
+                            AuralArcMotion.PAGE,
+                        easing =
+                            FastOutSlowInEasing
+                    )
+                ) +
+                        fadeOut(
+                            animationSpec = tween(
+                                durationMillis =
+                                    AuralArcMotion.NORMAL
+                            )
+                        )
+            } else {
+                fadeOut(
+                    animationSpec = tween(
+                        durationMillis =
+                            AuralArcMotion.NORMAL
+                    )
                 )
-            )
+            }
         },
+
         popEnterTransition = {
-            fadeIn(
-                animationSpec = tween(
-                    durationMillis =
-                    AuralArcMotion.NORMAL
+            if (
+                pageAnimationsEnabled
+            ) {
+                slideInHorizontally(
+                    initialOffsetX = { width ->
+                        -width / 4
+                    },
+                    animationSpec = tween(
+                        durationMillis =
+                            AuralArcMotion.PAGE,
+                        easing =
+                            FastOutSlowInEasing
+                    )
+                ) +
+                        fadeIn(
+                            animationSpec = tween(
+                                durationMillis =
+                                    AuralArcMotion.NORMAL
+                            )
+                        )
+            } else {
+                fadeIn(
+                    animationSpec = tween(
+                        durationMillis =
+                            AuralArcMotion.NORMAL
+                    )
                 )
-            )
+            }
         },
+
         popExitTransition = {
-            fadeOut(
-                animationSpec = tween(
-                    durationMillis =
-                    AuralArcMotion.FAST
+            if (
+                pageAnimationsEnabled
+            ) {
+                slideOutHorizontally(
+                    targetOffsetX = { width ->
+                        width / 4
+                    },
+                    animationSpec = tween(
+                        durationMillis =
+                            AuralArcMotion.PAGE,
+                        easing =
+                            FastOutSlowInEasing
+                    )
+                ) +
+                        fadeOut(
+                            animationSpec = tween(
+                                durationMillis =
+                                    AuralArcMotion.NORMAL
+                            )
+                        )
+            } else {
+                fadeOut(
+                    animationSpec = tween(
+                        durationMillis =
+                            AuralArcMotion.NORMAL
+                    )
                 )
-            )
+            }
         }
     ) {
         composable(
