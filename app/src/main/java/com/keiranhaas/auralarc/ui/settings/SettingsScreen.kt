@@ -461,8 +461,9 @@ fun AboutSettingsScreen(
 
     val releaseNotes =
         listOf(
-            "Fixed a bug where some artists' albums would be completely empty.",
-            "Fixed a bug where your Navidrome password would still show up on your keyboard while typing."
+            "Introduced smooth moving transitions between every page in the app.",
+            "Added a toggle in the Appearance settings to turn animations off.",
+            "Fixed the Today's Picks refreshing every time the tab is changed or reloaded."
         )
 
     SettingsMenuScaffold(
