@@ -19,7 +19,9 @@
 </p>
 
 <p align="center">
-  <strong>Like my work? ❤️ <a href="https://keirangamingtv.github.io/crypto-donation-page" class="donation-link" target="_blank">Donate here</a></strong>
+  <strong>- - - Like my work? ❤️ - - -</strong><br />
+  <strong><a href="https://keirangamingtv.github.io/crypto-donation-page">Donate with crypto</a></strong><br />
+  <strong><a href="https://ko-fi.com/therealkdude">Buy me a coffee on Ko-fi</a></strong><br />
 </p>
 
 
