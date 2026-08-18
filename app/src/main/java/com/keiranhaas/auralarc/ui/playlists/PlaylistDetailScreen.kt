@@ -29,7 +29,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.lazy.rememberLazyListState
 import com.keiranhaas.auralarc.storage.PlaylistArtworkStore
 import kotlinx.coroutines.launch
@@ -98,7 +104,7 @@ fun PlaylistDetailScreen(
     val playlistArtworkPicker =
         rememberLauncherForActivityResult(
             contract =
-            ActivityResultContracts.GetContent()
+                ActivityResultContracts.GetContent()
         ) { selectedUri ->
             val targetPlaylist =
                 playlist
@@ -212,12 +218,21 @@ fun PlaylistDetailScreen(
     val playlistListState =
         rememberLazyListState()
 
+    val headerCollapseThresholdPx =
+        with(
+            androidx.compose.ui.platform.LocalDensity.current
+        ) {
+            56.dp.roundToPx()
+        }
+
     val headerCollapsed by remember(
-        playlistListState
+        playlistListState,
+        headerCollapseThresholdPx
     ) {
         derivedStateOf {
             playlistListState.firstVisibleItemIndex > 0 ||
-                    playlistListState.firstVisibleItemScrollOffset > 40
+                    playlistListState.firstVisibleItemScrollOffset >
+                    headerCollapseThresholdPx
         }
     }
 
@@ -346,11 +361,11 @@ fun PlaylistDetailScreen(
                         track = track,
                         canRemove = canEdit,
                         canMoveUp =
-                        canEdit &&
-                                index > 0,
+                            canEdit &&
+                                    index > 0,
                         canMoveDown =
-                        canEdit &&
-                                index < playlistTracks.lastIndex,
+                            canEdit &&
+                                    index < playlistTracks.lastIndex,
                         onClick = {
                             QueueManager.setQueue(
                                 playlistTracks,
@@ -514,117 +529,62 @@ private fun PlaylistDetailHeader(
             .padding(
                 horizontal = 10.dp,
                 vertical =
-                if (
-                    collapsed
-                ) {
-                    4.dp
-                } else {
-                    8.dp
-                }
-            )
-            .animateContentSize(),
+                    if (
+                        collapsed
+                    ) {
+                        4.dp
+                    } else {
+                        8.dp
+                    }
+            ),
         shape = AuralArcStyle.CardShape,
         backgroundColor = AuralArcStyle.SurfaceBright,
         elevation = 8.dp
     ) {
-        if (
-            collapsed
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        7.dp
-                    ),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                AuralArcIconButton(
-                    onClick = onBack
-                ) {
-                    Icon(
-                        imageVector =
-                        Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back to playlists",
-                        tint = AuralArcStyle.TextPrimary
+        AnimatedContent(
+            targetState = collapsed,
+            transitionSpec = {
+                (
+                        fadeIn(
+                            animationSpec = tween(
+                                durationMillis = 220,
+                                delayMillis = 60,
+                                easing = FastOutSlowInEasing
+                            )
+                        )
+                            .togetherWith(
+                                fadeOut(
+                                    animationSpec = tween(
+                                        durationMillis = 160,
+                                        easing = FastOutSlowInEasing
+                                    )
+                                )
+                            )
+                        )
+                    .using(
+                        SizeTransform(
+                            clip = false,
+                            sizeAnimationSpec = { _, _ ->
+                                tween(
+                                    durationMillis = 320,
+                                    easing = FastOutSlowInEasing
+                                )
+                            }
+                        )
                     )
-                }
+            },
+            label = "PlaylistHeaderCollapse"
+        ) { isCollapsed ->
 
-                PlaylistArtwork(
-                    playlist = playlist,
-                    tracks = tracks,
-                    size = 44.dp,
-                    refreshKey = artworkRefreshKey
-                )
-
-                Spacer(
-                    modifier = Modifier.width(
-                        10.dp
-                    )
-                )
-
-                Column(
-                    modifier = Modifier.weight(
-                        1f
-                    )
-                ) {
-                    Text(
-                        text = playlist.name,
-                        style =
-                        MaterialTheme.typography.subtitle1,
-                        fontWeight = FontWeight.Bold,
-                        color = AuralArcStyle.TextPrimary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-
-                    Text(
-                        text = songCountText,
-                        style = MaterialTheme.typography.caption,
-                        color = AuralArcStyle.TextMuted,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-
-                AuralArcIconButton(
-                    enabled = trackCount > 0,
-                    onClick = onPlay
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.PlayArrow,
-                        contentDescription = "Play playlist",
-                        tint = AuralArcStyle.PurpleBright
-                    )
-                }
-
-                AuralArcIconButton(
-                    enabled = trackCount > 0,
-                    onClick = onShuffle
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Shuffle,
-                        contentDescription = "Shuffle playlist",
-                        tint = AuralArcStyle.PurpleBright
-                    )
-                }
-
-                PlaylistHeaderOptionsButton(
-                    canEdit = canEdit,
-                    hasCustomArtwork = hasCustomArtwork,
-                    onRename = onRename,
-                    onDelete = onDelete,
-                    onChangeArtwork = onChangeArtwork,
-                    onRemoveArtwork = onRemoveArtwork
-                )
-            }
-        } else {
-            Column(
-                modifier = Modifier.padding(
-                    12.dp
-                )
+            if (
+                isCollapsed
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            7.dp
+                        ),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     AuralArcIconButton(
@@ -632,48 +592,22 @@ private fun PlaylistDetailHeader(
                     ) {
                         Icon(
                             imageVector =
-                            Icons.AutoMirrored.Filled.ArrowBack,
+                                Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back to playlists",
                             tint = AuralArcStyle.TextPrimary
                         )
                     }
 
-                    Text(
-                        text = sourceLabel,
-                        style = MaterialTheme.typography.caption,
-                        color = AuralArcStyle.TextMuted
-                    )
-
-                    Spacer(
-                        modifier = Modifier.weight(
-                            1f
-                        )
-                    )
-
-                    PlaylistHeaderOptionsButton(
-                        canEdit = canEdit,
-                        hasCustomArtwork = hasCustomArtwork,
-                        onRename = onRename,
-                        onDelete = onDelete,
-                        onChangeArtwork = onChangeArtwork,
-                        onRemoveArtwork = onRemoveArtwork
-                    )
-                }
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
                     PlaylistArtwork(
                         playlist = playlist,
                         tracks = tracks,
-                        size = 86.dp,
+                        size = 44.dp,
                         refreshKey = artworkRefreshKey
                     )
 
                     Spacer(
                         modifier = Modifier.width(
-                            14.dp
+                            10.dp
                         )
                     )
 
@@ -684,45 +618,161 @@ private fun PlaylistDetailHeader(
                     ) {
                         Text(
                             text = playlist.name,
-                            style = MaterialTheme.typography.h6,
+                            style =
+                                MaterialTheme.typography.subtitle1,
                             fontWeight = FontWeight.Bold,
                             color = AuralArcStyle.TextPrimary,
-                            maxLines = 2,
+                            maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
 
                         Text(
                             text = songCountText,
-                            style = MaterialTheme.typography.body2,
-                            color = AuralArcStyle.TextSecondary,
+                            style = MaterialTheme.typography.caption,
+                            color = AuralArcStyle.TextMuted,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                     }
 
+                    AuralArcIconButton(
+                        enabled = trackCount > 0,
+                        onClick = onPlay
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = "Play playlist",
+                            tint = AuralArcStyle.PurpleBright
+                        )
+                    }
+
+                    AuralArcIconButton(
+                        enabled = trackCount > 0,
+                        onClick = onShuffle
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Shuffle,
+                            contentDescription = "Shuffle playlist",
+                            tint = AuralArcStyle.PurpleBright
+                        )
+                    }
+
+                    PlaylistHeaderOptionsButton(
+                        canEdit = canEdit,
+                        hasCustomArtwork = hasCustomArtwork,
+                        onRename = onRename,
+                        onDelete = onDelete,
+                        onChangeArtwork = onChangeArtwork,
+                        onRemoveArtwork = onRemoveArtwork
+                    )
+                }
+            } else {
+                Column(
+                    modifier = Modifier.padding(
+                        12.dp
+                    )
+                ) {
                     Row(
+                        modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         AuralArcIconButton(
-                            enabled = trackCount > 0,
-                            onClick = onPlay
+                            onClick = onBack
                         ) {
                             Icon(
-                                imageVector = Icons.Default.PlayArrow,
-                                contentDescription = "Play playlist",
-                                tint = AuralArcStyle.PurpleBright
+                                imageVector =
+                                    Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back to playlists",
+                                tint = AuralArcStyle.TextPrimary
                             )
                         }
 
-                        AuralArcIconButton(
-                            enabled = trackCount > 0,
-                            onClick = onShuffle
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Shuffle,
-                                contentDescription = "Shuffle playlist",
-                                tint = AuralArcStyle.PurpleBright
+                        Text(
+                            text = sourceLabel,
+                            style = MaterialTheme.typography.caption,
+                            color = AuralArcStyle.TextMuted
+                        )
+
+                        Spacer(
+                            modifier = Modifier.weight(
+                                1f
                             )
+                        )
+
+                        PlaylistHeaderOptionsButton(
+                            canEdit = canEdit,
+                            hasCustomArtwork = hasCustomArtwork,
+                            onRename = onRename,
+                            onDelete = onDelete,
+                            onChangeArtwork = onChangeArtwork,
+                            onRemoveArtwork = onRemoveArtwork
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        PlaylistArtwork(
+                            playlist = playlist,
+                            tracks = tracks,
+                            size = 86.dp,
+                            refreshKey = artworkRefreshKey
+                        )
+
+                        Spacer(
+                            modifier = Modifier.width(
+                                14.dp
+                            )
+                        )
+
+                        Column(
+                            modifier = Modifier.weight(
+                                1f
+                            )
+                        ) {
+                            Text(
+                                text = playlist.name,
+                                style = MaterialTheme.typography.h6,
+                                fontWeight = FontWeight.Bold,
+                                color = AuralArcStyle.TextPrimary,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis
+                            )
+
+                            Text(
+                                text = songCountText,
+                                style = MaterialTheme.typography.body2,
+                                color = AuralArcStyle.TextSecondary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            AuralArcIconButton(
+                                enabled = trackCount > 0,
+                                onClick = onPlay
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.PlayArrow,
+                                    contentDescription = "Play playlist",
+                                    tint = AuralArcStyle.PurpleBright
+                                )
+                            }
+
+                            AuralArcIconButton(
+                                enabled = trackCount > 0,
+                                onClick = onShuffle
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Shuffle,
+                                    contentDescription = "Shuffle playlist",
+                                    tint = AuralArcStyle.PurpleBright
+                                )
+                            }
                         }
                     }
                 }
@@ -777,13 +827,13 @@ private fun PlaylistHeaderOptionsButton(
             ) {
                 Text(
                     text =
-                    if (
-                        hasCustomArtwork
-                    ) {
-                        "Change Playlist Artwork"
-                    } else {
-                        "Choose Playlist Artwork"
-                    }
+                        if (
+                            hasCustomArtwork
+                        ) {
+                            "Change Playlist Artwork"
+                        } else {
+                            "Choose Playlist Artwork"
+                        }
                 )
             }
 
@@ -906,16 +956,16 @@ private fun PlaylistTrackRow(
 
                 Text(
                     text =
-                    trackArtistAlbumText(
-                        track
-                    ),
+                        trackArtistAlbumText(
+                            track
+                        ),
                     style =
-                    MaterialTheme.typography.body2,
+                        MaterialTheme.typography.body2,
                     color =
-                    AuralArcStyle.TextSecondary,
+                        AuralArcStyle.TextSecondary,
                     maxLines = 1,
                     overflow =
-                    TextOverflow.Ellipsis
+                        TextOverflow.Ellipsis
                 )
             }
 
@@ -931,13 +981,13 @@ private fun PlaylistTrackRow(
                             imageVector = Icons.Default.KeyboardArrowUp,
                             contentDescription = "Move song up",
                             tint =
-                            if (
-                                canMoveUp
-                            ) {
-                                AuralArcStyle.TextPrimary
-                            } else {
-                                AuralArcStyle.TextMuted
-                            }
+                                if (
+                                    canMoveUp
+                                ) {
+                                    AuralArcStyle.TextPrimary
+                                } else {
+                                    AuralArcStyle.TextMuted
+                                }
                         )
                     }
 
@@ -949,13 +999,13 @@ private fun PlaylistTrackRow(
                             imageVector = Icons.Default.KeyboardArrowDown,
                             contentDescription = "Move song down",
                             tint =
-                            if (
-                                canMoveDown
-                            ) {
-                                AuralArcStyle.TextPrimary
-                            } else {
-                                AuralArcStyle.TextMuted
-                            }
+                                if (
+                                    canMoveDown
+                                ) {
+                                    AuralArcStyle.TextPrimary
+                                } else {
+                                    AuralArcStyle.TextMuted
+                                }
                         )
                     }
                 }
@@ -1020,13 +1070,13 @@ private fun EmptyPlaylistDetail(
 
         Text(
             text =
-            if (
-                librarySource == LibrarySource.NAVIDROME
-            ) {
-                "Add songs to this playlist in Navidrome, then refresh."
-            } else {
-                "Go to your library and add songs to this playlist."
-            },
+                if (
+                    librarySource == LibrarySource.NAVIDROME
+                ) {
+                    "Add songs to this playlist in Navidrome, then refresh."
+                } else {
+                    "Go to your library and add songs to this playlist."
+                },
             style = MaterialTheme.typography.body2,
             color = AuralArcStyle.TextMuted
         )
@@ -1104,7 +1154,7 @@ private fun DeletePlaylistConfirmationDialog(
         text = {
             Text(
                 text =
-                "Delete \"$playlistName\"? This will remove the playlist, but it will not delete any audio files."
+                    "Delete \"$playlistName\"? This will remove the playlist, but it will not delete any audio files."
             )
         },
         confirmButton = {
@@ -1166,7 +1216,7 @@ private fun RenamePlaylistDialog(
         confirmButton = {
             TextButton(
                 enabled =
-                playlistName.isNotBlank(),
+                    playlistName.isNotBlank(),
                 onClick = {
                     onRename(
                         playlistName
