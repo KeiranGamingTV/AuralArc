@@ -18,6 +18,11 @@
   <img alt="License" src="https://img.shields.io/badge/license-TBD-lightgrey" />
 </p>
 
+<p align="center">
+  <strong>Like my work? ❤️ <a href="https://keirangamingtv.github.io/crypto-donation-page" class="donation-link" target="_blank">Donate here</a></strong>
+</p>
+
+
 > [!NOTE]
 > AuralArc is under active development. Features, layouts, settings, and internal architecture may change as the project evolves.
 
