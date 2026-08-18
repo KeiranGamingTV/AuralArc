@@ -14,6 +14,8 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -35,13 +37,43 @@ fun TrackTitleWithHdBadge(
         Arrangement.Start,
     fillTitleWeight: Boolean = false,
     marqueeWhenOverflow: Boolean = false,
-    textAlign: TextAlign = TextAlign.Start
+    textAlign: TextAlign = TextAlign.Start,
+    centerTitleIndependently: Boolean = false
 ) {
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = horizontalArrangement
     ) {
+        /*
+        * On centered layouts such as Now Playing, an HD badge
+        * on only the right side reduces the title's available
+        * width from that side and shifts the title's true center
+        * slightly left.
+        *
+        * Add an invisible badge of the exact same size on the
+        * left so the title receives perfectly symmetrical space.
+        */
+        if (
+            centerTitleIndependently &&
+            track.isHighResolution
+        ) {
+            AuralArcHdBadge(
+                modifier = Modifier
+                    .alpha(
+                        0f
+                    )
+                    .clearAndSetSemantics {
+                    }
+            )
+
+            Spacer(
+                modifier = Modifier.width(
+                    7.dp
+                )
+            )
+        }
+
         val titleModifier =
             if (
                 fillTitleWeight ||

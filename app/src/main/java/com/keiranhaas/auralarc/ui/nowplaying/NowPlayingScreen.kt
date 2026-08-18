@@ -378,7 +378,8 @@ private fun NowPlayingMainContent(
                     Arrangement.Center,
                     fillTitleWeight = true,
                     marqueeWhenOverflow = true,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    centerTitleIndependently = true
                 )
             } else {
                 Text(

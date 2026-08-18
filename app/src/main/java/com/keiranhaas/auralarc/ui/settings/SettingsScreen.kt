@@ -464,7 +464,8 @@ fun AboutSettingsScreen(
             "Introduced smooth moving transitions between every page in the app.",
             "Added a toggle in the Appearance settings to turn animations off.",
             "Fixed the Today's Picks refreshing every time the tab is changed or reloaded.",
-            "Made the Playlist header smoothly shrink down instead of abruptly shrinking as the playlist is scrolled down."
+            "Made the Playlist header smoothly shrink down instead of abruptly shrinking as the playlist is scrolled down.",
+            "Fixed song titles being off-center due to the HD badge. They are now centered."
         )
 
     SettingsMenuScaffold(
