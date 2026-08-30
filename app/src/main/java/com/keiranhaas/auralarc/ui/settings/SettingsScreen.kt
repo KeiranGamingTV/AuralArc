@@ -462,6 +462,7 @@ fun AboutSettingsScreen(
     val releaseNotes =
         listOf(
             "Fixed the 'smooth' animations and make them more fluid.",
+            "Fixed transitions between app elements.",
             "Added an initial setup page.",
             "Added the import and export M3U capabilities back.",
             "Fixed Navidrome timing out and not loading large music libraries.",
