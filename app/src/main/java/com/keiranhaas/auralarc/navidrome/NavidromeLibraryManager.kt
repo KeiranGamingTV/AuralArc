@@ -3,6 +3,7 @@ package com.keiranhaas.auralarc.navidrome
 import android.content.Context
 import android.util.Log
 import com.keiranhaas.auralarc.data.MusicTrack
+import android.os.SystemClock
 
 object NavidromeLibraryManager {
 
@@ -39,12 +40,19 @@ object NavidromeLibraryManager {
                     credentials
                 )
 
+            val startTime =
+                SystemClock.elapsedRealtime()
+
             val tracks =
                 client.getAllSongs()
 
+            val elapsedMilliseconds =
+                SystemClock.elapsedRealtime() -
+                        startTime
+
             Log.d(
                 "AuralArc",
-                "Navidrome returned ${tracks.size} tracks"
+                "Navidrome returned ${tracks.size} tracks in ${elapsedMilliseconds}ms"
             )
 
             tracks

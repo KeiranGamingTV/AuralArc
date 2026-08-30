@@ -1,8 +1,5 @@
 package com.keiranhaas.auralarc.ui
 
-import android.graphics.BitmapFactory
-import android.net.Uri
-import android.util.LruCache
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -12,7 +9,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -22,36 +18,11 @@ import com.keiranhaas.auralarc.data.MusicTrack
 import com.keiranhaas.auralarc.data.Playlist
 import com.keiranhaas.auralarc.storage.PlaylistArtworkStore
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import java.io.File
-import java.net.URL
-
-private object PlaylistArtworkBitmapCache {
-
-    private val cache =
-        object : LruCache<String, ImageBitmap>(
-            120
-        ) {}
-
-    fun get(
-        artworkPath: String
-    ): ImageBitmap? {
-        return cache.get(
-            artworkPath
-        )
-    }
-
-    fun put(
-        artworkPath: String,
-        bitmap: ImageBitmap
-    ) {
-        cache.put(
-            artworkPath,
-            bitmap
-        )
-    }
-}
+import android.graphics.Bitmap
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalDensity
+import com.keiranhaas.auralarc.utils.ArtworkBitmapLoader
 
 @Composable
 fun PlaylistArtwork(
@@ -321,155 +292,82 @@ private fun PlaylistArtworkImage(
     val context =
         LocalContext.current
 
-    var imageBitmap by remember(
-        artworkPath
-    ) {
-        mutableStateOf(
-            PlaylistArtworkBitmapCache.get(
-                artworkPath
-            )
-        )
-    }
-
-    LaunchedEffect(
-        artworkPath
-    ) {
-        val cachedBitmap =
-            PlaylistArtworkBitmapCache.get(
-                artworkPath
-            )
-
-        if (
-            cachedBitmap != null
-        ) {
-            imageBitmap =
-                cachedBitmap
-
-            return@LaunchedEffect
-        }
-
-        val loadedBitmap =
-            withContext(
-                Dispatchers.IO
-            ) {
-                loadPlaylistArtworkBitmap(
-                    context = context.applicationContext,
-                    artworkPath = artworkPath
-                )
-            }
-
-        if (
-            loadedBitmap != null
-        ) {
-            PlaylistArtworkBitmapCache.put(
-                artworkPath = artworkPath,
-                bitmap = loadedBitmap
-            )
-        }
-
-        imageBitmap =
-            loadedBitmap
-    }
-
-    Box(
+    BoxWithConstraints(
         modifier = modifier
             .background(
                 AuralArcStyle.SurfaceSoft
             )
     ) {
-        val loadedImage =
-            imageBitmap
+        val density =
+            LocalDensity.current
 
-        if (
-            loadedImage != null
+        /*
+         * Determine how large this individual tile is actually
+         * being drawn.
+         *
+         * A four-image playlist mosaic therefore requests
+         * much smaller bitmaps than a full-size single cover.
+         */
+        val targetSizePx =
+            maxOf(
+                with(
+                    density
+                ) {
+                    maxWidth.roundToPx()
+                },
+                with(
+                    density
+                ) {
+                    maxHeight.roundToPx()
+                }
+            ).coerceAtLeast(
+                64
+            )
+
+        var bitmap by remember(
+            artworkPath,
+            targetSizePx
         ) {
-            Image(
-                bitmap = loadedImage,
-                contentDescription = "Playlist artwork",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
+            mutableStateOf<Bitmap?>(
+                ArtworkBitmapLoader.peek(
+                    artworkPath =
+                        artworkPath,
+                    targetSizePx =
+                        targetSizePx
+                )
             )
         }
-    }
-}
 
-private fun loadPlaylistArtworkBitmap(
-    context: android.content.Context,
-    artworkPath: String
-): ImageBitmap? {
-    return try {
-        val bitmap =
-            when {
-                artworkPath.startsWith(
-                    "http://"
-                ) ||
-                        artworkPath.startsWith(
-                            "https://"
-                        ) -> {
-                    URL(
-                        artworkPath
-                    ).openStream().use { stream ->
-                        BitmapFactory.decodeStream(
-                            stream
-                        )
-                    }
-                }
+        LaunchedEffect(
+            artworkPath,
+            targetSizePx
+        ) {
+            bitmap =
+                ArtworkBitmapLoader.load(
+                    context = context,
+                    artworkPath =
+                        artworkPath,
+                    targetSizePx =
+                        targetSizePx
+                )
+        }
 
-                artworkPath.startsWith(
-                    "content://"
-                ) -> {
-                    context.contentResolver.openInputStream(
-                        Uri.parse(
-                            artworkPath
-                        )
-                    )?.use { stream ->
-                        BitmapFactory.decodeStream(
-                            stream
-                        )
-                    }
-                }
+        val loadedBitmap =
+            bitmap
 
-                artworkPath.startsWith(
-                    "file://"
-                ) -> {
-                    val file =
-                        File(
-                            Uri.parse(
-                                artworkPath
-                            ).path ?: ""
-                        )
-
-                    if (
-                        file.exists()
-                    ) {
-                        BitmapFactory.decodeFile(
-                            file.absolutePath
-                        )
-                    } else {
-                        null
-                    }
-                }
-
-                else -> {
-                    val file =
-                        File(
-                            artworkPath
-                        )
-
-                    if (
-                        file.exists()
-                    ) {
-                        BitmapFactory.decodeFile(
-                            file.absolutePath
-                        )
-                    } else {
-                        null
-                    }
-                }
-            }
-
-        bitmap?.asImageBitmap()
-    } catch (_: Exception) {
-        null
+        if (
+            loadedBitmap != null
+        ) {
+            Image(
+                bitmap =
+                    loadedBitmap.asImageBitmap(),
+                contentDescription =
+                    "Playlist artwork",
+                contentScale =
+                    ContentScale.Crop,
+                modifier =
+                    Modifier.fillMaxSize()
+            )
+        }
     }
 }

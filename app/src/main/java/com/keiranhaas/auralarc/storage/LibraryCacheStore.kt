@@ -23,6 +23,9 @@ object LibraryCacheStore {
     private var legacyCacheCleanupCompleted =
         false
 
+    private var oldPersistentCacheCleanupCompleted =
+        false
+
     fun loadTracks(
         context: Context,
         source: LibrarySource
@@ -149,7 +152,7 @@ object LibraryCacheStore {
     ): File {
         val directory =
             File(
-                context.applicationContext.filesDir,
+                context.applicationContext.cacheDir,
                 CACHE_DIRECTORY_NAME
             )
 
@@ -157,6 +160,29 @@ object LibraryCacheStore {
             !directory.exists()
         ) {
             directory.mkdirs()
+        }
+
+        if (
+            !oldPersistentCacheCleanupCompleted
+        ) {
+            oldPersistentCacheCleanupCompleted =
+                true
+
+            try {
+                val oldPersistentDirectory =
+                    File(
+                        context.applicationContext.filesDir,
+                        CACHE_DIRECTORY_NAME
+                    )
+
+                if (
+                    oldPersistentDirectory.absolutePath !=
+                    directory.absolutePath
+                ) {
+                    oldPersistentDirectory.deleteRecursively()
+                }
+            } catch (_: Exception) {
+            }
         }
 
         if (

@@ -1,16 +1,50 @@
 package com.keiranhaas.auralarc.ui
 
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import com.keiranhaas.auralarc.data.MusicTrack
 import com.keiranhaas.auralarc.player.PlayerManager
 import com.keiranhaas.auralarc.player.QueueManager
 import com.keiranhaas.auralarc.storage.ListeningStatsStore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+
+private const val LISTENING_STATS_FLUSH_MS =
+    5_000L
 
 @Composable
 fun ListeningStatsTracker() {
     val context =
         LocalContext.current
+            .applicationContext
+
+    val statsScope =
+        rememberCoroutineScope()
+
+    val writeMutex =
+        remember {
+            Mutex()
+        }
+
+    fun enqueueStatsWrite(
+        block: () -> Unit
+    ) {
+        statsScope.launch(
+            Dispatchers.IO
+        ) {
+            writeMutex.withLock {
+                block()
+            }
+        }
+    }
 
     val currentTitle =
         PlayerManager.currentTitle.value
@@ -19,14 +53,16 @@ fun ListeningStatsTracker() {
         PlayerManager.isPlaying.value
 
     val position =
-        PlayerManager.currentPosition.value.coerceAtLeast(
-            0L
-        )
+        PlayerManager.currentPosition.value
+            .coerceAtLeast(
+                0L
+            )
 
     val duration =
-        PlayerManager.duration.value.coerceAtLeast(
-            0L
-        )
+        PlayerManager.duration.value
+            .coerceAtLeast(
+                0L
+            )
 
     val currentTrack =
         QueueManager.currentTrack()
@@ -55,6 +91,12 @@ fun ListeningStatsTracker() {
         )
     }
 
+    var pendingListeningMillis by remember {
+        mutableStateOf(
+            0L
+        )
+    }
+
     var playCounted by remember {
         mutableStateOf(
             false
@@ -62,6 +104,12 @@ fun ListeningStatsTracker() {
     }
 
     var completedCounted by remember {
+        mutableStateOf(
+            false
+        )
+    }
+
+    var wasPlaying by remember {
         mutableStateOf(
             false
         )
@@ -77,32 +125,61 @@ fun ListeningStatsTracker() {
         val oldUri =
             trackedUri
 
+        val pendingOldListening =
+            pendingListeningMillis
+
+        val shouldCountSkip =
+            oldTrack != null &&
+                    oldUri != null &&
+                    oldUri !=
+                    currentTrack?.uri &&
+                    !completedCounted &&
+                    lastPosition >=
+                    5_000L &&
+                    lastDuration >
+                    0L &&
+                    lastPosition <
+                    (
+                            lastDuration *
+                                    8L
+                            ) /
+                    10L
+
+        val newTrack =
+            currentTrack
+
         if (
             oldTrack != null &&
-            oldUri != null &&
-            oldUri != currentTrack?.uri
+            oldUri != newTrack?.uri &&
+            (
+                    pendingOldListening >
+                            0L ||
+                            shouldCountSkip
+                    )
         ) {
-            val shouldCountSkip =
-                !completedCounted &&
-                        lastPosition >= 5000L &&
-                        lastDuration > 0L &&
-                        lastPosition < ((lastDuration * 8L) / 10L)
-
-            if (
-                shouldCountSkip
-            ) {
-                ListeningStatsStore.recordSkip(
-                    context,
-                    oldTrack
+            enqueueStatsWrite {
+                ListeningStatsStore.recordActivityBatch(
+                    context = context,
+                    track = oldTrack,
+                    listeningMillis =
+                        pendingOldListening,
+                    skipCount =
+                        if (
+                            shouldCountSkip
+                        ) {
+                            1
+                        } else {
+                            0
+                        }
                 )
             }
         }
 
         trackedTrack =
-            currentTrack
+            newTrack
 
         trackedUri =
-            currentTrack?.uri
+            newTrack?.uri
 
         lastPosition =
             position
@@ -110,19 +187,27 @@ fun ListeningStatsTracker() {
         lastDuration =
             duration
 
+        pendingListeningMillis =
+            0L
+
         playCounted =
             false
 
         completedCounted =
             false
 
+        wasPlaying =
+            isPlaying
+
         if (
-            currentTrack != null
+            newTrack != null
         ) {
-            ListeningStatsStore.recordTrackSeen(
-                context,
-                currentTrack
-            )
+            enqueueStatsWrite {
+                ListeningStatsStore.recordTrackSeen(
+                    context,
+                    newTrack
+                )
+            }
         }
     }
 
@@ -133,60 +218,76 @@ fun ListeningStatsTracker() {
         currentTrack?.uri
     ) {
         val activeTrack =
-            currentTrack ?: return@LaunchedEffect
+            currentTrack
+                ?: return@LaunchedEffect
 
         if (
-            trackedUri != activeTrack.uri
+            trackedUri !=
+            activeTrack.uri
         ) {
             return@LaunchedEffect
         }
 
         val delta =
-            position - lastPosition
+            position -
+                    lastPosition
 
         if (
             isPlaying &&
-            delta in 1L..15000L
+            delta in
+            1L..15_000L
         ) {
-            ListeningStatsStore.recordListeningTime(
-                context = context,
-                track = activeTrack,
-                deltaMillis = delta
-            )
+            pendingListeningMillis +=
+                delta
         }
+
+        var listeningToFlush =
+            0L
+
+        var playDelta =
+            0
+
+        var completionDelta =
+            0
 
         val playThreshold =
             when {
                 duration <= 0L ->
-                    30000L
+                    30_000L
 
-                duration < 60000L ->
-                    (duration / 2L).coerceAtLeast(
-                        10000L
-                    )
+                duration < 60_000L ->
+                    (
+                            duration /
+                                    2L
+                            ).coerceAtLeast(
+                            10_000L
+                        )
 
                 else ->
-                    30000L
+                    30_000L
             }
 
         if (
             !playCounted &&
-            position >= playThreshold
+            position >=
+            playThreshold
         ) {
-            ListeningStatsStore.recordCountedPlay(
-                context,
-                activeTrack
-            )
-
             playCounted =
                 true
+
+            playDelta =
+                1
         }
 
         val completionThreshold =
             if (
                 duration > 0L
             ) {
-                (duration * 8L) / 10L
+                (
+                        duration *
+                                8L
+                        ) /
+                        10L
             } else {
                 Long.MAX_VALUE
             }
@@ -194,15 +295,59 @@ fun ListeningStatsTracker() {
         if (
             !completedCounted &&
             duration > 0L &&
-            position >= completionThreshold
+            position >=
+            completionThreshold
         ) {
-            ListeningStatsStore.recordCompletedPlay(
-                context,
-                activeTrack
-            )
-
             completedCounted =
                 true
+
+            completionDelta =
+                1
+        }
+
+        val shouldFlushListening =
+            pendingListeningMillis >=
+                    LISTENING_STATS_FLUSH_MS ||
+                    (
+                            !isPlaying &&
+                                    wasPlaying &&
+                                    pendingListeningMillis >
+                                    0L
+                            ) ||
+                    (
+                            completionDelta >
+                                    0 &&
+                                    pendingListeningMillis >
+                                    0L
+                            )
+
+        if (
+            shouldFlushListening
+        ) {
+            listeningToFlush =
+                pendingListeningMillis
+
+            pendingListeningMillis =
+                0L
+        }
+
+        if (
+            listeningToFlush > 0L ||
+            playDelta > 0 ||
+            completionDelta > 0
+        ) {
+            enqueueStatsWrite {
+                ListeningStatsStore.recordActivityBatch(
+                    context = context,
+                    track = activeTrack,
+                    listeningMillis =
+                        listeningToFlush,
+                    playCount =
+                        playDelta,
+                    completedCount =
+                        completionDelta
+                )
+            }
         }
 
         lastPosition =
@@ -210,5 +355,8 @@ fun ListeningStatsTracker() {
 
         lastDuration =
             duration
+
+        wasPlaying =
+            isPlaying
     }
 }

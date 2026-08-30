@@ -172,6 +172,45 @@ object ListeningStatsStore {
         )
     }
 
+    fun recordActivityBatch(
+        context: Context,
+        track: MusicTrack,
+        listeningMillis: Long = 0L,
+        playCount: Int = 0,
+        completedCount: Int = 0,
+        skipCount: Int = 0
+    ) {
+        if (
+            listeningMillis <= 0L &&
+            playCount <= 0 &&
+            completedCount <= 0 &&
+            skipCount <= 0
+        ) {
+            return
+        }
+
+        recordActivity(
+            context = context,
+            track = track,
+            delta = StatDelta(
+                playCount =
+                    playCount,
+                completedCount =
+                    completedCount,
+                skipCount =
+                    skipCount,
+                listeningMillis =
+                    listeningMillis
+                        .coerceAtLeast(
+                            0L
+                        )
+                        .coerceAtMost(
+                            30_000L
+                        )
+            )
+        )
+    }
+
     fun recordCountedPlay(
         context: Context,
         track: MusicTrack

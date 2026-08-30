@@ -34,8 +34,11 @@ object SafAudioScanner {
         )
 
     fun scan(
-        context: Context
+        context: Context,
+        cachedTracksByUri: Map<String, MusicTrack> =
+            emptyMap()
     ): List<MusicTrack> {
+
         val tracks =
             mutableListOf<MusicTrack>()
 
@@ -71,8 +74,11 @@ object SafAudioScanner {
                     context = context,
                     folder = root,
                     tracks = tracks,
+                    cachedTracksByUri =
+                        cachedTracksByUri,
                     depth = 0
                 )
+
             } catch (e: Exception) {
                 Log.d(
                     TAG,
@@ -89,6 +95,7 @@ object SafAudioScanner {
         context: Context,
         folder: DocumentFile,
         tracks: MutableList<MusicTrack>,
+        cachedTracksByUri: Map<String, MusicTrack>,
         depth: Int
     ) {
         if (
@@ -118,6 +125,8 @@ object SafAudioScanner {
                             context = context,
                             folder = file,
                             tracks = tracks,
+                            cachedTracksByUri =
+                                cachedTracksByUri,
                             depth = depth + 1
                         )
                     }
@@ -128,7 +137,9 @@ object SafAudioScanner {
                             ) -> {
                         buildTrack(
                             context = context,
-                            file = file
+                            file = file,
+                            cachedTracksByUri =
+                                cachedTracksByUri
                         )?.let { track ->
                             tracks.add(
                                 track
@@ -148,10 +159,45 @@ object SafAudioScanner {
 
     private fun buildTrack(
         context: Context,
-        file: DocumentFile
+        file: DocumentFile,
+        cachedTracksByUri: Map<String, MusicTrack>
     ): MusicTrack? {
         val uri =
             file.uri
+
+        val uriString =
+            uri.toString()
+
+        val fileSize =
+            try {
+                file.length()
+            } catch (_: Exception) {
+                0L
+            }
+
+        val modifiedTime =
+            try {
+                file.lastModified()
+            } catch (_: Exception) {
+                0L
+            }
+
+        val cachedTrack =
+            cachedTracksByUri[
+                uriString
+            ]
+
+        if (
+            cachedTrack != null &&
+            fileSize > 0L &&
+            modifiedTime > 0L &&
+            cachedTrack.fileSizeBytes ==
+            fileSize &&
+            cachedTrack.dateModifiedMillis ==
+            modifiedTime
+        ) {
+            return cachedTrack
+        }
 
         val retriever =
             MediaMetadataRetriever()
@@ -242,8 +288,8 @@ object SafAudioScanner {
                         context = context,
                         uri = uri,
                         fallbackName = file.name ?: "",
-                        fileSizeBytes = file.length(),
-                        dateModifiedMillis = file.lastModified(),
+                        fileSizeBytes = fileSize,
+                        dateModifiedMillis = modifiedTime,
                         sourceType = "Picked Folder / SAF",
                         sourcePath = file.uri.toString()
                     )

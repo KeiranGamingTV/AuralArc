@@ -35,39 +35,37 @@ fun QueueScreen(
     val listState =
         rememberLazyListState()
 
-    var refreshKey by remember {
-        mutableStateOf(
-            0
-        )
-    }
+    val queueRevision =
+        QueueManager.revision.value
 
-    var showSaveQueueDialog by remember {
-        mutableStateOf(
-            false
-        )
-    }
-
-    var showClearConfirm by remember {
-        mutableStateOf(
-            false
-        )
-    }
+    val queueEntries =
+        remember(
+            queueRevision
+        ) {
+            QueueManager.getQueueEntries()
+        }
 
     val queue =
         remember(
-            refreshKey,
-            PlayerManager.currentTitle.value,
-            PlayerManager.currentPosition.value
+            queueEntries
         ) {
-            QueueManager.getQueue()
+            queueEntries.map { entry ->
+                entry.track
+            }
         }
 
     val currentIndex =
         QueueManager.currentIndex
 
+    /*
+     * Scroll to the currently-playing song once when the Queue
+     * screen first opens.
+     *
+     * After that, the user's scroll position belongs to the user.
+     * Queue edits must not force the list back to currentIndex.
+     */
     LaunchedEffect(
-        currentIndex,
-        queue.size
+        Unit
     ) {
         if (
             currentIndex in queue.indices
@@ -167,11 +165,14 @@ fun QueueScreen(
                     )
                 ) {
                     itemsIndexed(
-                        items = queue,
-                        key = { _, track ->
-                            track.uri
+                        items = queueEntries,
+                        key = { _, entry ->
+                            entry.entryId
                         }
-                    ) { index, track ->
+                    ) { index, entry ->
+
+                        val track =
+                            entry.track
 
                         QueueTrackRow(
                             track = track,
@@ -196,8 +197,6 @@ fun QueueScreen(
                                         queueTracks = QueueManager.getQueue()
                                     )
                                 }
-
-                                refreshKey++
                             },
 
                             onMoveUp = {
@@ -215,8 +214,6 @@ fun QueueScreen(
                                 PlayerManager.syncPlayerPlaylistToQueueOrder(
                                     context = context
                                 )
-
-                                refreshKey++
                             },
 
                             onMoveDown = {
@@ -231,8 +228,6 @@ fun QueueScreen(
                                 PlayerManager.syncPlayerPlaylistToQueueOrder(
                                     context = context
                                 )
-
-                                refreshKey++
                             },
 
                             onRemove = {
@@ -245,8 +240,6 @@ fun QueueScreen(
                                     context = context,
                                     resetPosition = removedCurrent
                                 )
-
-                                refreshKey++
                             },
 
                             onOpenLyrics = {
@@ -303,8 +296,6 @@ fun QueueScreen(
                         PlayerManager.clearQueuePlayback(
                             context
                         )
-
-                        refreshKey++
 
                         showClearConfirm =
                             false

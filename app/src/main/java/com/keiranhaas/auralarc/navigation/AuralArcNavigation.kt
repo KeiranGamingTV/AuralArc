@@ -1,5 +1,6 @@
 package com.keiranhaas.auralarc.navigation
 
+import androidx.compose.animation.core.spring
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -9,9 +10,8 @@ import androidx.compose.runtime.LaunchedEffect
 import com.keiranhaas.auralarc.ui.TrackInfoNavigationState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.core.tween
 import com.keiranhaas.auralarc.ui.theme.AuralArcMotion
 import androidx.compose.runtime.getValue
@@ -35,8 +35,6 @@ fun AuralArcNavigation() {
 
     ListeningStatsTracker()
 
-    LyricsPreloadTracker()
-
     NavHost(
         navController = navController,
         startDestination = Screen.Library.route,
@@ -44,21 +42,19 @@ fun AuralArcNavigation() {
             if (
                 pageAnimationsEnabled
             ) {
-                slideInHorizontally(
-                    initialOffsetX = { width ->
-                        width / 4
-                    },
-                    animationSpec = tween(
-                        durationMillis =
-                            AuralArcMotion.PAGE,
-                        easing =
-                            FastOutSlowInEasing
+                scaleIn(
+                    initialScale =
+                        AuralArcMotion.CONTENT_ENTER_SCALE,
+                    animationSpec = spring(
+                        dampingRatio =
+                            AuralArcMotion.DAMPING_RATIO,
+                        stiffness =
+                            AuralArcMotion.STIFFNESS
                     )
                 ) +
                         fadeIn(
                             animationSpec = tween(
-                                durationMillis =
-                                    AuralArcMotion.NORMAL
+                                durationMillis = 90
                             )
                         )
             } else {
@@ -75,21 +71,19 @@ fun AuralArcNavigation() {
             if (
                 pageAnimationsEnabled
             ) {
-                slideOutHorizontally(
-                    targetOffsetX = { width ->
-                        -width / 4
-                    },
-                    animationSpec = tween(
-                        durationMillis =
-                            AuralArcMotion.PAGE,
-                        easing =
-                            FastOutSlowInEasing
+                scaleOut(
+                    targetScale =
+                        AuralArcMotion.CONTENT_EXIT_SCALE,
+                    animationSpec = spring(
+                        dampingRatio =
+                            AuralArcMotion.DAMPING_RATIO,
+                        stiffness =
+                            AuralArcMotion.STIFFNESS
                     )
                 ) +
                         fadeOut(
                             animationSpec = tween(
-                                durationMillis =
-                                    AuralArcMotion.NORMAL
+                                durationMillis = 110
                             )
                         )
             } else {
@@ -106,21 +100,19 @@ fun AuralArcNavigation() {
             if (
                 pageAnimationsEnabled
             ) {
-                slideInHorizontally(
-                    initialOffsetX = { width ->
-                        -width / 4
-                    },
-                    animationSpec = tween(
-                        durationMillis =
-                            AuralArcMotion.PAGE,
-                        easing =
-                            FastOutSlowInEasing
+                scaleIn(
+                    initialScale =
+                        AuralArcMotion.CONTENT_EXIT_SCALE,
+                    animationSpec = spring(
+                        dampingRatio =
+                            AuralArcMotion.DAMPING_RATIO,
+                        stiffness =
+                            AuralArcMotion.STIFFNESS
                     )
                 ) +
                         fadeIn(
                             animationSpec = tween(
-                                durationMillis =
-                                    AuralArcMotion.NORMAL
+                                durationMillis = 90
                             )
                         )
             } else {
@@ -137,21 +129,19 @@ fun AuralArcNavigation() {
             if (
                 pageAnimationsEnabled
             ) {
-                slideOutHorizontally(
-                    targetOffsetX = { width ->
-                        width / 4
-                    },
-                    animationSpec = tween(
-                        durationMillis =
-                            AuralArcMotion.PAGE,
-                        easing =
-                            FastOutSlowInEasing
+                scaleOut(
+                    targetScale =
+                        AuralArcMotion.CONTENT_ENTER_SCALE,
+                    animationSpec = spring(
+                        dampingRatio =
+                            AuralArcMotion.DAMPING_RATIO,
+                        stiffness =
+                            AuralArcMotion.STIFFNESS
                     )
                 ) +
                         fadeOut(
                             animationSpec = tween(
-                                durationMillis =
-                                    AuralArcMotion.NORMAL
+                                durationMillis = 110
                             )
                         )
             } else {

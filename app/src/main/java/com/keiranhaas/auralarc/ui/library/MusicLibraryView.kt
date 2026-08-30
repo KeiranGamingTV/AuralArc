@@ -37,7 +37,6 @@ import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.random.Random
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -46,8 +45,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import com.keiranhaas.auralarc.ui.theme.AuralArcPageDirection
-import com.keiranhaas.auralarc.ui.theme.AuralArcPageTransition
+import com.keiranhaas.auralarc.ui.theme.AuralArcContentTransition
 import com.keiranhaas.auralarc.ui.theme.AuralArcMotion
 import android.app.Activity
 import android.app.PendingIntent
@@ -59,32 +57,21 @@ import com.keiranhaas.auralarc.storage.AudioTagEditResult
 import com.keiranhaas.auralarc.storage.AudioTagEditor
 import androidx.compose.runtime.saveable.rememberSaveable
 import com.keiranhaas.auralarc.storage.NavigationPreferences
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.snap
+import com.keiranhaas.auralarc.ui.theme.rememberAuralArcMotionEnabled
+import com.keiranhaas.auralarc.storage.AppCacheMaintenance
 
-private data class LibraryPageTransitionState(
-    val libraryMode: LibraryMode,
-    val selectedAlbum: String?,
-    val selectedArtist: String?,
-    val selectedPlaylistId: String?
-) {
-
-    val depth: Int
-        get() =
-            when {
-                selectedAlbum != null &&
-                        selectedArtist != null ->
-                    2
-
-                selectedAlbum != null ||
-                        selectedArtist != null ||
-                        selectedPlaylistId != null ->
-                    1
-
-                else ->
-                    0
-            }
-}
-
-private fun loadTracksSafely(
+private suspend fun loadTracksSafely(
     context: Context
 ): List<MusicTrack> {
     return try {
@@ -102,7 +89,7 @@ private fun loadTracksSafely(
     }
 }
 
-private fun loadTracksForSource(
+private suspend fun loadTracksForSource(
     context: Context,
     source: LibrarySource
 ): List<MusicTrack>? {
@@ -767,32 +754,7 @@ fun MusicLibraryView(
             false
 
         val loadedTracks =
-            if (
-                source == LibrarySource.NAVIDROME
-            ) {
-                try {
-                    withTimeoutOrNull(
-                        45_000L
-                    ) {
-                        withContext(
-                            Dispatchers.IO
-                        ) {
-                            loadTracksForSource(
-                                context = context.applicationContext,
-                                source = source
-                            )
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.e(
-                        "AuralArc",
-                        "Navidrome load crashed",
-                        e
-                    )
-
-                    null
-                }
-            } else {
+            try {
                 withContext(
                     Dispatchers.IO
                 ) {
@@ -801,6 +763,21 @@ fun MusicLibraryView(
                         source = source
                     )
                 }
+            } catch (e: Exception) {
+                Log.e(
+                    "AuralArc",
+                    if (
+                        source ==
+                        LibrarySource.NAVIDROME
+                    ) {
+                        "Navidrome library load crashed"
+                    } else {
+                        "Local library load crashed"
+                    },
+                    e
+                )
+
+                null
             }
 
         if (
@@ -832,6 +809,25 @@ fun MusicLibraryView(
                 source = source,
                 tracks = loadedTracks
             )
+
+            AppCacheMaintenance.prune(
+                context =
+                    context.applicationContext,
+                referencedArtworkPaths =
+                    loadedTracks
+                        .mapNotNull { track ->
+                            track.albumArtPath
+                        }
+                        .filter { path ->
+                            !path.startsWith(
+                                "http://"
+                            ) &&
+                                    !path.startsWith(
+                                        "https://"
+                                    )
+                        }
+                        .toSet()
+            )
         }
 
         LibraryRuntimeState.markRefreshCompleted(
@@ -855,18 +851,84 @@ fun MusicLibraryView(
             false
     }
 
-    val searchedTracks =
-        sortTracks(
-            tracks =
-            tracks.filter { track ->
-                trackMatchesSearch(
+    /*
+     * Build lowercase search text only when the actual library changes.
+     *
+     * Previously title/artist/album strings were lowercased repeatedly
+     * for every search and potentially for unrelated recompositions.
+     */
+    val searchIndex =
+        remember(
+            tracks
+        ) {
+            tracks.map { track ->
+                Pair(
                     track,
-                    searchQuery
+                    buildString {
+                        append(
+                            track.title.lowercase()
+                        )
+
+                        append(
+                            '\n'
+                        )
+
+                        append(
+                            track.artist.lowercase()
+                        )
+
+                        append(
+                            '\n'
+                        )
+
+                        append(
+                            track.album.lowercase()
+                        )
+                    }
                 )
-            },
-            sortMode = sortMode,
-            descending = sortDescending
-        )
+            }
+        }
+
+    val searchedTracks =
+        remember(
+            searchIndex,
+            searchQuery,
+            sortMode,
+            sortDescending
+        ) {
+            val cleanQuery =
+                searchQuery
+                    .trim()
+                    .lowercase()
+
+            val filtered =
+                if (
+                    cleanQuery.isBlank()
+                ) {
+                    searchIndex.map { entry ->
+                        entry.first
+                    }
+                } else {
+                    searchIndex
+                        .asSequence()
+                        .filter { entry ->
+                            entry.second.contains(
+                                cleanQuery
+                            )
+                        }
+                        .map { entry ->
+                            entry.first
+                        }
+                        .toList()
+                }
+
+            sortTracks(
+                tracks = filtered,
+                sortMode = sortMode,
+                descending =
+                    sortDescending
+            )
+        }
 
     LaunchedEffect(
         librarySource
@@ -1065,18 +1127,8 @@ fun MusicLibraryView(
                     brush = AuralArcStyle.appBackgroundBrush()
                 )
         ) {
-            AuralArcPageTransition(
-                targetState = rootTab,
-                directionForTransition = { initialTab, targetTab ->
-                    if (
-                        targetTab.ordinal >
-                        initialTab.ordinal
-                    ) {
-                        AuralArcPageDirection.FORWARD
-                    } else {
-                        AuralArcPageDirection.BACKWARD
-                    }
-                }
+            AuralArcContentTransition(
+                targetState = rootTab
             ) { activeRootTab ->
                 when (
                     activeRootTab
@@ -1133,117 +1185,81 @@ fun MusicLibraryView(
                     }
 
                     LibraryRootTab.LIBRARY -> {
-                        val libraryPageState =
-                            LibraryPageTransitionState(
-                                libraryMode = libraryMode,
-                                selectedAlbum = selectedAlbum,
-                                selectedArtist = selectedArtist,
-                                selectedPlaylistId =
-                                    selectedPlaylistId
-                            )
+                        LibraryTabContent(
+                            context = context,
+                            navController = navController,
+                            selectedSource = librarySource,
+                            isLibraryLoading =
+                                isLibraryLoading,
 
-                        AuralArcPageTransition(
-                            targetState = libraryPageState,
-                            directionForTransition = { initialPage, targetPage ->
-                                when {
-                                    targetPage.depth >
-                                            initialPage.depth -> {
-                                        AuralArcPageDirection.FORWARD
-                                    }
+                            onSourceSelected = { newSource ->
+                                if (
+                                    newSource != librarySource
+                                ) {
+                                    librarySource =
+                                        newSource
 
-                                    targetPage.depth <
-                                            initialPage.depth -> {
-                                        AuralArcPageDirection.BACKWARD
-                                    }
-
-                                    targetPage.libraryMode.ordinal >
-                                            initialPage.libraryMode.ordinal -> {
-                                        AuralArcPageDirection.FORWARD
-                                    }
-
-                                    else -> {
-                                        AuralArcPageDirection.BACKWARD
-                                    }
-                                }
-                            }
-                        ) { pageState ->
-
-                            LibraryTabContent(
-                                context = context,
-                                navController = navController,
-                                selectedSource = librarySource,
-                                isLibraryLoading =
-                                    isLibraryLoading,
-
-                                onSourceSelected = { newSource ->
-                                    if (
-                                        newSource != librarySource
-                                    ) {
-                                        librarySource =
-                                            newSource
-
-                                        LibrarySourcePreferences.saveLibrarySource(
-                                            context,
-                                            newSource
-                                        )
-                                    }
-                                },
-
-                                tracks = tracks,
-                                searchedTracks =
-                                    searchedTracks,
-
-                                libraryMode =
-                                    pageState.libraryMode,
-
-                                onLibraryModeChange = { newMode ->
-                                    selectLibraryMode(
-                                        newMode
+                                    LibrarySourcePreferences.saveLibrarySource(
+                                        context,
+                                        newSource
                                     )
+                                }
+                            },
 
-                                    selectedAlbum =
-                                        null
+                            tracks = tracks,
+                            searchedTracks =
+                                searchedTracks,
 
-                                    selectedArtist =
-                                        null
+                            libraryMode =
+                                libraryMode,
 
-                                    selectedPlaylistId =
-                                        null
-                                },
-
-                                onOpenFilter = {
-                                    filterDialogVisible =
-                                        true
-                                },
+                            onLibraryModeChange = { newMode ->
+                                selectLibraryMode(
+                                    newMode
+                                )
 
                                 selectedAlbum =
-                                    pageState.selectedAlbum,
-
-                                onSelectedAlbumChange = {
-                                    selectedAlbum =
-                                        it
-                                },
+                                    null
 
                                 selectedArtist =
-                                    pageState.selectedArtist,
-
-                                onSelectedArtistChange = {
-                                    selectedArtist =
-                                        it
-                                },
+                                    null
 
                                 selectedPlaylistId =
-                                    pageState.selectedPlaylistId,
+                                    null
+                            },
 
-                                onSelectedPlaylistChange = {
-                                    selectedPlaylistId =
-                                        it
-                                },
+                            onOpenFilter = {
+                                filterDialogVisible =
+                                    true
+                            },
 
-                                librarySource =
-                                    librarySource
-                            )
-                        }
+                            selectedAlbum =
+                                selectedAlbum,
+
+                            onSelectedAlbumChange = {
+                                selectedAlbum =
+                                    it
+                            },
+
+                            selectedArtist =
+                                selectedArtist,
+
+                            onSelectedArtistChange = {
+                                selectedArtist =
+                                    it
+                            },
+
+                            selectedPlaylistId =
+                                selectedPlaylistId,
+
+                            onSelectedPlaylistChange = {
+                                selectedPlaylistId =
+                                    it
+                            },
+
+                            librarySource =
+                                librarySource
+                        )
                     }
                 }
             }
@@ -2669,6 +2685,9 @@ private fun LibraryCategorySelector(
     libraryMode: LibraryMode,
     onLibraryModeChange: (LibraryMode) -> Unit
 ) {
+    val motionEnabled =
+        rememberAuralArcMotionEnabled()
+
     val modes =
         remember {
             listOf(
@@ -2686,22 +2705,112 @@ private fun LibraryCategorySelector(
                 horizontal = 10.dp,
                 vertical = 8.dp
             ),
-        horizontalArrangement = Arrangement.spacedBy(
-            6.dp
-        ),
-        verticalAlignment = Alignment.CenterVertically
+        horizontalArrangement =
+            Arrangement.spacedBy(
+                6.dp
+            ),
+        verticalAlignment =
+            Alignment.CenterVertically
     ) {
         modes.forEach { mode ->
             val selected =
                 libraryMode == mode
 
+            /*
+             * 1.24 + 0.92 + 0.92 + 0.92 = 4.0
+             *
+             * Total row weight never changes.
+             */
+            val itemWeight by
+            animateFloatAsState(
+                targetValue =
+                    if (
+                        !motionEnabled
+                    ) {
+                        1f
+                    } else if (
+                        selected
+                    ) {
+                        1.24f
+                    } else {
+                        0.92f
+                    },
+                animationSpec =
+                    if (
+                        motionEnabled
+                    ) {
+                        tween(
+                            durationMillis =
+                                AuralArcMotion.MORPH,
+                            easing =
+                                FastOutSlowInEasing
+                        )
+                    } else {
+                        snap()
+                    }
+            )
+
+            val itemHeight by
+            animateDpAsState(
+                targetValue =
+                    if (
+                        !motionEnabled
+                    ) {
+                        42.dp
+                    } else if (
+                        selected
+                    ) {
+                        46.dp
+                    } else {
+                        40.dp
+                    },
+                animationSpec =
+                    if (
+                        motionEnabled
+                    ) {
+                        tween(
+                            durationMillis =
+                                AuralArcMotion.MORPH,
+                            easing =
+                                FastOutSlowInEasing
+                        )
+                    } else {
+                        snap()
+                    }
+            )
+
+            val elevation by
+            animateDpAsState(
+                targetValue =
+                    if (
+                        selected
+                    ) {
+                        6.dp
+                    } else {
+                        0.dp
+                    },
+                animationSpec =
+                    if (
+                        motionEnabled
+                    ) {
+                        spring(
+                            dampingRatio =
+                                AuralArcMotion.DAMPING_RATIO,
+                            stiffness =
+                                AuralArcMotion.STIFFNESS
+                        )
+                    } else {
+                        snap()
+                    }
+            )
+
             Card(
                 modifier = Modifier
                     .weight(
-                        1f
+                        itemWeight
                     )
-                    .heightIn(
-                        min = 42.dp
+                    .height(
+                        itemHeight
                     )
                     .auralArcClickable {
                         if (
@@ -2714,54 +2823,46 @@ private fun LibraryCategorySelector(
                     },
                 shape = AuralArcStyle.SmallShape,
                 backgroundColor =
-                if (
-                    selected
-                ) {
-                    AuralArcStyle.PurpleDark
-                } else {
-                    AuralArcStyle.Surface
-                },
+                    if (
+                        selected
+                    ) {
+                        AuralArcStyle.PurpleDark
+                    } else {
+                        AuralArcStyle.Surface
+                    },
                 elevation =
-                if (
-                    selected
-                ) {
-                    6.dp
-                } else {
-                    0.dp
-                }
+                    elevation
             ) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            horizontal = 4.dp,
-                            vertical = 11.dp
-                        ),
-                    contentAlignment = Alignment.Center
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment =
+                        Alignment.Center
                 ) {
                     Text(
                         text = libraryModeLabel(
                             mode
                         ),
-                        style = MaterialTheme.typography.caption,
+                        style =
+                            MaterialTheme.typography.caption,
                         fontWeight =
-                        if (
-                            selected
-                        ) {
-                            FontWeight.Bold
-                        } else {
-                            FontWeight.Medium
-                        },
+                            if (
+                                selected
+                            ) {
+                                FontWeight.Bold
+                            } else {
+                                FontWeight.Medium
+                            },
                         color =
-                        if (
-                            selected
-                        ) {
-                            AuralArcStyle.TextPrimary
-                        } else {
-                            AuralArcStyle.TextMuted
-                        },
+                            if (
+                                selected
+                            ) {
+                                AuralArcStyle.TextPrimary
+                            } else {
+                                AuralArcStyle.TextMuted
+                            },
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow =
+                            TextOverflow.Ellipsis
                     )
                 }
             }
@@ -3017,13 +3118,136 @@ private fun LibrarySourceSelector(
     isLoading: Boolean,
     onSourceSelected: (LibrarySource) -> Unit
 ) {
+    val motionEnabled =
+        rememberAuralArcMotionEnabled()
+
+    val localSelected =
+        selectedSource ==
+                LibrarySource.LOCAL
+
+    val navidromeSelected =
+        selectedSource ==
+                LibrarySource.NAVIDROME
+
+    val localWeight by
+    animateFloatAsState(
+        targetValue =
+            if (
+                !motionEnabled
+            ) {
+                1f
+            } else if (
+                localSelected
+            ) {
+                1.12f
+            } else {
+                0.88f
+            },
+        animationSpec =
+            if (
+                motionEnabled
+            ) {
+                tween(
+                    durationMillis =
+                        AuralArcMotion.MORPH,
+                    easing =
+                        FastOutSlowInEasing
+                )
+            } else {
+                snap()
+            }
+    )
+
+    val navidromeWeight by
+    animateFloatAsState(
+        targetValue =
+            if (
+                !motionEnabled
+            ) {
+                1f
+            } else if (
+                navidromeSelected
+            ) {
+                1.12f
+            } else {
+                0.88f
+            },
+        animationSpec =
+            if (
+                motionEnabled
+            ) {
+                tween(
+                    durationMillis =
+                        AuralArcMotion.MORPH,
+                    easing =
+                        FastOutSlowInEasing
+                )
+            } else {
+                snap()
+            }
+    )
+
+    val localHeight by
+    animateDpAsState(
+        targetValue =
+            if (
+                motionEnabled &&
+                localSelected
+            ) {
+                48.dp
+            } else {
+                44.dp
+            },
+        animationSpec =
+            if (
+                motionEnabled
+            ) {
+                tween(
+                    durationMillis =
+                        AuralArcMotion.MORPH,
+                    easing =
+                        FastOutSlowInEasing
+                )
+            } else {
+                snap()
+            }
+    )
+
+    val navidromeHeight by
+    animateDpAsState(
+        targetValue =
+            if (
+                motionEnabled &&
+                navidromeSelected
+            ) {
+                48.dp
+            } else {
+                44.dp
+            },
+        animationSpec =
+            if (
+                motionEnabled
+            ) {
+                tween(
+                    durationMillis =
+                        AuralArcMotion.MORPH,
+                    easing =
+                        FastOutSlowInEasing
+                )
+            } else {
+                snap()
+            }
+    )
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
                 horizontal = 10.dp,
                 vertical = 8.dp
-            )
+            ),
+        verticalAlignment =
+            Alignment.CenterVertically
     ) {
         AuralArcButton(
             enabled = !isLoading,
@@ -3032,19 +3256,23 @@ private fun LibrarySourceSelector(
                     LibrarySource.LOCAL
                 )
             },
-            modifier = Modifier.weight(
-                1f
-            )
+            modifier = Modifier
+                .weight(
+                    localWeight
+                )
+                .height(
+                    localHeight
+                )
         ) {
             Text(
                 text =
-                if (
-                    selectedSource == LibrarySource.LOCAL
-                ) {
-                    "Local On"
-                } else {
-                    "Local"
-                }
+                    if (
+                        localSelected
+                    ) {
+                        "Local On"
+                    } else {
+                        "Local"
+                    }
             )
         }
 
@@ -3061,19 +3289,23 @@ private fun LibrarySourceSelector(
                     LibrarySource.NAVIDROME
                 )
             },
-            modifier = Modifier.weight(
-                1f
-            )
+            modifier = Modifier
+                .weight(
+                    navidromeWeight
+                )
+                .height(
+                    navidromeHeight
+                )
         ) {
             Text(
                 text =
-                if (
-                    selectedSource == LibrarySource.NAVIDROME
-                ) {
-                    "Navidrome On"
-                } else {
-                    "Navidrome"
-                }
+                    if (
+                        navidromeSelected
+                    ) {
+                        "Navidrome On"
+                    } else {
+                        "Navidrome"
+                    }
             )
         }
     }
@@ -3085,6 +3317,9 @@ private fun LibrarySearchBar(
     onQueryChange: (String) -> Unit,
     onClose: () -> Unit
 ) {
+    val motionEnabled =
+        rememberAuralArcMotionEnabled()
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -3133,16 +3368,74 @@ private fun LibrarySearchBar(
                 )
             )
 
-            if (
-                query.isNotEmpty()
+            AnimatedVisibility(
+                visible =
+                    query.isNotEmpty(),
+                enter =
+                    if (
+                        motionEnabled
+                    ) {
+                        expandHorizontally(
+                            expandFrom =
+                                Alignment.End,
+                            animationSpec = spring(
+                                dampingRatio =
+                                    AuralArcMotion.DAMPING_RATIO,
+                                stiffness =
+                                    AuralArcMotion.STIFFNESS
+                            )
+                        ) +
+                                fadeIn(
+                                    animationSpec = tween(
+                                        durationMillis = 70
+                                    )
+                                )
+                    } else {
+                        fadeIn(
+                            animationSpec = tween(
+                                durationMillis =
+                                    AuralArcMotion.NORMAL
+                            )
+                        )
+                    },
+                exit =
+                    if (
+                        motionEnabled
+                    ) {
+                        shrinkHorizontally(
+                            shrinkTowards =
+                                Alignment.End,
+                            animationSpec = spring(
+                                dampingRatio =
+                                    AuralArcMotion.DAMPING_RATIO,
+                                stiffness =
+                                    AuralArcMotion.STIFFNESS
+                            )
+                        ) +
+                                fadeOut(
+                                    animationSpec = tween(
+                                        durationMillis = 70
+                                    )
+                                )
+                    } else {
+                        fadeOut(
+                            animationSpec = tween(
+                                durationMillis =
+                                    AuralArcMotion.NORMAL
+                            )
+                        )
+                    }
             ) {
                 AuralArcIconButton(
                     onClick = onClose
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Clear search",
-                        tint = AuralArcStyle.TextPrimary
+                        imageVector =
+                            Icons.Default.Close,
+                        contentDescription =
+                            "Clear search",
+                        tint =
+                            AuralArcStyle.TextPrimary
                     )
                 }
             }
@@ -3170,19 +3463,80 @@ private fun MainBottomBar(
                     top = 6.dp
                 )
         ) {
-            if (
-                PlayerManager.currentTitle.value.isNotEmpty()
-            ) {
-                MiniPlayerBar(
-                    navController = navController
-                )
+            val motionEnabled =
+                rememberAuralArcMotionEnabled()
 
-                Divider(
-                    color = AuralArcStyle.Divider,
-                    modifier = Modifier.padding(
-                        top = 8.dp
+            AnimatedVisibility(
+                visible =
+                    PlayerManager.currentTitle.value
+                        .isNotEmpty(),
+                enter =
+                    if (
+                        motionEnabled
+                    ) {
+                        expandVertically(
+                            expandFrom =
+                                Alignment.Bottom,
+                            animationSpec = spring(
+                                dampingRatio =
+                                    AuralArcMotion.DAMPING_RATIO,
+                                stiffness =
+                                    AuralArcMotion.STIFFNESS
+                            )
+                        ) +
+                                fadeIn(
+                                    animationSpec = tween(
+                                        durationMillis = 90
+                                    )
+                                )
+                    } else {
+                        fadeIn(
+                            animationSpec = tween(
+                                durationMillis =
+                                    AuralArcMotion.NORMAL
+                            )
+                        )
+                    },
+                exit =
+                    if (
+                        motionEnabled
+                    ) {
+                        shrinkVertically(
+                            shrinkTowards =
+                                Alignment.Bottom,
+                            animationSpec = spring(
+                                dampingRatio =
+                                    AuralArcMotion.DAMPING_RATIO,
+                                stiffness =
+                                    AuralArcMotion.STIFFNESS
+                            )
+                        ) +
+                                fadeOut(
+                                    animationSpec = tween(
+                                        durationMillis = 90
+                                    )
+                                )
+                    } else {
+                        fadeOut(
+                            animationSpec = tween(
+                                durationMillis =
+                                    AuralArcMotion.NORMAL
+                            )
+                        )
+                    }
+            ) {
+                Column {
+                    MiniPlayerBar(
+                        navController = navController
                     )
-                )
+
+                    Divider(
+                        color = AuralArcStyle.Divider,
+                        modifier = Modifier.padding(
+                            top = 8.dp
+                        )
+                    )
+                }
             }
 
             Card(
@@ -3250,9 +3604,133 @@ private fun RowScope.RootTabButton(
     icon: ImageVector,
     onClick: () -> Unit
 ) {
-    val alpha =
-        animateFloatAsState(
-            targetValue =
+    val motionEnabled =
+        rememberAuralArcMotionEnabled()
+
+    /*
+     * One selected + two unselected =
+     *
+     * 1.28 + 0.86 + 0.86 = 3.0
+     *
+     * so the Row always uses exactly the same total width,
+     * while the selected item physically grows and pushes
+     * its neighbors inward.
+     */
+    val tabWeight by
+    animateFloatAsState(
+        targetValue =
+            if (
+                !motionEnabled
+            ) {
+                1f
+            } else if (
+                selected
+            ) {
+                1.28f
+            } else {
+                0.86f
+            },
+        animationSpec =
+            if (
+                motionEnabled
+            ) {
+                tween(
+                    durationMillis =
+                        AuralArcMotion.MORPH,
+                    easing =
+                        FastOutSlowInEasing
+                )
+            } else {
+                snap()
+            }
+    )
+
+    val tabHeight by
+    animateDpAsState(
+        targetValue =
+            if (
+                !motionEnabled
+            ) {
+                54.dp
+            } else if (
+                selected
+            ) {
+                60.dp
+            } else {
+                50.dp
+            },
+        animationSpec =
+            if (
+                motionEnabled
+            ) {
+                tween(
+                    durationMillis =
+                        AuralArcMotion.MORPH,
+                    easing =
+                        FastOutSlowInEasing
+                )
+            } else {
+                snap()
+            }
+    )
+
+    val iconSize by
+    animateDpAsState(
+        targetValue =
+            if (
+                !motionEnabled
+            ) {
+                24.dp
+            } else if (
+                selected
+            ) {
+                27.dp
+            } else {
+                22.dp
+            },
+        animationSpec =
+            if (
+                motionEnabled
+            ) {
+                spring(
+                    dampingRatio =
+                        AuralArcMotion.DAMPING_RATIO,
+                    stiffness =
+                        AuralArcMotion.STIFFNESS
+                )
+            } else {
+                snap()
+            }
+    )
+
+    val elevation by
+    animateDpAsState(
+        targetValue =
+            if (
+                selected
+            ) {
+                8.dp
+            } else {
+                0.dp
+            },
+        animationSpec =
+            if (
+                motionEnabled
+            ) {
+                spring(
+                    dampingRatio =
+                        AuralArcMotion.DAMPING_RATIO,
+                    stiffness =
+                        AuralArcMotion.STIFFNESS
+                )
+            } else {
+                snap()
+            }
+    )
+
+    val alpha by
+    animateFloatAsState(
+        targetValue =
             if (
                 selected
             ) {
@@ -3260,77 +3738,96 @@ private fun RowScope.RootTabButton(
             } else {
                 0.62f
             },
-            animationSpec = tween(
-                durationMillis =
-                AuralArcMotion.FAST
-            )
-        )
+        animationSpec =
+            if (
+                motionEnabled
+            ) {
+                spring(
+                    dampingRatio =
+                        AuralArcMotion.DAMPING_RATIO,
+                    stiffness =
+                        AuralArcMotion.STIFFNESS
+                )
+            } else {
+                snap()
+            }
+    )
 
     Card(
         modifier = Modifier
             .weight(
-                1f
+                tabWeight
+            )
+            .height(
+                tabHeight
             )
             .padding(
                 horizontal = 4.dp
             )
             .alpha(
-                alpha.value
+                alpha
             )
             .auralArcClickable {
                 onClick()
             },
         shape = AuralArcStyle.SmallShape,
         backgroundColor =
-        if (
-            selected
-        ) {
-            AuralArcStyle.PurpleDark
-        } else {
-            AuralArcStyle.Surface
-        },
+            if (
+                selected
+            ) {
+                AuralArcStyle.PurpleDark
+            } else {
+                AuralArcStyle.Surface
+            },
         elevation =
-        if (
-            selected
-        ) {
-            8.dp
-        } else {
-            0.dp
-        }
+            elevation
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .padding(
-                    vertical = 8.dp,
                     horizontal = 4.dp
                 ),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment =
+                Alignment.CenterHorizontally,
+            verticalArrangement =
+                Arrangement.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = tab.label,
                 tint =
-                if (
-                    selected
-                ) {
-                    AuralArcStyle.TextPrimary
-                } else {
-                    AuralArcStyle.TextMuted
-                }
+                    if (
+                        selected
+                    ) {
+                        AuralArcStyle.TextPrimary
+                    } else {
+                        AuralArcStyle.TextMuted
+                    },
+                modifier = Modifier.size(
+                    iconSize
+                )
             )
 
             Text(
                 text = tab.label,
                 style = MaterialTheme.typography.caption,
+                fontWeight =
+                    if (
+                        selected
+                    ) {
+                        FontWeight.Bold
+                    } else {
+                        FontWeight.Medium
+                    },
                 color =
-                if (
-                    selected
-                ) {
-                    AuralArcStyle.TextPrimary
-                } else {
-                    AuralArcStyle.TextMuted
-                },
+                    if (
+                        selected
+                    ) {
+                        AuralArcStyle.TextPrimary
+                    } else {
+                        AuralArcStyle.TextMuted
+                    },
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )

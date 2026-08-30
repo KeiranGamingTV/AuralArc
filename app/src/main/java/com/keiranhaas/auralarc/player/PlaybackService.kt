@@ -8,7 +8,6 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
@@ -28,8 +27,16 @@ import com.keiranhaas.auralarc.MainActivity
 import com.keiranhaas.auralarc.R
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
-import java.io.File
-import java.net.URL
+import android.os.Handler
+import android.os.Looper
+import com.keiranhaas.auralarc.storage.AudioBehaviorPreferences
+import com.keiranhaas.auralarc.utils.ArtworkBitmapLoader
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 
 @UnstableApi
 class PlaybackService : Service() {
@@ -113,6 +120,28 @@ class PlaybackService : Service() {
 
     private var lastArtworkBitmap: Bitmap? =
         null
+
+    private val artworkScope =
+        CoroutineScope(
+            SupervisorJob() +
+                    Dispatchers.Main.immediate
+        )
+
+    private var artworkLoadJob: Job? =
+        null
+
+    @Volatile
+    private var artworkLoadInFlightPath =
+        ""
+
+    @Volatile
+    private var serviceDestroyed =
+        false
+
+    private val mainHandler =
+        Handler(
+            Looper.getMainLooper()
+        )
 
     private val shuffleSessionCommand =
         SessionCommand(
@@ -353,6 +382,9 @@ class PlaybackService : Service() {
     override fun onCreate() {
         super.onCreate()
 
+        serviceDestroyed =
+            false
+
         createNotificationChannel()
 
         val player =
@@ -459,11 +491,40 @@ class PlaybackService : Service() {
     override fun onTaskRemoved(
         rootIntent: Intent?
     ) {
-        PlayerManager.stopBecauseAppClosed(
-            this
-        )
+        val stopWhenClosed =
+            AudioBehaviorPreferences.getStopWhenAppClosed(
+                this
+            )
 
-        stopSelf()
+        if (
+            stopWhenClosed
+        ) {
+            /*
+             * stopBecauseAppClosed() now performs a synchronous
+             * session save before releasing the player.
+             */
+            PlayerManager.stopBecauseAppClosed(
+                this
+            )
+
+            stopSelf()
+        } else {
+            /*
+             * IMPORTANT:
+             *
+             * Previously this service ALWAYS called stopSelf(),
+             * even when "Stop Music When App Closes" was disabled.
+             *
+             * That left ExoPlayer alive inside the process but removed
+             * the foreground service protecting it. Android could then
+             * kill the process shortly afterward.
+             *
+             * Keep the playback service alive and foreground instead.
+             */
+            PlayerManager.saveCurrentSessionImmediately()
+
+            postPlaybackNotification()
+        }
 
         super.onTaskRemoved(
             rootIntent
@@ -471,6 +532,21 @@ class PlaybackService : Service() {
     }
 
     override fun onDestroy() {
+        PlayerManager.saveCurrentSessionImmediately()
+
+        serviceDestroyed =
+            true
+
+        artworkLoadInFlightPath =
+            ""
+
+        artworkLoadJob?.cancel()
+
+        artworkLoadJob =
+            null
+
+        artworkScope.cancel()
+
         try {
             attachedPlayer?.removeListener(
                 playerListener
@@ -519,6 +595,24 @@ class PlaybackService : Service() {
         intent: Intent?
     ): IBinder? {
         return null
+    }
+
+    override fun onTrimMemory(
+        level: Int
+    ) {
+        ArtworkBitmapLoader.trimMemory(
+            level
+        )
+
+        super.onTrimMemory(
+            level
+        )
+    }
+
+    override fun onLowMemory() {
+        ArtworkBitmapLoader.clearMemory()
+
+        super.onLowMemory()
     }
 
     private fun createMediaButtonPreferences(): List<CommandButton> {
@@ -687,6 +781,12 @@ class PlaybackService : Service() {
     }
 
     private fun postPlaybackNotification() {
+        if (
+            serviceDestroyed
+        ) {
+            return
+        }
+
         val notification =
             buildPlaybackNotification()
 
@@ -988,17 +1088,31 @@ class PlaybackService : Service() {
 
     private fun getCurrentArtwork(): Bitmap? {
         val artworkPath =
-            PlayerManager.currentAlbumArtPath.value
+            PlayerManager
+                .currentAlbumArtPath
+                .value
+                .trim()
 
         if (
             artworkPath.isBlank()
         ) {
+            artworkLoadJob?.cancel()
+
+            artworkLoadJob =
+                null
+
+            lastArtworkPath =
+                ""
+
+            lastArtworkBitmap =
+                null
+
             return null
         }
 
         if (
-            artworkPath == lastArtworkPath &&
-            lastArtworkBitmap != null
+            artworkPath ==
+            lastArtworkPath
         ) {
             return lastArtworkBitmap
         }
@@ -1007,92 +1121,47 @@ class PlaybackService : Service() {
             artworkPath
 
         lastArtworkBitmap =
-            if (
-                artworkPath.startsWith(
-                    "http://"
-                ) ||
-                artworkPath.startsWith(
-                    "https://"
-                )
-            ) {
-                loadRemoteArtworkAsync(
-                    artworkPath
-                )
-
-                null
-            } else {
-                loadLocalArtwork(
-                    artworkPath
-                )
-            }
-
-        return lastArtworkBitmap
-    }
-
-    private fun loadLocalArtwork(
-        artworkPath: String
-    ): Bitmap? {
-        return try {
-            val file =
-                File(
-                    artworkPath
-                )
-
-            if (
-                !file.exists() ||
-                file.length() <= 0L
-            ) {
-                return null
-            }
-
-            BitmapFactory.decodeFile(
-                file.absolutePath
+            ArtworkBitmapLoader.peek(
+                artworkPath =
+                    artworkPath,
+                targetSizePx =
+                    512
             )
-        } catch (
-            exception: Exception
+
+        if (
+            lastArtworkBitmap != null
         ) {
-            Log.d(
-                TAG,
-                "Could not load local notification artwork.",
-                exception
-            )
-
-            null
+            return lastArtworkBitmap
         }
-    }
 
-    private fun loadRemoteArtworkAsync(
-        artworkUrl: String
-    ) {
-        Thread {
-            try {
-                val bitmap =
-                    URL(
-                        artworkUrl
-                    ).openStream().use { inputStream ->
-                        BitmapFactory.decodeStream(
-                            inputStream
-                        )
-                    }
+        artworkLoadJob?.cancel()
 
+        artworkLoadJob =
+            artworkScope.launch {
+                val loadedBitmap =
+                    ArtworkBitmapLoader.load(
+                        context =
+                            applicationContext,
+                        artworkPath =
+                            artworkPath,
+                        targetSizePx =
+                            512
+                    )
+
+                /*
+                 * The song may have changed while artwork was loading.
+                 */
                 if (
-                    bitmap != null &&
-                    artworkUrl == lastArtworkPath
+                    artworkPath ==
+                    lastArtworkPath
                 ) {
                     lastArtworkBitmap =
-                        bitmap
+                        loadedBitmap
 
                     postPlaybackNotification()
                 }
-            } catch (
-                exception: Exception
-            ) {
-                Log.d(
-                    TAG,
-                    "Could not load remote notification artwork.",
-                    exception
-                )
             }
-        }.start()
+
+        return null
     }
 }

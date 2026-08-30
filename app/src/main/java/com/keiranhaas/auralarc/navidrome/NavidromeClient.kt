@@ -101,16 +101,195 @@ class NavidromeClient(
     }
 
     fun getAllSongs(): List<MusicTrack> {
-        val tracks =
-            mutableListOf<MusicTrack>()
+        /*
+         * Primary path:
+         *
+         * search3 with an empty query lets us retrieve the actual
+         * song library directly with paging.
+         *
+         * This is dramatically more efficient for large libraries
+         * than fetching every album and then issuing another request
+         * for every individual album.
+         */
+        return try {
+            val tracks =
+                getAllSongsUsingSearch3()
 
+            Log.d(
+                "AuralArc",
+                "Loaded ${tracks.size} Navidrome songs using paged search3."
+            )
+
+            tracks
+        } catch (e: Exception) {
+            /*
+             * Keep the older album-by-album implementation as a
+             * compatibility/recovery fallback.
+             *
+             * Navidrome supports search3, so normally this should
+             * never be necessary.
+             */
+            Log.w(
+                "AuralArc",
+                "Paged Navidrome song loading failed. Falling back to album loading.",
+                e
+            )
+
+            getAllSongsUsingAlbums()
+        }
+    }
+
+    private fun getAllSongsUsingSearch3(): List<MusicTrack> {
+        val tracks =
+            ArrayList<MusicTrack>()
+
+        /*
+         * Prevent duplicate pages or a broken server implementation
+         * from trapping us in an endless paging loop.
+         */
+        val seenSongIds =
+            HashSet<String>()
+
+        /*
+         * 500 gives us large pages without producing unnecessarily
+         * huge JSON responses.
+         *
+         * A 2,000-song library normally takes roughly 4–5 requests
+         * instead of potentially hundreds of album requests.
+         */
         val pageSize =
             500
 
         var offset =
             0
 
-        while (true) {
+        while (
+            true
+        ) {
+            val songs =
+                getSongSearchPage(
+                    size = pageSize,
+                    offset = offset
+                )
+
+            val returnedCount =
+                songs.length()
+
+            if (
+                returnedCount == 0
+            ) {
+                break
+            }
+
+            var newSongsThisPage =
+                0
+
+            for (
+            index in 0 until returnedCount
+            ) {
+                val songObject =
+                    songs.optJSONObject(
+                        index
+                    ) ?: continue
+
+                val songId =
+                    songObject.optString(
+                        "id",
+                        ""
+                    ).trim()
+
+                if (
+                    songId.isBlank()
+                ) {
+                    continue
+                }
+
+                /*
+                 * Protect against duplicate pages if a server ignores
+                 * songOffset for some reason.
+                 */
+                if (
+                    !seenSongIds.add(
+                        songId
+                    )
+                ) {
+                    continue
+                }
+
+                val track =
+                    songJsonToMusicTrack(
+                        songObject
+                    ) ?: continue
+
+                tracks.add(
+                    track
+                )
+
+                newSongsThisPage +=
+                    1
+            }
+
+            Log.d(
+                "AuralArc",
+                "Navidrome page: offset=$offset, returned=$returnedCount, new=$newSongsThisPage, total=${tracks.size}"
+            )
+
+            /*
+             * A partial page means we've reached the end.
+             */
+            if (
+                returnedCount <
+                pageSize
+            ) {
+                break
+            }
+
+            /*
+             * Full page but zero new IDs means paging isn't advancing.
+             * Stop rather than looping forever.
+             */
+            if (
+                newSongsThisPage ==
+                0
+            ) {
+                Log.w(
+                    "AuralArc",
+                    "Navidrome search paging stopped because no new songs were returned."
+                )
+
+                break
+            }
+
+            /*
+             * Advance by the actual response size instead of blindly
+             * assuming the server honored our requested page size.
+             */
+            offset +=
+                returnedCount
+        }
+
+        return sortNavidromeTracks(
+            tracks
+        )
+    }
+
+    private fun getAllSongsUsingAlbums(): List<MusicTrack> {
+        val tracks =
+            mutableListOf<MusicTrack>()
+
+        /*
+         * getAlbumList2 officially allows at most 500 albums per page.
+         * This remains only as our recovery path.
+         */
+        val pageSize =
+            500
+
+        var offset =
+            0
+
+        while (
+            true
+        ) {
             val albums =
                 getAlbumListPage(
                     size = pageSize,
@@ -118,7 +297,8 @@ class NavidromeClient(
                 )
 
             if (
-                albums.length() == 0
+                albums.length() ==
+                0
             ) {
                 break
             }
@@ -171,6 +351,10 @@ class NavidromeClient(
                         }
                     }
                 } catch (e: Exception) {
+                    /*
+                     * One bad album should never prevent the rest of
+                     * the user's Navidrome library from loading.
+                     */
                     Log.e(
                         "AuralArc",
                         "Failed loading Navidrome album $albumId",
@@ -180,35 +364,58 @@ class NavidromeClient(
             }
 
             if (
-                albums.length() < pageSize
+                albums.length() <
+                pageSize
             ) {
                 break
             }
 
             offset +=
-                pageSize
+                albums.length()
         }
 
+        return sortNavidromeTracks(
+            tracks
+        )
+    }
+
+    private fun sortNavidromeTracks(
+        tracks: List<MusicTrack>
+    ): List<MusicTrack> {
         return tracks
-            .distinctBy {
-                it.uri
+            .distinctBy { track ->
+                track.uri
             }
             .sortedWith(
-                compareBy<MusicTrack> {
-                    it.artist.lowercase()
-                }.thenBy {
-                    it.album.lowercase()
-                }.thenBy {
-                    if (
-                        it.trackNumber > 0
-                    ) {
-                        it.trackNumber
-                    } else {
-                        Int.MAX_VALUE
-                    }
-                }.thenBy {
-                    it.title.lowercase()
+                compareBy<MusicTrack> { track ->
+                    track.artist.lowercase()
                 }
+                    .thenBy { track ->
+                        track.album.lowercase()
+                    }
+                    .thenBy { track ->
+                        if (
+                            track.discNumber >
+                            0
+                        ) {
+                            track.discNumber
+                        } else {
+                            Int.MAX_VALUE
+                        }
+                    }
+                    .thenBy { track ->
+                        if (
+                            track.trackNumber >
+                            0
+                        ) {
+                            track.trackNumber
+                        } else {
+                            Int.MAX_VALUE
+                        }
+                    }
+                    .thenBy { track ->
+                        track.title.lowercase()
+                    }
             )
     }
 
@@ -495,6 +702,40 @@ class NavidromeClient(
         return fallbackUnsynced
     }
 
+    private fun getSongSearchPage(
+        size: Int,
+        offset: Int
+    ): JSONArray {
+        /*
+         * Navidrome supports Subsonic search3.
+         *
+         * An empty query is specifically useful here because it
+         * requests the complete media collection while songCount
+         * and songOffset provide proper paging.
+         *
+         * We don't need artist or album search results, so request
+         * zero of each to keep the JSON response smaller.
+         */
+        val response =
+            getJsonWithRetry(
+                endpoint = "search3.view",
+                extraParams = mapOf(
+                    "query" to "",
+                    "artistCount" to "0",
+                    "albumCount" to "0",
+                    "songCount" to size.toString(),
+                    "songOffset" to offset.toString()
+                )
+            )
+
+        return jsonArrayOrSingleObject(
+            parent = response.optJSONObject(
+                "searchResult3"
+            ),
+            key = "song"
+        )
+    }
+
     private fun getAlbumListPage(
         size: Int,
         offset: Int
@@ -536,6 +777,71 @@ class NavidromeClient(
         )
     }
 
+    private fun getJsonWithRetry(
+        endpoint: String,
+        extraParams: Map<String, String> = emptyMap(),
+        maxAttempts: Int = 3
+    ): JSONObject {
+        var lastException: Exception? =
+            null
+
+        for (
+        attempt in 1..maxAttempts
+        ) {
+            try {
+                return getJson(
+                    endpoint = endpoint,
+                    extraParams = extraParams
+                )
+            } catch (e: Exception) {
+                lastException =
+                    e
+
+                if (
+                    attempt >=
+                    maxAttempts
+                ) {
+                    break
+                }
+
+                Log.w(
+                    "AuralArc",
+                    "Navidrome request $endpoint failed on attempt $attempt/$maxAttempts. Retrying.",
+                    e
+                )
+
+                /*
+                 * Small progressive delay:
+                 *
+                 * attempt 1 → 300 ms
+                 * attempt 2 → 600 ms
+                 *
+                 * Long enough to survive a brief network hiccup without
+                 * making normal loading noticeably slower.
+                 */
+                try {
+                    Thread.sleep(
+                        300L *
+                                attempt
+                    )
+                } catch (
+                    interrupted:
+                    InterruptedException
+                ) {
+                    Thread.currentThread()
+                        .interrupt()
+
+                    throw interrupted
+                }
+            }
+        }
+
+        throw lastException
+            ?: IllegalStateException(
+                "Navidrome request failed."
+            )
+    }
+
     fun getJson(
         endpoint: String,
         extraParams: Map<String, String> = emptyMap()
@@ -561,10 +867,10 @@ class NavidromeClient(
                 "GET"
 
             connection.connectTimeout =
-                15000
+                20_000
 
             connection.readTimeout =
-                30000
+                60_000
 
             val responseCode =
                 connection.responseCode

@@ -278,8 +278,8 @@ fun AppearanceSettingsScreen(
         navController = navController
     ) {
         SettingsToggleCard(
-            title = "Smooth Page Transitions",
-            subtitle = "Move pages smoothly while navigating. Turn this off to use fade-only transitions.",
+            title = "Fluid UI Motion",
+            subtitle = "Use soft fade-and-scale motion between app content. Turn this off to use fade-only transitions.",
             checked = pageAnimationsEnabled,
             onCheckedChange = { enabled ->
                 AppearancePreferences.setPageAnimationsEnabled(
@@ -461,11 +461,23 @@ fun AboutSettingsScreen(
 
     val releaseNotes =
         listOf(
-            "Introduced smooth moving transitions between every page in the app.",
-            "Added a toggle in the Appearance settings to turn animations off.",
-            "Fixed the Today's Picks refreshing every time the tab is changed or reloaded.",
-            "Made the Playlist header smoothly shrink down instead of abruptly shrinking as the playlist is scrolled down.",
-            "Fixed song titles being off-center due to the HD badge. They are now centered."
+            "Fixed the 'smooth' animations and make them more fluid.",
+            "Added an initial setup page.",
+            "Added the import and export M3U capabilities back.",
+            "Fixed Navidrome timing out and not loading large music libraries.",
+            "Optimized Navidrome library loading.",
+            "Fixed queue visually jumping to the top again when a song is removed or moved around.",
+            "Fixed the app sometimes not saving position in the song when the app is closed.",
+            "Fixed app randomly crashing in the background after a small period of time.",
+            "Optimized library loading.",
+            "Optimized library scanning.",
+            "Optimized and improved lyric scanning to be more reliable.",
+            "Optimized UI and navigation.",
+            "Optimized battery usage.",
+            "Optimized background tasks.",
+            "Optimized app cache size.",
+            "Improved animations, animation speed, and animation jittering.",
+            "Improved app stability."
         )
 
     SettingsMenuScaffold(
@@ -783,6 +795,8 @@ fun LibraryMenuScreen(
                 )
             }
         )
+
+        PlaylistTransferSettingsSection()
 
         SettingsIconRow(
             title = "Default Folders",
@@ -1196,7 +1210,7 @@ private fun SettingsMenuScaffold(
 }
 
 @Composable
-private fun SettingsIconRow(
+fun SettingsIconRow(
     title: String,
     icon: ImageVector,
     onClick: () -> Unit

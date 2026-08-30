@@ -13,6 +13,10 @@ import com.keiranhaas.auralarc.storage.LrcLyricsFinder
 import com.keiranhaas.auralarc.storage.LyricsPreferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import android.os.SystemClock
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.withContext
+import java.util.concurrent.ConcurrentHashMap
 
 object LyricsState {
 
@@ -24,11 +28,28 @@ object LyricsState {
             0
         )
 
-    private val loadedUris =
-        mutableSetOf<String>()
+    /*
+     * A failed lyrics lookup should not remain a permanent failure.
+     *
+     * This is especially important for:
+     * - temporarily unavailable SAF storage
+     * - temporary Navidrome network failures
+     * - lyrics added while the app remains running
+     */
+    private const val FAILED_LOOKUP_RETRY_MS =
+        60_000L
 
-    private val loadingUris =
-        mutableSetOf<String>()
+    private val completedAttempts =
+        ConcurrentHashMap.newKeySet<String>()
+
+    private val retryAfterElapsedTime =
+        ConcurrentHashMap<String, Long>()
+
+    private val inFlightLoads =
+        ConcurrentHashMap<
+                String,
+                CompletableDeferred<EmbeddedLyricsResult?>
+                >()
 
     suspend fun preloadLyrics(
         context: Context,
@@ -37,49 +58,50 @@ object LyricsState {
         val uri =
             track.uri
 
-        val shouldLoad =
-            synchronized(
-                loadingUris
-            ) {
-                if (
-                    loadedUris.contains(
-                        uri
-                    ) ||
-                    loadingUris.contains(
-                        uri
-                    )
-                ) {
-                    false
-                } else {
-                    loadingUris.add(
-                        uri
-                    )
+        /*
+         * Positive results don't need another scan.
+         */
+        if (
+            lyricsCache[
+                uri
+            ] != null
+        ) {
+            return
+        }
 
-                    true
-                }
-            }
+        val now =
+            SystemClock.elapsedRealtime()
+
+        val retryAfter =
+            retryAfterElapsedTime[
+                uri
+            ] ?: 0L
 
         if (
-            !shouldLoad
+            retryAfter > now
         ) {
-            /*
-             * Another request is already loading this track.
-             * Wait briefly for that request rather than starting a
-             * second full filesystem search.
-             */
-            while (
-                synchronized(
-                    loadingUris
-                ) {
-                    loadingUris.contains(
-                        uri
-                    )
-                }
-            ) {
-                kotlinx.coroutines.delay(
-                    10L
-                )
-            }
+            return
+        }
+
+        /*
+         * CompletableDeferred replaces the previous 10 ms polling loop.
+         *
+         * If two parts of the app request the same lyrics simultaneously,
+         * the second simply awaits the first.
+         */
+        val ourLoad =
+            CompletableDeferred<EmbeddedLyricsResult?>()
+
+        val existingLoad =
+            inFlightLoads.putIfAbsent(
+                uri,
+                ourLoad
+            )
+
+        if (
+            existingLoad != null
+        ) {
+            existingLoad.await()
 
             return
         }
@@ -93,28 +115,63 @@ object LyricsState {
                         loadLyricsInternal(
                             context =
                                 context.applicationContext,
-                            track =
-                                track
+                            track = track
                         )
                     } catch (_: Throwable) {
                         null
                     }
                 }
 
-            lyricsCache[uri] =
+            lyricsCache[
+                uri
+            ] =
                 result
 
-            loadedUris.add(
+            completedAttempts.add(
                 uri
             )
-        } finally {
-            synchronized(
-                loadingUris
+
+            if (
+                result == null
             ) {
-                loadingUris.remove(
+                retryAfterElapsedTime[
+                    uri
+                ] =
+                    SystemClock.elapsedRealtime() +
+                            FAILED_LOOKUP_RETRY_MS
+            } else {
+                retryAfterElapsedTime.remove(
                     uri
                 )
             }
+
+            cacheRevision.value +=
+                1
+
+            ourLoad.complete(
+                result
+            )
+        } catch (
+            throwable: Throwable
+        ) {
+            completedAttempts.add(
+                uri
+            )
+
+            retryAfterElapsedTime[
+                uri
+            ] =
+                SystemClock.elapsedRealtime() +
+                        FAILED_LOOKUP_RETRY_MS
+
+            ourLoad.complete(
+                null
+            )
+        } finally {
+            inFlightLoads.remove(
+                uri,
+                ourLoad
+            )
         }
     }
 
@@ -129,20 +186,28 @@ object LyricsState {
     fun hasFinishedLoading(
         track: MusicTrack
     ): Boolean {
-        return loadedUris.contains(
+        return completedAttempts.contains(
             track.uri
-        )
+        ) &&
+                !inFlightLoads.containsKey(
+                    track.uri
+                )
     }
 
     fun clearCache() {
         lyricsCache.clear()
-        loadedUris.clear()
 
-        synchronized(
-            loadingUris
-        ) {
-            loadingUris.clear()
-        }
+        completedAttempts.clear()
+
+        retryAfterElapsedTime.clear()
+
+        inFlightLoads
+            .values
+            .forEach { load ->
+                load.cancel()
+            }
+
+        inFlightLoads.clear()
 
         LrcLyricsFinder.invalidateIndex()
 

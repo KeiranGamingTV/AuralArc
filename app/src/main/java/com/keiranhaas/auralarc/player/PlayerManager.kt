@@ -87,7 +87,13 @@ object PlayerManager {
         5_000L
 
     private const val SESSION_POSITION_SAVE_INTERVAL_MS =
-        2_000L
+        5_000L
+
+    private const val PLAYING_PROGRESS_UPDATE_INTERVAL_MS =
+        250L
+
+    private const val IDLE_PROGRESS_UPDATE_INTERVAL_MS =
+        1_000L
 
     private var player: ExoPlayer? =
         null
@@ -345,9 +351,20 @@ object PlayerManager {
                     }
                 }
 
+                val nextUpdateDelay =
+                    if (
+                        activePlayer?.isPlaying ==
+                        true ||
+                        pendingSeekPosition != null
+                    ) {
+                        PLAYING_PROGRESS_UPDATE_INTERVAL_MS
+                    } else {
+                        IDLE_PROGRESS_UPDATE_INTERVAL_MS
+                    }
+
                 progressHandler.postDelayed(
                     this,
-                    100L
+                    nextUpdateDelay
                 )
             }
         }
@@ -1896,9 +1913,7 @@ object PlayerManager {
             return
         }
 
-        saveCurrentSessionIfNeeded(
-            force = true
-        )
+        saveCurrentSessionImmediately()
 
         playbackModeJob?.cancel()
 
@@ -1926,20 +1941,11 @@ object PlayerManager {
         progressHandler.removeCallbacks(
             progressRunnable
         )
-
-        try {
-            context.stopService(
-                Intent(
-                    context,
-                    PlaybackService::class.java
-                )
-            )
-        } catch (_: Exception) {
-        }
     }
 
     fun saveCurrentSessionIfNeeded(
-        force: Boolean = false
+        force: Boolean = false,
+        synchronous: Boolean = false
     ) {
         val context =
             appContext ?: return
@@ -1997,55 +2003,80 @@ object PlayerManager {
                     0L
                 )
 
-        context.getSharedPreferences(
-            SESSION_PREFS_NAME,
-            Context.MODE_PRIVATE
-        )
-            .edit()
-            .putString(
-                KEY_LAST_URI,
-                currentTrack.uri
+        val sessionEditor =
+            context.getSharedPreferences(
+                SESSION_PREFS_NAME,
+                Context.MODE_PRIVATE
             )
-            .putString(
-                KEY_LAST_KEY,
-                stableTrackKey(
-                    currentTrack
+                .edit()
+                .putString(
+                    KEY_LAST_URI,
+                    currentTrack.uri
                 )
-            )
-            .putLong(
-                KEY_LAST_POSITION,
-                positionToSave
-            )
-            .putString(
-                KEY_LAST_TITLE,
-                currentTrack.title
-            )
-            .putString(
-                KEY_LAST_ARTIST,
-                currentTrack.artist
-            )
-            .putString(
-                KEY_LAST_ALBUM_ART,
-                currentTrack.albumArtPath
-                    ?: currentAlbumArtPath.value
-            )
-            .putLong(
-                KEY_LAST_DURATION,
-                durationToSave
-            )
-            .putString(
-                KEY_QUEUE_KEYS,
-                queueKeysArray.toString()
-            )
-            .putBoolean(
-                KEY_SHUFFLE,
-                PlaybackState.shuffleEnabled.value
-            )
-            .putString(
-                KEY_REPEAT,
-                PlaybackState.repeatMode.value.name
-            )
-            .apply()
+                .putString(
+                    KEY_LAST_KEY,
+                    stableTrackKey(
+                        currentTrack
+                    )
+                )
+                .putLong(
+                    KEY_LAST_POSITION,
+                    positionToSave
+                )
+                .putString(
+                    KEY_LAST_TITLE,
+                    currentTrack.title
+                )
+                .putString(
+                    KEY_LAST_ARTIST,
+                    currentTrack.artist
+                )
+                .putString(
+                    KEY_LAST_ALBUM_ART,
+                    currentTrack.albumArtPath
+                        ?: currentAlbumArtPath.value
+                )
+                .putLong(
+                    KEY_LAST_DURATION,
+                    durationToSave
+                )
+                .putString(
+                    KEY_QUEUE_KEYS,
+                    queueKeysArray.toString()
+                )
+                .putBoolean(
+                    KEY_SHUFFLE,
+                    PlaybackState.shuffleEnabled.value
+                )
+                .putString(
+                    KEY_REPEAT,
+                    PlaybackState.repeatMode.value.name
+                )
+
+        if (
+            synchronous
+        ) {
+            val committed =
+                sessionEditor.commit()
+
+            if (
+                !committed
+            ) {
+                Log.w(
+                    TAG,
+                    "Synchronous playback-session save failed."
+                )
+            }
+        } else {
+            sessionEditor.apply()
+        }
+    }
+
+    fun saveCurrentSessionImmediately() {
+        saveCurrentSessionIfNeeded(
+            force = true,
+            synchronous = true
+        )
     }
 
     private fun requestAudioFocusIfNeeded(

@@ -7,11 +7,15 @@ import android.util.Log
 import com.keiranhaas.auralarc.data.MusicTrack
 import com.keiranhaas.auralarc.utils.extractEmbeddedAlbumArt
 import com.keiranhaas.auralarc.utils.AudioMetadataReader
+import android.net.Uri
+import java.io.File
 
 object MusicScanner {
 
     fun scan(
-        context: Context
+        context: Context,
+        cachedTracksByUri: Map<String, MusicTrack> =
+            emptyMap()
     ): List<MusicTrack> {
 
         val tracks =
@@ -228,6 +232,95 @@ object MusicScanner {
                             id
                         )
 
+                    val uriString =
+                        uri.toString()
+
+                    val cachedTrack =
+                        cachedTracksByUri[
+                            uriString
+                        ]
+
+                    val cachedArtworkStillExists =
+                        cachedTrack
+                            ?.albumArtPath
+                            ?.let { artworkPath ->
+                                when {
+                                    artworkPath.isBlank() ->
+                                        true
+
+                                    artworkPath.startsWith(
+                                        "content://"
+                                    ) ->
+                                        true
+
+                                    artworkPath.startsWith(
+                                        "http://"
+                                    ) ||
+                                            artworkPath.startsWith(
+                                                "https://"
+                                            ) ->
+                                        true
+
+                                    artworkPath.startsWith(
+                                        "file://"
+                                    ) -> {
+                                        File(
+                                            Uri.parse(
+                                                artworkPath
+                                            ).path.orEmpty()
+                                        ).exists()
+                                    }
+
+                                    else ->
+                                        File(
+                                            artworkPath
+                                        ).exists()
+                                }
+                            }
+                            ?: true
+
+                    val canReuseExpensiveMetadata =
+                        cachedTrack != null &&
+                                fileSizeBytes > 0L &&
+                                dateModifiedMillis > 0L &&
+                                cachedTrack.fileSizeBytes ==
+                                fileSizeBytes &&
+                                cachedTrack.dateModifiedMillis ==
+                                dateModifiedMillis &&
+                                cachedArtworkStillExists
+
+                    if (
+                        canReuseExpensiveMetadata
+                    ) {
+                        tracks.add(
+                            cachedTrack!!.copy(
+                                id = id,
+                                title = title,
+                                artist = artist,
+                                albumArtist =
+                                    albumArtist,
+                                album = album,
+                                duration = duration,
+                                uri = uriString,
+                                albumId = albumId,
+                                trackNumber =
+                                    trackNumber,
+                                releaseDate =
+                                    releaseDate,
+                                releaseYear =
+                                    releaseYear,
+                                fileSizeBytes =
+                                    fileSizeBytes,
+                                dateAddedMillis =
+                                    dateAddedMillis,
+                                dateModifiedMillis =
+                                    dateModifiedMillis
+                            )
+                        )
+
+                        continue
+                    }
+
                     val audioMetadata =
                         AudioMetadataReader.read(
                             context = context,
@@ -243,13 +336,9 @@ object MusicScanner {
                         extractEmbeddedAlbumArt(
                             context = context,
                             audioUriString = uri.toString(),
-                            trackId = id
+                            trackId = id,
+                            albumId = albumId
                         )
-
-                    Log.d(
-                        "AuralArc",
-                        "Track art result: title=$title path=$albumArtPath"
-                    )
 
                     tracks.add(
                         MusicTrack(

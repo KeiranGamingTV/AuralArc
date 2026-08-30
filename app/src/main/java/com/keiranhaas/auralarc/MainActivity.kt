@@ -1,6 +1,5 @@
 package com.keiranhaas.auralarc
 
-import android.Manifest
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -8,7 +7,6 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import com.keiranhaas.auralarc.navigation.AuralArcNavigation
 import com.keiranhaas.auralarc.player.PlayerManager
 import com.keiranhaas.auralarc.player.QueueManager
@@ -17,13 +15,15 @@ import com.keiranhaas.auralarc.storage.FolderPreferences
 import com.keiranhaas.auralarc.ui.theme.AuralArcTheme
 import com.keiranhaas.auralarc.utils.createExternalAudioTrack
 import com.keiranhaas.auralarc.utils.getAudioUriFromIntent
-import android.content.pm.PackageManager
 import com.keiranhaas.auralarc.storage.LyricsPreferences
 import com.keiranhaas.auralarc.ui.LibraryRuntimeState
 import android.content.res.Configuration
 import android.graphics.Color
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import com.keiranhaas.auralarc.storage.SetupPreferences
+import com.keiranhaas.auralarc.ui.setup.FirstRunSetupScreen
+import com.keiranhaas.auralarc.utils.ArtworkBitmapLoader
 
 class MainActivity : ComponentActivity() {
 
@@ -32,46 +32,6 @@ class MainActivity : ComponentActivity() {
 
     private var pendingIntentToHandle: Intent? =
         null
-
-    private val permission =
-        if (
-            Build.VERSION.SDK_INT >= 33
-        ) {
-            Manifest.permission.READ_MEDIA_AUDIO
-        } else {
-            Manifest.permission.READ_EXTERNAL_STORAGE
-        }
-
-    private val requestPermission =
-        registerForActivityResult(
-            ActivityResultContracts.RequestPermission()
-        ) { granted ->
-            Log.d(
-                "AuralArc",
-                "Permission granted = $granted"
-            )
-
-            Log.d(
-                "AuralArc",
-                "checkSelfPermission = ${checkSelfPermission(permission)}"
-            )
-
-            showApp()
-
-            handleIncomingAudioIntent(
-                pendingIntentToHandle ?: intent
-            )
-        }
-
-    private val requestNotificationPermission =
-        registerForActivityResult(
-            ActivityResultContracts.RequestPermission()
-        ) { granted ->
-            Log.d(
-                "AuralArc",
-                "Notification permission granted = $granted"
-            )
-        }
 
     override fun onCreate(
         savedInstanceState: Bundle?
@@ -84,8 +44,6 @@ class MainActivity : ComponentActivity() {
 
         preferHighRefreshRate()
 
-        requestNotificationPermissionIfNeeded()
-
         pendingIntentToHandle =
             intent
 
@@ -94,20 +52,37 @@ class MainActivity : ComponentActivity() {
                 this
             )
 
-        Log.d(
-            "AuralArc",
-            "Requesting permission: $permission"
-        )
+        if (
+            SetupPreferences.shouldShowSetup(
+                this
+            )
+        ) {
+            showFirstRunSetup()
+        } else {
+            showApp()
 
-        requestPermission.launch(
-            permission
-        )
+            handleIncomingAudioIntent(
+                pendingIntentToHandle
+            )
+        }
     }
 
     override fun onResume() {
         super.onResume()
 
         configureForegroundWindow()
+    }
+
+    override fun onStop() {
+        /*
+         * onStop is one of the last reliable Activity lifecycle
+         * callbacks before Android may reclaim the UI process.
+         *
+         * Perform one synchronous position save here.
+         */
+        PlayerManager.saveCurrentSessionImmediately()
+
+        super.onStop()
     }
 
     override fun onConfigurationChanged(
@@ -134,11 +109,36 @@ class MainActivity : ComponentActivity() {
         pendingIntentToHandle =
             intent
 
-        showApp()
+        if (
+            appContentShown ||
+            !SetupPreferences.shouldShowSetup(
+                this
+            )
+        ) {
+            showApp()
 
-        handleIncomingAudioIntent(
-            intent
+            handleIncomingAudioIntent(
+                intent
+            )
+        }
+    }
+
+    override fun onTrimMemory(
+        level: Int
+    ) {
+        ArtworkBitmapLoader.trimMemory(
+            level
         )
+
+        super.onTrimMemory(
+            level
+        )
+    }
+
+    override fun onLowMemory() {
+        ArtworkBitmapLoader.clearMemory()
+
+        super.onLowMemory()
     }
 
     private fun configureForegroundWindow() {
@@ -188,30 +188,24 @@ class MainActivity : ComponentActivity() {
             layoutParams
     }
 
-    private fun requestNotificationPermissionIfNeeded() {
-        if (
-            Build.VERSION.SDK_INT < 33
-        ) {
-            return
+    private fun showFirstRunSetup() {
+        setContent {
+            AuralArcTheme {
+                FirstRunSetupScreen(
+                    onFinished = {
+                        SetupPreferences.markSetupComplete(
+                            this@MainActivity
+                        )
+
+                        showApp()
+
+                        handleIncomingAudioIntent(
+                            pendingIntentToHandle
+                        )
+                    }
+                )
+            }
         }
-
-        val permissionName =
-            Manifest.permission.POST_NOTIFICATIONS
-
-        val granted =
-            checkSelfPermission(
-                permissionName
-            ) == PackageManager.PERMISSION_GRANTED
-
-        if (
-            granted
-        ) {
-            return
-        }
-
-        requestNotificationPermission.launch(
-            permissionName
-        )
     }
 
     private fun showApp() {

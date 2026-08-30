@@ -65,6 +65,9 @@ fun MusicLibraryScreen(
             items = tracks,
             key = { track ->
                 track.uri
+            },
+            contentType = {
+                "music_track"
             }
         ) { track ->
             MusicTrackRow(

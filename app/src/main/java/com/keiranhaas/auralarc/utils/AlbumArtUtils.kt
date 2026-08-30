@@ -1,8 +1,6 @@
 package com.keiranhaas.auralarc.utils
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.util.Log
@@ -12,7 +10,8 @@ import java.io.FileOutputStream
 fun extractEmbeddedAlbumArt(
     context: Context,
     audioUriString: String,
-    trackId: Long
+    trackId: Long,
+    albumId: Long = 0L
 ): String? {
     val artDirectory =
         File(
@@ -29,7 +28,13 @@ fun extractEmbeddedAlbumArt(
     val artFile =
         File(
             artDirectory,
-            "track_$trackId.jpg"
+            if (
+                albumId > 0L
+            ) {
+                "album_$albumId.jpg"
+            } else {
+                "track_$trackId.jpg"
+            }
         )
 
     if (
@@ -75,31 +80,11 @@ fun extractEmbeddedAlbumArt(
                 return@use null
             }
 
-            val bitmap =
-                BitmapFactory.decodeByteArray(
-                    pictureBytes,
-                    0,
-                    pictureBytes.size
-                )
-
-            if (
-                bitmap == null
-            ) {
-                Log.d(
-                    "AuralArc",
-                    "Embedded album art bytes could not be decoded for $audioUriString"
-                )
-
-                return@use null
-            }
-
             FileOutputStream(
                 artFile
             ).use { outputStream ->
-                bitmap.compress(
-                    Bitmap.CompressFormat.JPEG,
-                    92,
-                    outputStream
+                outputStream.write(
+                    pictureBytes
                 )
             }
 
