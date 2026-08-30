@@ -35,6 +35,18 @@ fun QueueScreen(
     val listState =
         rememberLazyListState()
 
+    var showSaveQueueDialog by remember {
+        mutableStateOf(
+            false
+        )
+    }
+
+    var showClearConfirm by remember {
+        mutableStateOf(
+            false
+        )
+    }
+
     val queueRevision =
         QueueManager.revision.value
 
