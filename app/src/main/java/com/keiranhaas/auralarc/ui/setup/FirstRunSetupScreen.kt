@@ -41,6 +41,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import com.keiranhaas.auralarc.ui.AuralArcButton
+import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import com.keiranhaas.auralarc.ui.theme.AuralArcContentTransition
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
 
@@ -144,7 +146,7 @@ fun FirstRunSetupScreen(
                 )
             )
 
-            Card(
+            AuralArcCard(
                 modifier = Modifier
                     .fillMaxWidth(),
                 shape = AuralArcStyle.CardShape,
@@ -276,7 +278,7 @@ private fun SetupStepContent(
             ),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Card(
+        AuralArcCard(
             modifier = Modifier.size(
                 82.dp
             ),
@@ -332,7 +334,7 @@ private fun SetupStepContent(
             )
         )
 
-        Button(
+        AuralArcButton(
             onClick = onButtonClick,
             modifier = Modifier
                 .fillMaxWidth()
@@ -340,10 +342,10 @@ private fun SetupStepContent(
                     52.dp
                 ),
             shape = AuralArcStyle.SmallShape,
-            colors = ButtonDefaults.buttonColors(
-                backgroundColor = AuralArcStyle.Purple,
-                contentColor = AuralArcStyle.TextPrimary
-            )
+            containerColor =
+                AuralArcStyle.Purple,
+            contentColor =
+                AuralArcStyle.TextPrimary
         ) {
             Text(
                 text = buttonText,

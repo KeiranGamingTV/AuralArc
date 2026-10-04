@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.keiranhaas.auralarc.navigation.Screen
 import com.keiranhaas.auralarc.player.PlayerManager
+import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
 
 @Composable
@@ -37,7 +38,7 @@ fun PersistentMiniPlayerCard(
         return
     }
 
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(

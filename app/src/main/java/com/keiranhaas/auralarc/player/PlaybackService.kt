@@ -4,13 +4,12 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.app.Service
+import androidx.media3.session.MediaSessionService
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Build
 import android.os.Bundle
-import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
@@ -39,7 +38,8 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 @UnstableApi
-class PlaybackService : Service() {
+class PlaybackService :
+    MediaSessionService() {
 
     companion object {
         private const val CHANNEL_ID =
@@ -379,6 +379,13 @@ class PlaybackService : Service() {
                 .buildAsync()
     }
 
+    override fun onGetSession(
+        controllerInfo:
+        MediaSession.ControllerInfo
+    ): MediaSession? {
+        return mediaSession
+    }
+
     override fun onCreate() {
         super.onCreate()
 
@@ -589,12 +596,6 @@ class PlaybackService : Service() {
         }
 
         super.onDestroy()
-    }
-
-    override fun onBind(
-        intent: Intent?
-    ): IBinder? {
-        return null
     }
 
     override fun onTrimMemory(

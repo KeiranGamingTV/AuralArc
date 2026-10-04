@@ -15,6 +15,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.keiranhaas.auralarc.storage.LibraryCleanupPreferences
+import com.keiranhaas.auralarc.ui.components.AuralArcCard
+import com.keiranhaas.auralarc.ui.components.AuralArcSwitch
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
 
 @Composable
@@ -158,7 +160,7 @@ fun LibraryCleanupSettingsScreen(
                 }
             )
 
-            Card(
+            AuralArcCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
@@ -247,7 +249,7 @@ private fun CleanupToggleCard(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
@@ -288,7 +290,7 @@ private fun CleanupToggleCard(
                 )
             }
 
-            Switch(
+            AuralArcSwitch(
                 checked = checked,
                 onCheckedChange = onCheckedChange
             )

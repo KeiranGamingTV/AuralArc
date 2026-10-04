@@ -54,11 +54,12 @@ object LrcLyricsFinder {
         context: Context,
         track: MusicTrack
     ): EmbeddedLyricsResult? {
-        return findSidecarLyrics(
+        return findLyricsForTrackQuick(
             context = context,
-            track = track,
-            extension = "lrc",
-            lyricsType = EmbeddedLyricsType.SYNCED
+            track = track
+        ) ?: findLyricsForTrackIndexed(
+            context = context,
+            track = track
         )
     }
 
@@ -66,15 +67,81 @@ object LrcLyricsFinder {
         context: Context,
         track: MusicTrack
     ): EmbeddedLyricsResult? {
-        return findSidecarLyrics(
+        return findDuetLyricsForTrackQuick(
             context = context,
-            track = track,
-            extension = "dlrc",
-            lyricsType = EmbeddedLyricsType.DUET_SYNCED
+            track = track
+        ) ?: findDuetLyricsForTrackIndexed(
+            context = context,
+            track = track
         )
     }
 
-    private fun findSidecarLyrics(
+    /*
+     * QUICK LOOKUPS
+     *
+     * These only inspect the folder that actually contains the audio file.
+     * They never recursively walk the user's entire music library.
+     */
+    fun findLyricsForTrackQuick(
+        context: Context,
+        track: MusicTrack
+    ): EmbeddedLyricsResult? {
+        return findSidecarLyricsQuick(
+            context = context,
+            track = track,
+            extension = "lrc",
+            lyricsType =
+                EmbeddedLyricsType.SYNCED
+        )
+    }
+
+    fun findDuetLyricsForTrackQuick(
+        context: Context,
+        track: MusicTrack
+    ): EmbeddedLyricsResult? {
+        return findSidecarLyricsQuick(
+            context = context,
+            track = track,
+            extension = "dlrc",
+            lyricsType =
+                EmbeddedLyricsType.DUET_SYNCED
+        )
+    }
+
+    /*
+     * DEEP / INDEXED LOOKUPS
+     *
+     * These are intentionally separate because they may have to inspect
+     * configured local/SAF folders and should never block a lyric source
+     * that can be returned immediately.
+     */
+    fun findLyricsForTrackIndexed(
+        context: Context,
+        track: MusicTrack
+    ): EmbeddedLyricsResult? {
+        return findSidecarLyricsIndexed(
+            context = context,
+            track = track,
+            extension = "lrc",
+            lyricsType =
+                EmbeddedLyricsType.SYNCED
+        )
+    }
+
+    fun findDuetLyricsForTrackIndexed(
+        context: Context,
+        track: MusicTrack
+    ): EmbeddedLyricsResult? {
+        return findSidecarLyricsIndexed(
+            context = context,
+            track = track,
+            extension = "dlrc",
+            lyricsType =
+                EmbeddedLyricsType.DUET_SYNCED
+        )
+    }
+
+    private fun findSidecarLyricsQuick(
         context: Context,
         track: MusicTrack,
         extension: String,
@@ -92,11 +159,15 @@ object LrcLyricsFinder {
             return null
         }
 
+        /*
+         * SAF/document-provider tracks first.
+         */
         val sameDocumentFolderResult =
             findInSameDocumentFolderAsAudioFile(
                 context = context,
                 track = track,
-                normalizedCandidateNames = candidateNames,
+                normalizedCandidateNames =
+                    candidateNames,
                 extension = extension,
                 lyricsType = lyricsType
             )
@@ -107,30 +178,43 @@ object LrcLyricsFinder {
             return sameDocumentFolderResult
         }
 
-        val sameFolderResult =
-            findInSameFolderAsAudioFile(
+        /*
+         * Normal filesystem/MediaStore tracks.
+         */
+        return findInSameFolderAsAudioFile(
+            context = context,
+            track = track,
+            normalizedCandidateNames =
+                candidateNames,
+            extension = extension,
+            lyricsType = lyricsType
+        )
+    }
+
+    private fun findSidecarLyricsIndexed(
+        context: Context,
+        track: MusicTrack,
+        extension: String,
+        lyricsType: EmbeddedLyricsType
+    ): EmbeddedLyricsResult? {
+        val candidateNames =
+            buildCandidateNames(
                 context = context,
-                track = track,
-                normalizedCandidateNames = candidateNames,
-                extension = extension,
-                lyricsType = lyricsType
+                track = track
             )
 
         if (
-            sameFolderResult != null
+            candidateNames.isEmpty()
         ) {
-            return sameFolderResult
+            return null
         }
 
         return findInIndexedFolders(
-            context =
-                context,
+            context = context,
             normalizedCandidateNames =
                 candidateNames,
-            extension =
-                extension,
-            lyricsType =
-                lyricsType
+            extension = extension,
+            lyricsType = lyricsType
         )
     }
 
@@ -222,15 +306,16 @@ object LrcLyricsFinder {
             linkedSetOf<String>()
 
         /*
-         * Add the title stored in MusicTrack. Depending on the
-         * audio file's metadata, this may be either the real song
-         * title or the full filename.
+         * Normal song title.
          */
         addCandidateNameVariants(
             destination = names,
             rawName = track.title
         )
 
+        /*
+         * Actual audio filename.
+         */
         val audioFileName =
             getAudioFileBaseName(
                 context = context,
@@ -243,6 +328,36 @@ object LrcLyricsFinder {
             addCandidateNameVariants(
                 destination = names,
                 rawName = audioFileName
+            )
+        }
+
+        /*
+         * Common sidecar naming conventions:
+         *
+         * Artist - Title.lrc
+         * Title - Artist.lrc
+         * Artist_Title.lrc
+         */
+        if (
+            track.artist.isNotBlank() &&
+            track.title.isNotBlank()
+        ) {
+            addCandidateNameVariants(
+                destination = names,
+                rawName =
+                    "${track.artist} - ${track.title}"
+            )
+
+            addCandidateNameVariants(
+                destination = names,
+                rawName =
+                    "${track.title} - ${track.artist}"
+            )
+
+            addCandidateNameVariants(
+                destination = names,
+                rawName =
+                    "${track.artist}_${track.title}"
             )
         }
 
@@ -802,12 +917,33 @@ object LrcLyricsFinder {
                 '’',
                 '\''
             )
+            .replace(
+                '‘',
+                '\''
+            )
+            .replace(
+                '“',
+                '"'
+            )
+            .replace(
+                '”',
+                '"'
+            )
             .trim()
             .lowercase()
             .replace(
-                whitespaceRegex,
+                Regex(
+                    """[._–—]+"""
+                ),
                 " "
             )
+            .replace(
+                Regex(
+                    """\s+"""
+                ),
+                " "
+            )
+            .trim()
     }
 
     private fun String.removeSuffixIgnoreCase(

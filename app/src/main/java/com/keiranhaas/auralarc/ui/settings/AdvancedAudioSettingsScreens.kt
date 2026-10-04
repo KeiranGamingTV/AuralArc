@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
+import androidx.compose.material3.DropdownMenuItem as Material3DropdownMenuItem
+import androidx.compose.material3.DropdownMenu as Material3DropdownMenu
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
@@ -19,6 +21,9 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.keiranhaas.auralarc.navigation.Screen
 import com.keiranhaas.auralarc.storage.AdvancedAudioPreferences
+import com.keiranhaas.auralarc.ui.components.AuralArcCard
+import com.keiranhaas.auralarc.ui.components.AuralArcSlider
+import com.keiranhaas.auralarc.ui.components.AuralArcSwitch
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
 import kotlin.math.roundToInt
 
@@ -354,7 +359,7 @@ private fun AudioMenuRow(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     onClick: () -> Unit
 ) {
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
@@ -417,16 +422,15 @@ fun SwitchSetting(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
                 horizontal = 12.dp,
                 vertical = 7.dp
             ),
-        shape = AuralArcStyle.CardShape,
-        backgroundColor = AuralArcStyle.Surface,
-        elevation = 8.dp
+        backgroundColor =
+            AuralArcStyle.Surface
     ) {
         Row(
             modifier = Modifier.padding(
@@ -451,9 +455,21 @@ fun SwitchSetting(
                     style = MaterialTheme.typography.body2,
                     color = AuralArcStyle.TextMuted
                 )
+
+                Spacer(
+                    modifier = Modifier.height(
+                        8.dp
+                    )
+                )
+
+                Text(
+                    text = "Select an option",
+                    style = MaterialTheme.typography.caption,
+                    color = AuralArcStyle.TextMuted
+                )
             }
 
-            Switch(
+            AuralArcSwitch(
                 checked = checked,
                 onCheckedChange = onCheckedChange
             )
@@ -469,16 +485,15 @@ private fun SliderSetting(
     valueRange: ClosedFloatingPointRange<Float>,
     onValueChange: (Float) -> Unit
 ) {
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
                 horizontal = 12.dp,
                 vertical = 7.dp
             ),
-        shape = AuralArcStyle.CardShape,
-        backgroundColor = AuralArcStyle.Surface,
-        elevation = 8.dp
+        backgroundColor =
+            AuralArcStyle.Surface
     ) {
         Column(
             modifier = Modifier.padding(
@@ -498,7 +513,19 @@ private fun SliderSetting(
                 color = AuralArcStyle.TextMuted
             )
 
-            Slider(
+            Spacer(
+                modifier = Modifier.height(
+                    8.dp
+                )
+            )
+
+            Text(
+                text = "Select an option",
+                style = MaterialTheme.typography.caption,
+                color = AuralArcStyle.TextMuted
+            )
+
+            AuralArcSlider(
                 value = value,
                 onValueChange = onValueChange,
                 valueRange = valueRange
@@ -512,16 +539,15 @@ private fun AudioInfoNotice(
     title: String,
     message: String
 ) {
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
                 horizontal = 12.dp,
                 vertical = 7.dp
             ),
-        shape = AuralArcStyle.CardShape,
-        backgroundColor = AuralArcStyle.Surface,
-        elevation = 8.dp
+        backgroundColor =
+            AuralArcStyle.Surface
     ) {
         Column(
             modifier = Modifier.padding(

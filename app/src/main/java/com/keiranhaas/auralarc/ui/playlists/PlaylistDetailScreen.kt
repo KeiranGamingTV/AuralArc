@@ -38,6 +38,7 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.lazy.rememberLazyListState
 import com.keiranhaas.auralarc.storage.PlaylistArtworkStore
+import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import kotlinx.coroutines.launch
 
 @Composable
@@ -523,7 +524,7 @@ private fun PlaylistDetailHeader(
             "$trackCount songs • $totalDuration"
         }
 
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
@@ -906,7 +907,7 @@ private fun PlaylistTrackRow(
         )
     }
 
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(

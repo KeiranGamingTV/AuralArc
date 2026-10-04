@@ -30,6 +30,7 @@ data class TrackListeningStats(
     val trackUri: String,
     val title: String,
     val artist: String,
+    val albumArtist: String,
     val album: String,
     val genre: String,
     val playCount: Int,
@@ -46,6 +47,7 @@ data class DailyTrackListeningStats(
     val trackUri: String,
     val title: String,
     val artist: String,
+    val albumArtist: String,
     val album: String,
     val genre: String,
     val playCount: Int,
@@ -165,9 +167,9 @@ object ListeningStatsStore {
             track = track,
             delta = StatDelta(
                 listeningMillis =
-                deltaMillis.coerceAtMost(
-                    30_000L
-                )
+                    deltaMillis.coerceAtMost(
+                        30_000L
+                    )
             )
         )
     }
@@ -193,20 +195,10 @@ object ListeningStatsStore {
             context = context,
             track = track,
             delta = StatDelta(
-                playCount =
-                    playCount,
-                completedCount =
-                    completedCount,
-                skipCount =
-                    skipCount,
-                listeningMillis =
-                    listeningMillis
-                        .coerceAtLeast(
-                            0L
-                        )
-                        .coerceAtMost(
-                            30_000L
-                        )
+                playCount = playCount.coerceAtLeast(0),
+                completedCount = completedCount.coerceAtLeast(0),
+                skipCount = skipCount.coerceAtLeast(0),
+                listeningMillis = listeningMillis.coerceAtLeast(0L)
             )
         )
     }
@@ -439,8 +431,21 @@ object ListeningStatsStore {
 
     fun getSummary(
         context: Context,
-        range: ListeningStatsRange
+        range: ListeningStatsRange,
+        tracks: List<MusicTrack> = emptyList()
     ): ListeningStatsSummary {
+        val tracksByKey =
+            tracks.associateBy { track ->
+                keyForTrack(
+                    track.uri
+                )
+            }
+
+        val tracksByUri =
+            tracks.associateBy { track ->
+                track.uri
+            }
+
         val stats =
             when (
                 range
@@ -472,55 +477,73 @@ object ListeningStatsStore {
         return ListeningStatsSummary(
             range = range,
             totalListeningMillis =
-            totalListeningMillis,
+                totalListeningMillis,
             totalPlays =
-            stats.sumOf { stat ->
-                stat.playCount
-            },
+                stats.sumOf { stat ->
+                    stat.playCount
+                },
             totalCompleted =
-            stats.sumOf { stat ->
-                stat.completedCount
-            },
+                stats.sumOf { stat ->
+                    stat.completedCount
+                },
             totalSkips =
-            stats.sumOf { stat ->
-                stat.skipCount
-            },
+                stats.sumOf { stat ->
+                    stat.skipCount
+                },
             uniqueTracks =
-            stats.size,
+                stats.size,
             topTracks =
-            stats
-                .sortedWith(
-                    compareByDescending<TrackListeningStats> { stat ->
-                        stat.playCount
-                    }.thenByDescending { stat ->
-                        stat.listeningMillis
-                    }
-                )
-                .take(
-                    5
-                ),
+                stats
+                    .sortedWith(
+                        compareByDescending<TrackListeningStats> { stat ->
+                            stat.playCount
+                        }.thenByDescending { stat ->
+                            stat.listeningMillis
+                        }
+                    )
+                    .take(
+                        5
+                    ),
             topArtists =
-            groupStats(
-                stats
-            ) { stat ->
-                stat.artist.ifBlank {
-                    "Unknown Artist"
-                }
-            },
+                groupStats(
+                    stats
+                ) { stat ->
+                    val currentTrack =
+                        tracksByKey[stat.trackKey]
+                            ?: tracksByUri[stat.trackUri]
+
+                    currentTrack
+                        ?.albumArtist
+                        ?.trim()
+                        ?.takeIf { artist ->
+                            artist.isNotBlank()
+                        }
+                        ?: stat.albumArtist
+                            .trim()
+                            .takeIf { artist ->
+                                artist.isNotBlank()
+                            }
+                        ?: stat.artist
+                            .trim()
+                            .takeIf { artist ->
+                                artist.isNotBlank()
+                            }
+                        ?: "Unknown Artist"
+                },
             topAlbums =
-            groupStats(
-                stats
-            ) { stat ->
-                stat.album.ifBlank {
-                    "Unknown Album"
-                }
-            },
+                groupStats(
+                    stats
+                ) { stat ->
+                    stat.album.ifBlank {
+                        "Unknown Album"
+                    }
+                },
             genres =
-            buildGenreStats(
-                stats = stats,
-                totalListeningMillis =
-                totalListeningMillis
-            )
+                buildGenreStats(
+                    stats = stats,
+                    totalListeningMillis =
+                        totalListeningMillis
+                )
         )
     }
 
@@ -571,17 +594,17 @@ object ListeningStatsStore {
         lifetime[trackKey] =
             oldLifetime.copy(
                 playCount =
-                oldLifetime.playCount +
-                        delta.playCount,
+                    oldLifetime.playCount +
+                            delta.playCount,
                 completedCount =
-                oldLifetime.completedCount +
-                        delta.completedCount,
+                    oldLifetime.completedCount +
+                            delta.completedCount,
                 skipCount =
-                oldLifetime.skipCount +
-                        delta.skipCount,
+                    oldLifetime.skipCount +
+                            delta.skipCount,
                 listeningMillis =
-                oldLifetime.listeningMillis +
-                        delta.listeningMillis,
+                    oldLifetime.listeningMillis +
+                            delta.listeningMillis,
                 lastPlayedAt = now
             )
 
@@ -605,17 +628,17 @@ object ListeningStatsStore {
         daily[trackKey] =
             oldDaily.copy(
                 playCount =
-                oldDaily.playCount +
-                        delta.playCount,
+                    oldDaily.playCount +
+                            delta.playCount,
                 completedCount =
-                oldDaily.completedCount +
-                        delta.completedCount,
+                    oldDaily.completedCount +
+                            delta.completedCount,
                 skipCount =
-                oldDaily.skipCount +
-                        delta.skipCount,
+                    oldDaily.skipCount +
+                            delta.skipCount,
                 listeningMillis =
-                oldDaily.listeningMillis +
-                        delta.listeningMillis
+                    oldDaily.listeningMillis +
+                            delta.listeningMillis
             )
 
         prefs.edit()
@@ -646,6 +669,7 @@ object ListeningStatsStore {
             trackUri = track.uri,
             title = track.title,
             artist = track.artist,
+            albumArtist = track.albumArtist,
             album = track.album,
             genre = normalizeGenre(
                 track.genre
@@ -666,11 +690,12 @@ object ListeningStatsStore {
     ): DailyTrackListeningStats {
         return DailyTrackListeningStats(
             dayStartMillis =
-            dayStartMillis,
+                dayStartMillis,
             trackKey = trackKey,
             trackUri = track.uri,
             title = track.title,
             artist = track.artist,
+            albumArtist = track.albumArtist,
             album = track.album,
             genre = normalizeGenre(
                 track.genre
@@ -693,16 +718,21 @@ object ListeningStatsStore {
             artist = track.artist.ifBlank {
                 artist
             },
+            albumArtist = track.albumArtist.ifBlank {
+                albumArtist.ifBlank {
+                    track.artist.ifBlank { artist }
+                }
+            },
             album = track.album.ifBlank {
                 album
             },
             genre =
-            track.genre
-                .trim()
-                .takeIf { value ->
-                    value.isNotBlank()
-                }
-                ?: genre
+                track.genre
+                    .trim()
+                    .takeIf { value ->
+                        value.isNotBlank()
+                    }
+                    ?: genre
         )
     }
 
@@ -717,16 +747,21 @@ object ListeningStatsStore {
             artist = track.artist.ifBlank {
                 artist
             },
+            albumArtist = track.albumArtist.ifBlank {
+                albumArtist.ifBlank {
+                    track.artist.ifBlank { artist }
+                }
+            },
             album = track.album.ifBlank {
                 album
             },
             genre =
-            track.genre
-                .trim()
-                .takeIf { value ->
-                    value.isNotBlank()
-                }
-                ?: genre
+                track.genre
+                    .trim()
+                    .takeIf { value ->
+                        value.isNotBlank()
+                    }
+                    ?: genre
         )
     }
 
@@ -776,7 +811,7 @@ object ListeningStatsStore {
                 loadDailyStatsForDay(
                     prefs = prefs,
                     dayStartMillis =
-                    calendar.timeInMillis
+                        calendar.timeInMillis
                 ).values
             )
 
@@ -814,32 +849,33 @@ object ListeningStatsStore {
                     trackUri = latest.trackUri,
                     title = latest.title,
                     artist = latest.artist,
+                    albumArtist = latest.albumArtist,
                     album = latest.album,
                     genre = latest.genre,
                     playCount =
-                    values.sumOf { stat ->
-                        stat.playCount
-                    },
+                        values.sumOf { stat ->
+                            stat.playCount
+                        },
                     completedCount =
-                    values.sumOf { stat ->
-                        stat.completedCount
-                    },
+                        values.sumOf { stat ->
+                            stat.completedCount
+                        },
                     skipCount =
-                    values.sumOf { stat ->
-                        stat.skipCount
-                    },
+                        values.sumOf { stat ->
+                            stat.skipCount
+                        },
                     listeningMillis =
-                    values.sumOf { stat ->
-                        stat.listeningMillis
-                    },
+                        values.sumOf { stat ->
+                            stat.listeningMillis
+                        },
                     firstPlayedAt =
-                    values.minOf { stat ->
-                        stat.dayStartMillis
-                    },
+                        values.minOf { stat ->
+                            stat.dayStartMillis
+                        },
                     lastPlayedAt =
-                    values.maxOf { stat ->
-                        stat.dayStartMillis
-                    }
+                        values.maxOf { stat ->
+                            stat.dayStartMillis
+                        }
                 )
             }
     }
@@ -858,13 +894,13 @@ object ListeningStatsStore {
                 GroupListeningStats(
                     name = entry.key,
                     playCount =
-                    entry.value.sumOf { stat ->
-                        stat.playCount
-                    },
+                        entry.value.sumOf { stat ->
+                            stat.playCount
+                        },
                     listeningMillis =
-                    entry.value.sumOf { stat ->
-                        stat.listeningMillis
-                    }
+                        entry.value.sumOf { stat ->
+                            stat.listeningMillis
+                        }
                 )
             }
             .sortedWith(
@@ -907,11 +943,11 @@ object ListeningStatsStore {
                 GenreListeningStats(
                     name = entry.key,
                     listeningMillis =
-                    genreMillis,
+                        genreMillis,
                     percentage =
-                    genreMillis.toFloat() /
-                            totalListeningMillis.toFloat() *
-                            100f
+                        genreMillis.toFloat() /
+                                totalListeningMillis.toFloat() *
+                                100f
                 )
             }
             .sortedByDescending { stat ->
@@ -1094,65 +1130,73 @@ object ListeningStatsStore {
                 val stat =
                     TrackListeningStats(
                         trackKey =
-                        item.optString(
-                            "trackKey",
-                            ""
-                        ),
+                            item.optString(
+                                "trackKey",
+                                ""
+                            ),
                         trackUri =
-                        item.optString(
-                            "trackUri",
-                            ""
-                        ),
+                            item.optString(
+                                "trackUri",
+                                ""
+                            ),
                         title =
-                        item.optString(
-                            "title",
-                            "Unknown Title"
-                        ),
+                            item.optString(
+                                "title",
+                                "Unknown Title"
+                            ),
                         artist =
-                        item.optString(
-                            "artist",
-                            "Unknown Artist"
-                        ),
+                            item.optString(
+                                "artist",
+                                "Unknown Artist"
+                            ),
+                        albumArtist =
+                            item.optString(
+                                "albumArtist",
+                                item.optString(
+                                    "artist",
+                                    "Unknown Artist"
+                                )
+                            ),
                         album =
-                        item.optString(
-                            "album",
-                            "Unknown Album"
-                        ),
+                            item.optString(
+                                "album",
+                                "Unknown Album"
+                            ),
                         genre =
-                        item.optString(
-                            "genre",
-                            "Unknown"
-                        ),
+                            item.optString(
+                                "genre",
+                                "Unknown"
+                            ),
                         playCount =
-                        item.optInt(
-                            "playCount",
-                            0
-                        ),
+                            item.optInt(
+                                "playCount",
+                                0
+                            ),
                         completedCount =
-                        item.optInt(
-                            "completedCount",
-                            0
-                        ),
+                            item.optInt(
+                                "completedCount",
+                                0
+                            ),
                         skipCount =
-                        item.optInt(
-                            "skipCount",
-                            0
-                        ),
+                            item.optInt(
+                                "skipCount",
+                                0
+                            ),
                         listeningMillis =
-                        item.optLong(
-                            "listeningMillis",
-                            0L
-                        ),
+                            item.optLong(
+                                "listeningMillis",
+                                0L
+                            ),
                         firstPlayedAt =
-                        item.optLong(
-                            "firstPlayedAt",
-                            0L
-                        ),
+                            item.optLong(
+                                "firstPlayedAt",
+                                0L
+                            ),
                         lastPlayedAt =
-                        item.optLong(
-                            "lastPlayedAt",
-                            0L
-                        )
+                            item.optLong(
+                                "lastPlayedAt",
+                                0L
+                            )
                     )
 
                 if (
@@ -1201,57 +1245,65 @@ object ListeningStatsStore {
                 val stat =
                     DailyTrackListeningStats(
                         dayStartMillis =
-                        dayStartMillis,
+                            dayStartMillis,
                         trackKey =
-                        item.optString(
-                            "trackKey",
-                            ""
-                        ),
+                            item.optString(
+                                "trackKey",
+                                ""
+                            ),
                         trackUri =
-                        item.optString(
-                            "trackUri",
-                            ""
-                        ),
+                            item.optString(
+                                "trackUri",
+                                ""
+                            ),
                         title =
-                        item.optString(
-                            "title",
-                            "Unknown Title"
-                        ),
+                            item.optString(
+                                "title",
+                                "Unknown Title"
+                            ),
                         artist =
-                        item.optString(
-                            "artist",
-                            "Unknown Artist"
-                        ),
+                            item.optString(
+                                "artist",
+                                "Unknown Artist"
+                            ),
+                        albumArtist =
+                            item.optString(
+                                "albumArtist",
+                                item.optString(
+                                    "artist",
+                                    "Unknown Artist"
+                                )
+                            ),
                         album =
-                        item.optString(
-                            "album",
-                            "Unknown Album"
-                        ),
+                            item.optString(
+                                "album",
+                                "Unknown Album"
+                            ),
                         genre =
-                        item.optString(
-                            "genre",
-                            "Unknown"
-                        ),
+                            item.optString(
+                                "genre",
+                                "Unknown"
+                            ),
                         playCount =
-                        item.optInt(
-                            "playCount",
-                            0
-                        ),
+                            item.optInt(
+                                "playCount",
+                                0
+                            ),
                         completedCount =
-                        item.optInt(
-                            "completedCount",
-                            0
-                        ),
+                            item.optInt(
+                                "completedCount",
+                                0
+                            ),
                         skipCount =
-                        item.optInt(
-                            "skipCount",
-                            0
-                        ),
+                            item.optInt(
+                                "skipCount",
+                                0
+                            ),
                         listeningMillis =
-                        item.optLong(
-                            "listeningMillis",
-                            0L
-                        )
+                            item.optLong(
+                                "listeningMillis",
+                                0L
+                            )
                     )
 
                 if (
@@ -1309,6 +1361,10 @@ object ListeningStatsStore {
                     put(
                         "artist",
                         stat.artist
+                    )
+                    put(
+                        "albumArtist",
+                        stat.albumArtist
                     )
                     put(
                         "album",
@@ -1373,6 +1429,10 @@ object ListeningStatsStore {
                     put(
                         "artist",
                         stat.artist
+                    )
+                    put(
+                        "albumArtist",
+                        stat.albumArtist
                     )
                     put(
                         "album",

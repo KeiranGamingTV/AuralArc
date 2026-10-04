@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.keiranhaas.auralarc.storage.PickedFolderStore
+import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
 
 @Composable
@@ -228,7 +229,7 @@ private fun FolderUriCard(
     folderUri: String,
     onRemove: () -> Unit
 ) {
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(

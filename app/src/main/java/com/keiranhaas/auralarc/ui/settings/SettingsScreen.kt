@@ -45,6 +45,9 @@ import android.app.Activity
 import android.provider.DocumentsContract
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import com.keiranhaas.auralarc.ui.components.AuralArcCard
+import com.keiranhaas.auralarc.ui.components.AuralArcSlider
+import com.keiranhaas.auralarc.ui.components.AuralArcSwitch
 
 @Composable
 fun SettingsScreen(
@@ -78,7 +81,7 @@ fun SettingsScreen(
                     enabled = enabled
                 )
 
-                LyricsState.clearCache()
+                LyricsState.invalidateLyricsFileIndex()
             }
         )
 
@@ -154,7 +157,7 @@ fun LibraryFolderSettingsScreen(
         title = "Library Folders",
         navController = navController
     ) {
-        Card(
+        AuralArcCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
@@ -197,7 +200,7 @@ fun LibraryFolderSettingsScreen(
                     )
                 }
 
-                Button(
+                AuralArcButton(
                     onClick = {
                         FolderManager.folders =
                             FolderManager.allowedFolders.toMutableList()
@@ -207,10 +210,6 @@ fun LibraryFolderSettingsScreen(
                         .padding(
                             top = 14.dp
                         ),
-                    colors = ButtonDefaults.buttonColors(
-                        backgroundColor = AuralArcStyle.Surface,
-                        contentColor = AuralArcStyle.TextPrimary
-                    )
                 ) {
                     Icon(
                         imageVector = Icons.Default.Restore,
@@ -461,14 +460,15 @@ fun AboutSettingsScreen(
 
     val releaseNotes =
         listOf(
-            "Fixed the 'smooth' animations and make them more fluid.",
+            "Another major file overhaul.",
+            "Fixed the 'smooth' animations and made them more fluid.",
             "Fixed transitions between app elements.",
             "Added an initial setup page.",
-            "Added the import and export M3U capabilities back.",
+            "Added back the import and export M3U capabilities.",
             "Fixed Navidrome timing out and not loading large music libraries.",
             "Optimized Navidrome library loading.",
-            "Fixed queue visually jumping to the top again when a song is removed or moved around.",
-            "Fixed the app sometimes not saving position in the song when the app is closed.",
+            "Fixed queue visually jumping to the top when a song is removed or moved around.",
+            "Fixed the app sometimes not saving a song's position when the app is closed.",
             "Fixed app randomly crashing in the background after a small period of time.",
             "Optimized library loading.",
             "Optimized library scanning.",
@@ -478,7 +478,9 @@ fun AboutSettingsScreen(
             "Optimized background tasks.",
             "Optimized app cache size.",
             "Improved animations, animation speed, and animation jittering.",
-            "Improved app stability."
+            "Improved app stability.",
+            "Starting adding Material3 styling to the app.",
+            "Made AuralArc an externally discoverable music application (to use with KWGT, for example)."
         )
 
     SettingsMenuScaffold(
@@ -568,7 +570,7 @@ fun AboutSettingsScreen(
                 )
             )
 
-            Card(
+            AuralArcCard(
                 modifier = Modifier.fillMaxWidth(),
                 shape = AuralArcStyle.CardShape,
                 backgroundColor = AuralArcStyle.Surface,
@@ -866,7 +868,7 @@ private fun SmartShuffleSliderCard(
     level: Int,
     onLevelChange: (Int) -> Unit
 ) {
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
@@ -901,7 +903,7 @@ private fun SmartShuffleSliderCard(
                 )
             )
 
-            Slider(
+            AuralArcSlider(
                 value = level.toFloat(),
                 onValueChange = { value ->
                     onLevelChange(
@@ -974,7 +976,7 @@ private fun SettingsToggleCard(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
@@ -1015,7 +1017,7 @@ private fun SettingsToggleCard(
                 )
             }
 
-            Switch(
+            AuralArcSwitch(
                 checked = checked,
                 onCheckedChange = onCheckedChange
             )
@@ -1031,7 +1033,7 @@ private fun SettingsChoiceCard(
     options: List<Pair<String, String>>,
     onSelected: (String) -> Unit
 ) {
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
@@ -1216,7 +1218,7 @@ fun SettingsIconRow(
     icon: ImageVector,
     onClick: () -> Unit
 ) {
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(

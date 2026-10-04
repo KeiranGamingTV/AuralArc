@@ -9,6 +9,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
+import androidx.compose.material3.OutlinedTextField as Material3OutlinedTextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
@@ -70,6 +72,10 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.snap
 import com.keiranhaas.auralarc.ui.theme.rememberAuralArcMotionEnabled
 import com.keiranhaas.auralarc.storage.AppCacheMaintenance
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledTonalButton
+import com.keiranhaas.auralarc.ui.components.AuralArcCard
 
 private suspend fun loadTracksSafely(
     context: Context
@@ -933,6 +939,13 @@ fun MusicLibraryView(
     LaunchedEffect(
         librarySource
     ) {
+        /*
+         * The filesystem may have changed since the previous app session.
+         * Invalidate the lyric-file index before loading the library so
+         * newly-added .lrc/.dlrc files can be discovered.
+         */
+        LyricsState.invalidateLyricsFileIndex()
+
         restoreCachedLibrary(
             librarySource
         )
@@ -946,10 +959,15 @@ fun MusicLibraryView(
 
     LaunchedEffect(
         librarySource,
-        tracks.size
+        tracks
     ) {
         if (
-            tracks.isNotEmpty() &&
+            tracks.isEmpty()
+        ) {
+            return@LaunchedEffect
+        }
+
+        if (
             PlayerManager.canRestoreLastSession()
         ) {
             PlayerManager.restoreLastSession(
@@ -1397,7 +1415,7 @@ private fun ArtistAlbumsForArtistScreen(
                 album.albumName
             }
         ) { album ->
-            Card(
+            AuralArcCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
@@ -1924,12 +1942,20 @@ private fun LibraryTabContent(
                 libraryMode
             ) {
                 LibraryMode.SONGS -> {
-                    if (
-                        searchedTracks.size == 1
+                    val songCount =
+                        searchedTracks.size
+
+                    when (
+                        songCount
                     ) {
-                        "1 song"
-                    } else {
-                        "${searchedTracks.size} songs"
+                        0 ->
+                            "0 songs"
+
+                        1 ->
+                            "1 song"
+
+                        else ->
+                            "$songCount songs"
                     }
                 }
 
@@ -2121,6 +2147,7 @@ private fun LibraryTabContent(
 
                         MusicLibraryScreen(
                             tracks = albumTracks,
+                            showAddAlbumToPlaylist = true,
                             onOpenLyrics = { track ->
                                 NowPlayingLyricsRequest.request(
                                     track
@@ -2261,15 +2288,22 @@ private fun LibraryTabContent(
                     if (
                         selectedPlaylistId == null
                     ) {
-                        PlaylistBrowserScreen(
-                            allTracks = tracks,
-                            librarySource = librarySource,
-                            onPlaylistSelected = { playlistId ->
-                                onSelectedPlaylistChange(
-                                    playlistId
-                                )
-                            }
-                        )
+                        if (
+                            isLibraryLoading &&
+                            tracks.isEmpty()
+                        ) {
+                            PlaylistLoadingState()
+                        } else {
+                            PlaylistBrowserScreen(
+                                allTracks = tracks,
+                                librarySource = librarySource,
+                                onPlaylistSelected = { playlistId ->
+                                    onSelectedPlaylistChange(
+                                        playlistId
+                                    )
+                                }
+                            )
+                        }
                     } else {
                         PlaylistDetailScreen(
                             playlistId = selectedPlaylistId,
@@ -2357,6 +2391,113 @@ private fun LibraryTabContent(
                 }
             }
         )
+    }
+}
+
+@Composable
+private fun PlaylistLoadingState() {
+    Column(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(
+                    horizontal = 12.dp,
+                    vertical = 8.dp
+                ),
+        verticalArrangement =
+            Arrangement.spacedBy(
+                10.dp
+            )
+    ) {
+        repeat(4) {
+            AuralArcCard(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(
+                            96.dp
+                        ),
+                shape =
+                    AuralArcStyle.CardShape,
+                backgroundColor =
+                    AuralArcStyle.Surface,
+                elevation = 4.dp
+            ) {
+                Row(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(
+                                12.dp
+                            ),
+                    verticalAlignment =
+                        Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier =
+                            Modifier
+                                .size(
+                                    72.dp
+                                )
+                                .background(
+                                    AuralArcStyle.SurfaceBright,
+                                    AuralArcStyle.SmallShape
+                                )
+                    )
+
+                    Spacer(
+                        modifier =
+                            Modifier.width(
+                                12.dp
+                            )
+                    )
+
+                    Column(
+                        modifier =
+                            Modifier.weight(
+                                1f
+                            )
+                    ) {
+                        Box(
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth(
+                                        0.65f
+                                    )
+                                    .height(
+                                        18.dp
+                                    )
+                                    .background(
+                                        AuralArcStyle.SurfaceBright,
+                                        AuralArcStyle.SmallShape
+                                    )
+                        )
+
+                        Spacer(
+                            modifier =
+                                Modifier.height(
+                                    8.dp
+                                )
+                        )
+
+                        Box(
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth(
+                                        0.4f
+                                    )
+                                    .height(
+                                        14.dp
+                                    )
+                                    .background(
+                                        AuralArcStyle.SurfaceBright,
+                                        AuralArcStyle.SmallShape
+                                    )
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -2485,7 +2626,7 @@ private fun HomeTrackCard(
     modifier: Modifier,
     onClick: () -> Unit
 ) {
-    Card(
+    AuralArcCard(
         modifier = modifier
             .padding(
                 5.dp
@@ -2547,7 +2688,7 @@ private fun HomeRecentlyListenedCard(
     track: MusicTrack,
     onClick: () -> Unit
 ) {
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .width(
                 170.dp
@@ -2613,7 +2754,7 @@ private fun HomeWideTrackCard(
     track: MusicTrack,
     onClick: () -> Unit
 ) {
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
@@ -2804,7 +2945,7 @@ private fun LibraryCategorySelector(
                     }
             )
 
-            Card(
+            AuralArcCard(
                 modifier = Modifier
                     .weight(
                         itemWeight
@@ -3053,62 +3194,47 @@ private fun FilterChoiceButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    FilledTonalButton(
+        onClick = onClick,
         modifier = modifier
             .heightIn(
                 min = 42.dp
+            ),
+        shape = RoundedCornerShape(
+            14.dp
+        ),
+        colors =
+            ButtonDefaults.filledTonalButtonColors(
+                containerColor =
+                    if (selected) {
+                        AuralArcStyle.PurpleDark
+                    } else {
+                        AuralArcStyle.Surface
+                    },
+                contentColor =
+                    if (selected) {
+                        AuralArcStyle.TextPrimary
+                    } else {
+                        AuralArcStyle.TextMuted
+                    }
+            ),
+        contentPadding =
+            PaddingValues(
+                horizontal = 8.dp,
+                vertical = 10.dp
             )
-            .auralArcClickable {
-                onClick()
-            },
-        shape = AuralArcStyle.SmallShape,
-        backgroundColor =
-        if (
-            selected
-        ) {
-            AuralArcStyle.PurpleDark
-        } else {
-            AuralArcStyle.Surface
-        },
-        elevation =
-        if (
-            selected
-        ) {
-            6.dp
-        } else {
-            0.dp
-        }
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    horizontal = 8.dp,
-                    vertical = 10.dp
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = text,
-                color =
-                if (
-                    selected
-                ) {
-                    AuralArcStyle.TextPrimary
-                } else {
-                    AuralArcStyle.TextMuted
-                },
-                style = MaterialTheme.typography.caption,
-                fontWeight =
-                if (
-                    selected
-                ) {
+        Text(
+            text = text,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            fontWeight =
+                if (selected) {
                     FontWeight.Bold
                 } else {
                     FontWeight.Normal
                 }
-            )
-        }
+        )
     }
 }
 
@@ -3320,7 +3446,7 @@ private fun LibrarySearchBar(
     val motionEnabled =
         rememberAuralArcMotionEnabled()
 
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
@@ -3354,17 +3480,37 @@ private fun LibrarySearchBar(
                 )
             )
 
-            OutlinedTextField(
+            Material3OutlinedTextField(
                 value = query,
                 onValueChange = onQueryChange,
-                placeholder = {
+                label = {
                     Text(
-                        text = "Songs, artists, or albums"
+                        text = "Search songs, artists, albums"
                     )
                 },
                 singleLine = true,
                 modifier = Modifier.weight(
                     1f
+                ),
+                colors = TextFieldDefaults.colors(
+                    focusedTextColor =
+                        AuralArcStyle.TextPrimary,
+                    unfocusedTextColor =
+                        AuralArcStyle.TextPrimary,
+                    focusedContainerColor =
+                        AuralArcStyle.Surface,
+                    unfocusedContainerColor =
+                        AuralArcStyle.Surface,
+                    focusedLabelColor =
+                        AuralArcStyle.PurpleBright,
+                    unfocusedLabelColor =
+                        AuralArcStyle.TextMuted,
+                    focusedIndicatorColor =
+                        AuralArcStyle.PurpleBright,
+                    unfocusedIndicatorColor =
+                        AuralArcStyle.TextMuted,
+                    cursorColor =
+                        AuralArcStyle.PurpleBright
                 )
             )
 
@@ -3539,7 +3685,7 @@ private fun MainBottomBar(
                 }
             }
 
-            Card(
+            AuralArcCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
@@ -3753,7 +3899,7 @@ private fun RowScope.RootTabButton(
             }
     )
 
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .weight(
                 tabWeight
@@ -3867,7 +4013,7 @@ private fun AlbumDetailHeader(
     onShufflePlay: () -> Unit,
     onAddArtwork: () -> Unit
 ) {
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
@@ -4039,7 +4185,7 @@ private fun ArtistDetailHeader(
     onPlayAll: () -> Unit,
     onShufflePlay: () -> Unit
 ) {
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
@@ -4167,7 +4313,7 @@ private fun MiniPlayerBar(
             0f
         }
 
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .auralArcClickable {
@@ -4227,7 +4373,7 @@ private fun MiniPlayerBar(
                     )
                 )
 
-                Card(
+                AuralArcCard(
                     shape = AuralArcStyle.SmallShape,
                     backgroundColor =
                     if (

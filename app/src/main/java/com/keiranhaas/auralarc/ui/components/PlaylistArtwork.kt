@@ -22,6 +22,7 @@ import android.graphics.Bitmap
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalDensity
+import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import com.keiranhaas.auralarc.utils.ArtworkBitmapLoader
 
 @Composable
@@ -118,7 +119,7 @@ fun PlaylistArtwork(
             automaticArtworkPaths
         }
 
-    Card(
+    AuralArcCard(
         modifier = Modifier.size(
             size
         ),

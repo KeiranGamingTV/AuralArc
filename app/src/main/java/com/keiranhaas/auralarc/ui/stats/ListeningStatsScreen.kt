@@ -24,6 +24,7 @@ import com.keiranhaas.auralarc.storage.ListeningStatsRange
 import com.keiranhaas.auralarc.storage.ListeningStatsStore
 import com.keiranhaas.auralarc.storage.ListeningStatsSummary
 import com.keiranhaas.auralarc.storage.TrackListeningStats
+import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -71,6 +72,9 @@ fun ListeningStatsScreen(
             ) { result, track ->
                 31 * result +
                         track.uri.hashCode() +
+                        track.artist.hashCode() +
+                        track.albumArtist.hashCode() +
+                        track.album.hashCode() +
                         track.genre.hashCode()
             }
         }
@@ -101,9 +105,9 @@ fun ListeningStatsScreen(
         ) {
             ListeningStatsStore.refreshTrackMetadata(
                 context =
-                context.applicationContext,
+                    context.applicationContext,
                 tracks =
-                allTracks
+                    allTracks
             )
         }
 
@@ -120,20 +124,22 @@ fun ListeningStatsScreen(
             ) {
                 ListeningStatsStore.getSummary(
                     context =
-                    context.applicationContext,
+                        context.applicationContext,
                     range =
-                    selectedRange
+                        selectedRange,
+                    tracks =
+                        allTracks
                 )
             }
     }
 
     Scaffold(
         backgroundColor =
-        AuralArcStyle.BackgroundBottom,
+            AuralArcStyle.BackgroundBottom,
         topBar = {
             TopAppBar(
                 backgroundColor =
-                AuralArcStyle.BackgroundTop,
+                    AuralArcStyle.BackgroundTop,
                 elevation = 0.dp,
                 navigationIcon = {
                     AuralArcIconButton(
@@ -143,20 +149,20 @@ fun ListeningStatsScreen(
                     ) {
                         Icon(
                             imageVector =
-                            Icons.AutoMirrored.Filled.ArrowBack,
+                                Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription =
-                            "Back",
+                                "Back",
                             tint =
-                            AuralArcStyle.TextPrimary
+                                AuralArcStyle.TextPrimary
                         )
                     }
                 },
                 title = {
                     Text(
                         text =
-                        "Listening Stats",
+                            "Listening Stats",
                         color =
-                        AuralArcStyle.TextPrimary
+                            AuralArcStyle.TextPrimary
                     )
                 }
             )
@@ -176,15 +182,15 @@ fun ListeningStatsScreen(
                     )
                     .background(
                         brush =
-                        AuralArcStyle
-                            .appBackgroundBrush()
+                            AuralArcStyle
+                                .appBackgroundBrush()
                     ),
                 contentAlignment =
-                Alignment.Center
+                    Alignment.Center
             ) {
                 CircularProgressIndicator(
                     color =
-                    AuralArcStyle.PurpleBright
+                        AuralArcStyle.PurpleBright
                 )
             }
         } else {
@@ -196,18 +202,18 @@ fun ListeningStatsScreen(
                     )
                     .background(
                         brush =
-                        AuralArcStyle
-                            .appBackgroundBrush()
+                            AuralArcStyle
+                                .appBackgroundBrush()
                     ),
                 contentPadding =
-                PaddingValues(
-                    bottom = 18.dp
-                )
+                    PaddingValues(
+                        bottom = 18.dp
+                    )
             ) {
                 item {
                     StatsRangeSelector(
                         selectedRange =
-                        selectedRange,
+                            selectedRange,
                         onRangeSelected = { range ->
                             if (
                                 range != selectedRange
@@ -225,14 +231,14 @@ fun ListeningStatsScreen(
                 item {
                     StatsSummaryCard(
                         summary =
-                        currentSummary
+                            currentSummary
                     )
                 }
 
                 item {
                     SectionTitle(
                         title =
-                        "Top Songs"
+                            "Top Songs"
                     )
                 }
 
@@ -244,9 +250,9 @@ fun ListeningStatsScreen(
                     item {
                         EmptyStatsMessage(
                             text =
-                            emptyRangeMessage(
-                                selectedRange
-                            )
+                                emptyRangeMessage(
+                                    selectedRange
+                                )
                         )
                     }
                 } else {
@@ -255,7 +261,7 @@ fun ListeningStatsScreen(
                         .forEach { stat ->
                             item(
                                 key =
-                                "track_${stat.trackKey}"
+                                    "track_${stat.trackKey}"
                             ) {
                                 TrackStatRow(
                                     stat = stat
@@ -267,7 +273,7 @@ fun ListeningStatsScreen(
                 item {
                     SectionTitle(
                         title =
-                        "Top Artists"
+                            "Top Artists"
                     )
                 }
 
@@ -279,9 +285,9 @@ fun ListeningStatsScreen(
                     item {
                         EmptyStatsMessage(
                             text =
-                            emptyRangeMessage(
-                                selectedRange
-                            )
+                                emptyRangeMessage(
+                                    selectedRange
+                                )
                         )
                     }
                 } else {
@@ -290,7 +296,7 @@ fun ListeningStatsScreen(
                         .forEach { stat ->
                             item(
                                 key =
-                                "artist_${stat.name}"
+                                    "artist_${stat.name}"
                             ) {
                                 GroupStatRow(
                                     stat = stat
@@ -302,7 +308,7 @@ fun ListeningStatsScreen(
                 item {
                     SectionTitle(
                         title =
-                        "Top Albums"
+                            "Top Albums"
                     )
                 }
 
@@ -314,9 +320,9 @@ fun ListeningStatsScreen(
                     item {
                         EmptyStatsMessage(
                             text =
-                            emptyRangeMessage(
-                                selectedRange
-                            )
+                                emptyRangeMessage(
+                                    selectedRange
+                                )
                         )
                     }
                 } else {
@@ -325,7 +331,7 @@ fun ListeningStatsScreen(
                         .forEach { stat ->
                             item(
                                 key =
-                                "album_${stat.name}"
+                                    "album_${stat.name}"
                             ) {
                                 GroupStatRow(
                                     stat = stat
@@ -337,7 +343,7 @@ fun ListeningStatsScreen(
                 item {
                     SectionTitle(
                         title =
-                        "Genre Breakdown"
+                            "Genre Breakdown"
                     )
                 }
 
@@ -349,7 +355,7 @@ fun ListeningStatsScreen(
                     item {
                         EmptyStatsMessage(
                             text =
-                            "No genre listening data is available for this range."
+                                "No genre listening data is available for this range."
                         )
                     }
                 } else {
@@ -358,7 +364,7 @@ fun ListeningStatsScreen(
                         .forEach { stat ->
                             item(
                                 key =
-                                "genre_${stat.name}"
+                                    "genre_${stat.name}"
                             ) {
                                 GenreStatRow(
                                     stat = stat
@@ -387,9 +393,9 @@ private fun StatsRangeSelector(
                 vertical = 10.dp
             ),
         horizontalArrangement =
-        Arrangement.spacedBy(
-            7.dp
-        )
+            Arrangement.spacedBy(
+                7.dp
+            )
     ) {
         ListeningStatsRange
             .values()
@@ -397,7 +403,7 @@ private fun StatsRangeSelector(
                 val selected =
                     range == selectedRange
 
-                Card(
+                AuralArcCard(
                     modifier = Modifier
                         .widthIn(
                             min = 82.dp
@@ -411,25 +417,25 @@ private fun StatsRangeSelector(
                             )
                         },
                     shape =
-                    RoundedCornerShape(
-                        50
-                    ),
+                        RoundedCornerShape(
+                            50
+                        ),
                     backgroundColor =
-                    if (
-                        selected
-                    ) {
-                        AuralArcStyle.PurpleDark
-                    } else {
-                        AuralArcStyle.Surface
-                    },
+                        if (
+                            selected
+                        ) {
+                            AuralArcStyle.PurpleDark
+                        } else {
+                            AuralArcStyle.Surface
+                        },
                     elevation =
-                    if (
-                        selected
-                    ) {
-                        6.dp
-                    } else {
-                        0.dp
-                    }
+                        if (
+                            selected
+                        ) {
+                            6.dp
+                        } else {
+                            0.dp
+                        }
                 ) {
                     Box(
                         modifier = Modifier.padding(
@@ -437,31 +443,31 @@ private fun StatsRangeSelector(
                             vertical = 10.dp
                         ),
                         contentAlignment =
-                        Alignment.Center
+                            Alignment.Center
                     ) {
                         Text(
                             text =
-                            range.displayName,
+                                range.displayName,
                             style =
-                            MaterialTheme
-                                .typography
-                                .caption,
+                                MaterialTheme
+                                    .typography
+                                    .caption,
                             fontWeight =
-                            if (
-                                selected
-                            ) {
-                                FontWeight.Bold
-                            } else {
-                                FontWeight.Medium
-                            },
+                                if (
+                                    selected
+                                ) {
+                                    FontWeight.Bold
+                                } else {
+                                    FontWeight.Medium
+                                },
                             color =
-                            if (
-                                selected
-                            ) {
-                                AuralArcStyle.TextPrimary
-                            } else {
-                                AuralArcStyle.TextMuted
-                            },
+                                if (
+                                    selected
+                                ) {
+                                    AuralArcStyle.TextPrimary
+                                } else {
+                                    AuralArcStyle.TextMuted
+                                },
                             maxLines = 1
                         )
                     }
@@ -474,7 +480,7 @@ private fun StatsRangeSelector(
 private fun StatsSummaryCard(
     summary: ListeningStatsSummary
 ) {
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
@@ -482,9 +488,9 @@ private fun StatsSummaryCard(
                 vertical = 2.dp
             ),
         shape =
-        AuralArcStyle.CardShape,
+            AuralArcStyle.CardShape,
         backgroundColor =
-        AuralArcStyle.SurfaceBright,
+            AuralArcStyle.SurfaceBright,
         elevation = 8.dp
     ) {
         Column(
@@ -494,50 +500,50 @@ private fun StatsSummaryCard(
         ) {
             Text(
                 text =
-                "Overview • ${summary.range.displayName}",
+                    "Overview • ${summary.range.displayName}",
                 style =
-                MaterialTheme.typography.h6,
+                    MaterialTheme.typography.h6,
                 fontWeight =
-                FontWeight.Bold,
+                    FontWeight.Bold,
                 color =
-                AuralArcStyle.TextPrimary
+                    AuralArcStyle.TextPrimary
             )
 
             StatLine(
                 label =
-                "Total listening time",
+                    "Total listening time",
                 value =
-                formatStatsDuration(
-                    summary.totalListeningMillis
-                )
+                    formatStatsDuration(
+                        summary.totalListeningMillis
+                    )
             )
 
             StatLine(
                 label =
-                "Counted plays",
+                    "Counted plays",
                 value =
-                summary.totalPlays.toString()
+                    summary.totalPlays.toString()
             )
 
             StatLine(
                 label =
-                "Completed plays",
+                    "Completed plays",
                 value =
-                summary.totalCompleted.toString()
+                    summary.totalCompleted.toString()
             )
 
             StatLine(
                 label =
-                "Skips",
+                    "Skips",
                 value =
-                summary.totalSkips.toString()
+                    summary.totalSkips.toString()
             )
 
             StatLine(
                 label =
-                "Unique tracks",
+                    "Unique tracks",
                 value =
-                summary.uniqueTracks.toString()
+                    summary.uniqueTracks.toString()
             )
         }
     }
@@ -550,11 +556,11 @@ private fun SectionTitle(
     Text(
         text = title,
         style =
-        MaterialTheme.typography.subtitle1,
+            MaterialTheme.typography.subtitle1,
         fontWeight =
-        FontWeight.Bold,
+            FontWeight.Bold,
         color =
-        AuralArcStyle.TextPrimary,
+            AuralArcStyle.TextPrimary,
         modifier = Modifier.padding(
             start = 14.dp,
             end = 14.dp,
@@ -568,7 +574,7 @@ private fun SectionTitle(
 private fun TrackStatRow(
     stat: TrackListeningStats
 ) {
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
@@ -576,9 +582,9 @@ private fun TrackStatRow(
                 vertical = 4.dp
             ),
         shape =
-        AuralArcStyle.CardShape,
+            AuralArcStyle.CardShape,
         backgroundColor =
-        AuralArcStyle.Surface,
+            AuralArcStyle.Surface,
         elevation = 4.dp
     ) {
         Column(
@@ -588,41 +594,41 @@ private fun TrackStatRow(
         ) {
             Text(
                 text =
-                stat.title,
+                    stat.title,
                 fontWeight =
-                FontWeight.Bold,
+                    FontWeight.Bold,
                 color =
-                AuralArcStyle.TextPrimary,
+                    AuralArcStyle.TextPrimary,
                 maxLines = 1,
                 overflow =
-                TextOverflow.Ellipsis
+                    TextOverflow.Ellipsis
             )
 
             Text(
                 text =
-                "${stat.artist} • ${stat.album}",
+                    "${stat.artist} • ${stat.album}",
                 style =
-                MaterialTheme.typography.body2,
+                    MaterialTheme.typography.body2,
                 color =
-                AuralArcStyle.TextSecondary,
+                    AuralArcStyle.TextSecondary,
                 maxLines = 1,
                 overflow =
-                TextOverflow.Ellipsis
+                    TextOverflow.Ellipsis
             )
 
             Text(
                 text =
-                "${stat.playCount} plays • " +
-                        "${formatStatsDuration(stat.listeningMillis)} listened • " +
-                        "${stat.completedCount} completed • " +
-                        "${stat.skipCount} skips",
+                    "${stat.playCount} plays • " +
+                            "${formatStatsDuration(stat.listeningMillis)} listened • " +
+                            "${stat.completedCount} completed • " +
+                            "${stat.skipCount} skips",
                 style =
-                MaterialTheme.typography.caption,
+                    MaterialTheme.typography.caption,
                 color =
-                AuralArcStyle.TextMuted,
+                    AuralArcStyle.TextMuted,
                 maxLines = 2,
                 overflow =
-                TextOverflow.Ellipsis
+                    TextOverflow.Ellipsis
             )
         }
     }
@@ -632,7 +638,7 @@ private fun TrackStatRow(
 private fun GroupStatRow(
     stat: GroupListeningStats
 ) {
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
@@ -640,9 +646,9 @@ private fun GroupStatRow(
                 vertical = 4.dp
             ),
         shape =
-        AuralArcStyle.CardShape,
+            AuralArcStyle.CardShape,
         backgroundColor =
-        AuralArcStyle.Surface,
+            AuralArcStyle.Surface,
         elevation = 4.dp
     ) {
         Row(
@@ -652,18 +658,18 @@ private fun GroupStatRow(
                     12.dp
                 ),
             verticalAlignment =
-            Alignment.CenterVertically
+                Alignment.CenterVertically
         ) {
             Text(
                 text =
-                stat.name,
+                    stat.name,
                 color =
-                AuralArcStyle.TextPrimary,
+                    AuralArcStyle.TextPrimary,
                 fontWeight =
-                FontWeight.Bold,
+                    FontWeight.Bold,
                 maxLines = 1,
                 overflow =
-                TextOverflow.Ellipsis,
+                    TextOverflow.Ellipsis,
                 modifier = Modifier.weight(
                     1f
                 )
@@ -677,14 +683,14 @@ private fun GroupStatRow(
 
             Text(
                 text =
-                "${stat.playCount} plays • " +
-                        formatStatsDuration(
-                            stat.listeningMillis
-                        ),
+                    "${stat.playCount} plays • " +
+                            formatStatsDuration(
+                                stat.listeningMillis
+                            ),
                 style =
-                MaterialTheme.typography.caption,
+                    MaterialTheme.typography.caption,
                 color =
-                AuralArcStyle.TextMuted
+                    AuralArcStyle.TextMuted
             )
         }
     }
@@ -694,7 +700,7 @@ private fun GroupStatRow(
 private fun GenreStatRow(
     stat: GenreListeningStats
 ) {
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
@@ -702,9 +708,9 @@ private fun GenreStatRow(
                 vertical = 4.dp
             ),
         shape =
-        AuralArcStyle.CardShape,
+            AuralArcStyle.CardShape,
         backgroundColor =
-        AuralArcStyle.Surface,
+            AuralArcStyle.Surface,
         elevation = 4.dp
     ) {
         Column(
@@ -716,20 +722,20 @@ private fun GenreStatRow(
         ) {
             Row(
                 modifier =
-                Modifier.fillMaxWidth(),
+                    Modifier.fillMaxWidth(),
                 verticalAlignment =
-                Alignment.CenterVertically
+                    Alignment.CenterVertically
             ) {
                 Text(
                     text =
-                    stat.name,
+                        stat.name,
                     color =
-                    AuralArcStyle.TextPrimary,
+                        AuralArcStyle.TextPrimary,
                     fontWeight =
-                    FontWeight.Bold,
+                        FontWeight.Bold,
                     maxLines = 1,
                     overflow =
-                    TextOverflow.Ellipsis,
+                        TextOverflow.Ellipsis,
                     modifier = Modifier.weight(
                         1f
                     )
@@ -737,17 +743,17 @@ private fun GenreStatRow(
 
                 Text(
                     text =
-                    String.format(
-                        Locale.getDefault(),
-                        "%.1f%%",
-                        stat.percentage
-                    ),
+                        String.format(
+                            Locale.getDefault(),
+                            "%.1f%%",
+                            stat.percentage
+                        ),
                     style =
-                    MaterialTheme.typography.body2,
+                        MaterialTheme.typography.body2,
                     fontWeight =
-                    FontWeight.Bold,
+                        FontWeight.Bold,
                     color =
-                    AuralArcStyle.TextPrimary
+                        AuralArcStyle.TextPrimary
                 )
             }
 
@@ -759,22 +765,22 @@ private fun GenreStatRow(
 
             LinearProgressIndicator(
                 progress =
-                (
-                        stat.percentage /
-                                100f
-                        ).coerceIn(
-                        0f,
-                        1f
-                    ),
+                    (
+                            stat.percentage /
+                                    100f
+                            ).coerceIn(
+                            0f,
+                            1f
+                        ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(
                         6.dp
                     ),
                 color =
-                AuralArcStyle.PurpleBright,
+                    AuralArcStyle.PurpleBright,
                 backgroundColor =
-                AuralArcStyle.SurfaceBright
+                    AuralArcStyle.SurfaceBright
             )
 
             Spacer(
@@ -785,13 +791,13 @@ private fun GenreStatRow(
 
             Text(
                 text =
-                formatStatsDuration(
-                    stat.listeningMillis
-                ),
+                    formatStatsDuration(
+                        stat.listeningMillis
+                    ),
                 style =
-                MaterialTheme.typography.caption,
+                    MaterialTheme.typography.caption,
                 color =
-                AuralArcStyle.TextMuted
+                    AuralArcStyle.TextMuted
             )
         }
     }
@@ -804,9 +810,9 @@ private fun EmptyStatsMessage(
     Text(
         text = text,
         style =
-        MaterialTheme.typography.body2,
+            MaterialTheme.typography.body2,
         color =
-        AuralArcStyle.TextMuted,
+            AuralArcStyle.TextMuted,
         modifier = Modifier.padding(
             14.dp
         )
@@ -827,9 +833,9 @@ private fun StatLine(
     ) {
         Text(
             text =
-            label,
+                label,
             color =
-            AuralArcStyle.TextSecondary,
+                AuralArcStyle.TextSecondary,
             modifier = Modifier.weight(
                 1f
             )
@@ -837,11 +843,11 @@ private fun StatLine(
 
         Text(
             text =
-            value,
+                value,
             color =
-            AuralArcStyle.TextPrimary,
+                AuralArcStyle.TextPrimary,
             fontWeight =
-            FontWeight.Bold
+                FontWeight.Bold
         )
     }
 }

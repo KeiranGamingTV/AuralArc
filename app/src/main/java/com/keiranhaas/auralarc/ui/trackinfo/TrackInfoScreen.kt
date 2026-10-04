@@ -52,6 +52,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.keiranhaas.auralarc.storage.AudioTagEditResult
 import com.keiranhaas.auralarc.storage.AudioTagEditor
 import com.keiranhaas.auralarc.storage.EditableTrackMetadata
+import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import kotlinx.coroutines.launch
 
 @Composable
@@ -966,7 +967,7 @@ private fun MetadataTextField(
 private fun TrackInfoHeaderCard(
     track: MusicTrack
 ) {
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
@@ -1065,7 +1066,7 @@ private fun TrackInfoSectionCard(
     rows: List<Pair<String, String>>,
     monospaceValues: Boolean = false
 ) {
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(

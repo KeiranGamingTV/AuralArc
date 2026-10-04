@@ -10,8 +10,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.material.Button
-import androidx.compose.material.IconButton
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -19,6 +20,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.graphics.Color
+import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
 import com.keiranhaas.auralarc.ui.theme.AuralArcMotion
 import com.keiranhaas.auralarc.ui.theme.rememberAuralArcMotionEnabled
 
@@ -120,52 +123,13 @@ fun AuralArcIconButton(
     val clickFeedback =
         rememberAuralArcClickFeedback()
 
-    val motionEnabled =
-        rememberAuralArcMotionEnabled()
-
-    val interactionSource =
-        remember {
-            MutableInteractionSource()
-        }
-
-    val isPressed by
-    interactionSource.collectIsPressedAsState()
-
-    val scale by
-    animateFloatAsState(
-        targetValue =
-            if (
-                motionEnabled &&
-                enabled &&
-                isPressed
-            ) {
-                AuralArcMotion.BUTTON_PRESS_SCALE
-            } else {
-                1f
-            },
-        animationSpec = spring(
-            dampingRatio = 0.76f,
-            stiffness = 750f
-        )
-    )
-
     IconButton(
         onClick = {
             clickFeedback()
-
             onClick()
         },
-        modifier = modifier
-            .graphicsLayer {
-                scaleX =
-                    scale
-
-                scaleY =
-                    scale
-            },
+        modifier = modifier,
         enabled = enabled,
-        interactionSource =
-            interactionSource,
         content = content
     )
 }
@@ -175,57 +139,52 @@ fun AuralArcButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    shape: androidx.compose.ui.graphics.Shape =
+        AuralArcStyle.SmallShape,
+    containerColor: Color =
+        AuralArcStyle.Purple,
+    contentColor: Color =
+        AuralArcStyle.TextPrimary,
+    disabledContainerColor: Color =
+        AuralArcStyle.Surface,
+    disabledContentColor: Color =
+        AuralArcStyle.TextMuted,
     content: @Composable RowScope.() -> Unit
 ) {
     val clickFeedback =
         rememberAuralArcClickFeedback()
 
-    val motionEnabled =
-        rememberAuralArcMotionEnabled()
-
-    val interactionSource =
-        remember {
-            MutableInteractionSource()
-        }
-
-    val isPressed by
-    interactionSource.collectIsPressedAsState()
-
-    val scale by
-    animateFloatAsState(
-        targetValue =
-            if (
-                motionEnabled &&
-                enabled &&
-                isPressed
-            ) {
-                AuralArcMotion.BUTTON_PRESS_SCALE
-            } else {
-                1f
-            },
-        animationSpec = spring(
-            dampingRatio = 0.76f,
-            stiffness = 750f
-        )
-    )
-
-    Button(
+    FilledTonalButton(
         onClick = {
             clickFeedback()
-
             onClick()
         },
-        modifier = modifier
-            .graphicsLayer {
-                scaleX =
-                    scale
 
-                scaleY =
-                    scale
-            },
-        enabled = enabled,
-        interactionSource =
-            interactionSource,
-        content = content
+        modifier =
+            modifier,
+
+        enabled =
+            enabled,
+
+        shape =
+            shape,
+
+        colors =
+            ButtonDefaults.filledTonalButtonColors(
+                containerColor =
+                    containerColor,
+
+                contentColor =
+                    contentColor,
+
+                disabledContainerColor =
+                    disabledContainerColor,
+
+                disabledContentColor =
+                    disabledContentColor
+            ),
+
+        content =
+            content
     )
 }

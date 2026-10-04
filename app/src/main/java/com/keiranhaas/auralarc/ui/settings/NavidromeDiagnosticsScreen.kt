@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.keiranhaas.auralarc.navidrome.NavidromeClient
 import com.keiranhaas.auralarc.navidrome.NavidromePreferences
+import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -126,11 +127,18 @@ fun NavidromeDiagnosticsScreen(
                                 Dispatchers.IO
                             ) {
                                 try {
-                                    NavidromeClient(
-                                        credentials
-                                    ).ping()
+                                    val result =
+                                        NavidromeClient(
+                                            credentials
+                                        ).ping()
 
-                                    "Connection test passed."
+                                    if (
+                                        result.success
+                                    ) {
+                                        "Connection test passed: ${result.message}"
+                                    } else {
+                                        "Connection test failed: ${result.message}"
+                                    }
                                 } catch (e: Exception) {
                                     "Connection test failed: ${e.message ?: "Unknown error"}"
                                 }
@@ -166,7 +174,7 @@ private fun DiagnosticsCard(
     title: String,
     rows: List<Pair<String, String>>
 ) {
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(

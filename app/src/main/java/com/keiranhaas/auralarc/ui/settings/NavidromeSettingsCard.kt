@@ -185,7 +185,7 @@ fun NavidromeSettingsCard() {
                 )
             )
 
-            Button(
+            AuralArcButton(
                 enabled =
                 !isTesting &&
                         serverUrl.isNotBlank() &&
@@ -194,15 +194,13 @@ fun NavidromeSettingsCard() {
                 onClick = {
                     val credentials =
                         NavidromeCredentials(
-                            serverUrl = serverUrl,
-                            username = username,
-                            password = password
+                            serverUrl =
+                                serverUrl.trim(),
+                            username =
+                                username.trim(),
+                            password =
+                                password
                         )
-
-                    NavidromePreferences.saveCredentials(
-                        context,
-                        credentials
-                    )
 
                     isTesting =
                         true
@@ -211,20 +209,42 @@ fun NavidromeSettingsCard() {
                         "Testing connection..."
 
                     scope.launch {
-                        val result =
-                            withContext(
-                                Dispatchers.IO
+                        try {
+                            val result =
+                                withContext(
+                                    Dispatchers.IO
+                                ) {
+                                    NavidromeClient(
+                                        credentials
+                                    ).ping()
+                                }
+
+                            if (
+                                result.success
                             ) {
-                                NavidromeClient(
+                                /*
+                                 * Only replace the saved configuration after we have
+                                 * actually received a successful authenticated API
+                                 * response.
+                                 */
+                                NavidromePreferences.saveCredentials(
+                                    context,
                                     credentials
-                                ).ping()
+                                )
+
+                                statusText =
+                                    "Connected successfully. Navidrome settings saved."
+                            } else {
+                                statusText =
+                                    "Connection failed: ${result.message}"
                             }
-
-                        statusText =
-                            result.message
-
-                        isTesting =
-                            false
+                        } catch (e: Exception) {
+                            statusText =
+                                "Connection failed: ${e.message ?: "Unknown error"}"
+                        } finally {
+                            isTesting =
+                                false
+                        }
                     }
                 },
                 modifier = Modifier

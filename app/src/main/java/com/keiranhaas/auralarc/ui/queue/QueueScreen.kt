@@ -5,7 +5,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
@@ -23,6 +30,7 @@ import com.keiranhaas.auralarc.navigation.Screen
 import com.keiranhaas.auralarc.player.PlayerManager
 import com.keiranhaas.auralarc.player.QueueManager
 import com.keiranhaas.auralarc.storage.PlaylistStore
+import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
 
 @Composable
@@ -89,56 +97,56 @@ fun QueueScreen(
     }
 
     Scaffold(
-        backgroundColor = AuralArcStyle.BackgroundBottom,
+        containerColor =
+            AuralArcStyle.BackgroundBottom,
+
         topBar = {
-            TopAppBar(
-                backgroundColor = AuralArcStyle.BackgroundTop,
-                elevation = 0.dp,
+            com.keiranhaas.auralarc.ui.components.AuralArcTopBar(
+                title =
+                    "Queue",
+
                 navigationIcon = {
-                    AuralArcIconButton(
+                    com.keiranhaas.auralarc.ui.components.AuralArcBackButton(
                         onClick = {
                             navController.popBackStack()
                         }
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = AuralArcStyle.TextPrimary
-                        )
-                    }
-                },
-                title = {
-                    Text(
-                        text = "Queue",
-                        color = AuralArcStyle.TextPrimary
                     )
                 },
+
                 actions = {
                     AuralArcIconButton(
-                        enabled = queue.isNotEmpty(),
+                        enabled =
+                            queue.isNotEmpty(),
+
                         onClick = {
                             showSaveQueueDialog =
                                 true
                         }
                     ) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.PlaylistAdd,
-                            contentDescription = "Save queue as playlist",
-                            tint = AuralArcStyle.TextPrimary
+                            imageVector =
+                                Icons.AutoMirrored.Filled.PlaylistAdd,
+
+                            contentDescription =
+                                "Save queue as playlist"
                         )
                     }
 
                     AuralArcIconButton(
-                        enabled = queue.isNotEmpty(),
+                        enabled =
+                            queue.isNotEmpty(),
+
                         onClick = {
                             showClearConfirm =
                                 true
                         }
                     ) {
                         Icon(
-                            imageVector = Icons.Default.ClearAll,
-                            contentDescription = "Clear queue",
-                            tint = AuralArcStyle.TextPrimary
+                            imageVector =
+                                Icons.Default.ClearAll,
+
+                            contentDescription =
+                                "Clear queue"
                         )
                     }
                 }
@@ -292,12 +300,14 @@ fun QueueScreen(
             },
             title = {
                 Text(
-                    text = "Clear Queue?"
+                    text = "Clear Queue?",
+                    color = AuralArcStyle.TextPrimary
                 )
             },
             text = {
                 Text(
-                    text = "This removes every song from the current queue."
+                    text = "This removes every song from the current queue.",
+                    color = AuralArcStyle.TextSecondary
                 )
             },
             confirmButton = {
@@ -314,7 +324,8 @@ fun QueueScreen(
                     }
                 ) {
                     Text(
-                        text = "Clear"
+                        text = "Clear",
+                        color = AuralArcStyle.PurpleBright
                     )
                 }
             },
@@ -326,10 +337,14 @@ fun QueueScreen(
                     }
                 ) {
                     Text(
-                        text = "Cancel"
+                        text = "Cancel",
+                        color = AuralArcStyle.TextSecondary
                     )
                 }
-            }
+            },
+            containerColor = AuralArcStyle.Surface,
+            titleContentColor = AuralArcStyle.TextPrimary,
+            textContentColor = AuralArcStyle.TextSecondary
         )
     }
 }
@@ -339,7 +354,7 @@ private fun QueueHeaderCard(
     queue: List<MusicTrack>,
     currentIndex: Int
 ) {
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
@@ -357,14 +372,14 @@ private fun QueueHeaderCard(
         ) {
             Text(
                 text = "Current Queue",
-                style = MaterialTheme.typography.h6,
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = AuralArcStyle.TextPrimary
             )
 
             Text(
                 text = "${queue.size} songs",
-                style = MaterialTheme.typography.body2,
+                style = MaterialTheme.typography.bodyMedium,
                 color = AuralArcStyle.TextMuted
             )
         }
@@ -385,7 +400,7 @@ private fun QueueTrackRow(
     onRemove: () -> Unit,
     onOpenLyrics: () -> Unit
 ) {
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
@@ -446,7 +461,7 @@ private fun QueueTrackRow(
                     } else {
                         "Queue #${index + 1}"
                     },
-                    style = MaterialTheme.typography.caption,
+                    style = MaterialTheme.typography.labelMedium,
                     color =
                     if (
                         isCurrent
@@ -459,7 +474,7 @@ private fun QueueTrackRow(
 
                 TrackTitleWithHdBadge(
                     track = track,
-                    style = MaterialTheme.typography.body1,
+                    style = MaterialTheme.typography.bodyLarge,
                     color = AuralArcStyle.TextPrimary,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
@@ -472,7 +487,7 @@ private fun QueueTrackRow(
                         track
                     ),
                     style =
-                    MaterialTheme.typography.body2,
+                    MaterialTheme.typography.bodyMedium,
                     color =
                     AuralArcStyle.TextSecondary,
                     maxLines = 1,
@@ -544,20 +559,28 @@ private fun SaveQueueAsPlaylistDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Save Queue as Playlist"
+                text = "Save Queue as Playlist",
+                color = AuralArcStyle.TextPrimary
             )
         },
         text = {
             Column {
                 Text(
                     text =
-                    if (
-                        queue.size == 1
-                    ) {
-                        "1 song will be saved."
-                    } else {
-                        "${queue.size} songs will be saved."
-                    }
+                        if (
+                            queue.size == 1
+                        ) {
+                            "1 song will be saved."
+                        } else {
+                            "${queue.size} songs will be saved."
+                        },
+                    color = AuralArcStyle.TextSecondary
+                )
+
+                Spacer(
+                    modifier = Modifier.height(
+                        12.dp
+                    )
                 )
 
                 OutlinedTextField(
@@ -572,7 +595,27 @@ private fun SaveQueueAsPlaylistDialog(
                         )
                     },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = TextFieldDefaults.colors(
+                        focusedTextColor =
+                            AuralArcStyle.TextPrimary,
+                        unfocusedTextColor =
+                            AuralArcStyle.TextPrimary,
+                        focusedContainerColor =
+                            AuralArcStyle.SurfaceBright,
+                        unfocusedContainerColor =
+                            AuralArcStyle.SurfaceBright,
+                        focusedLabelColor =
+                            AuralArcStyle.PurpleBright,
+                        unfocusedLabelColor =
+                            AuralArcStyle.TextMuted,
+                        focusedIndicatorColor =
+                            AuralArcStyle.PurpleBright,
+                        unfocusedIndicatorColor =
+                            AuralArcStyle.TextMuted,
+                        cursorColor =
+                            AuralArcStyle.PurpleBright
+                    )
                 )
             }
         },
@@ -590,7 +633,15 @@ private fun SaveQueueAsPlaylistDialog(
                 }
             ) {
                 Text(
-                    text = "Save"
+                    text = "Save",
+                    color =
+                        if (
+                            playlistName.isNotBlank()
+                        ) {
+                            AuralArcStyle.PurpleBright
+                        } else {
+                            AuralArcStyle.TextMuted
+                        }
                 )
             }
         },
@@ -599,9 +650,13 @@ private fun SaveQueueAsPlaylistDialog(
                 onClick = onDismiss
             ) {
                 Text(
-                    text = "Cancel"
+                    text = "Cancel",
+                    color = AuralArcStyle.TextSecondary
                 )
             }
-        }
+        },
+        containerColor = AuralArcStyle.Surface,
+        titleContentColor = AuralArcStyle.TextPrimary,
+        textContentColor = AuralArcStyle.TextSecondary
     )
 }

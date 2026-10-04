@@ -25,6 +25,7 @@ import kotlinx.coroutines.withContext
 import com.keiranhaas.auralarc.storage.PlaylistArtworkStore
 import com.keiranhaas.auralarc.storage.LibraryCacheStore
 import androidx.compose.material.icons.filled.Add
+import com.keiranhaas.auralarc.ui.components.AuralArcCard
 
 @Composable
 fun PlaylistBrowserScreen(
@@ -299,7 +300,7 @@ private fun PlaylistBrowserHeader(
     isLoading: Boolean,
     onCreateClick: () -> Unit
 ) {
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
@@ -374,7 +375,7 @@ private fun PlaylistBrowserHeader(
             if (
                 librarySource == LibrarySource.LOCAL
             ) {
-                Card(
+                AuralArcCard(
                     modifier = Modifier.size(
                         44.dp
                     ),
@@ -424,7 +425,7 @@ private fun PlaylistBrowserRow(
             "Local"
         }
 
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(

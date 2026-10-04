@@ -11,10 +11,8 @@ import com.keiranhaas.auralarc.storage.EmbeddedLyricsExtractor
 import com.keiranhaas.auralarc.storage.EmbeddedLyricsResult
 import com.keiranhaas.auralarc.storage.LrcLyricsFinder
 import com.keiranhaas.auralarc.storage.LyricsPreferences
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import android.os.SystemClock
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.concurrent.ConcurrentHashMap
 
@@ -28,22 +26,8 @@ object LyricsState {
             0
         )
 
-    /*
-     * A failed lyrics lookup should not remain a permanent failure.
-     *
-     * This is especially important for:
-     * - temporarily unavailable SAF storage
-     * - temporary Navidrome network failures
-     * - lyrics added while the app remains running
-     */
-    private const val FAILED_LOOKUP_RETRY_MS =
-        60_000L
-
     private val completedAttempts =
         ConcurrentHashMap.newKeySet<String>()
-
-    private val retryAfterElapsedTime =
-        ConcurrentHashMap<String, Long>()
 
     private val inFlightLoads =
         ConcurrentHashMap<
@@ -51,76 +35,147 @@ object LyricsState {
                 CompletableDeferred<EmbeddedLyricsResult?>
                 >()
 
+    /*
+     * A null result can happen because the track's metadata, MediaStore,
+     * or SAF storage is not ready yet when Now Playing first opens.
+     *
+     * Do not retry continuously, but also do not treat a null result
+     * as a permanent "no lyrics" state.
+     */
+    private val retryAfterElapsedTime =
+        ConcurrentHashMap<String, Long>()
+
     suspend fun preloadLyrics(
         context: Context,
-        track: MusicTrack
+        track: MusicTrack,
+        forceReload: Boolean = false
     ) {
         val uri =
             track.uri
 
-        /*
-         * Positive results don't need another scan.
-         */
         if (
-            lyricsCache[
-                uri
-            ] != null
-        ) {
-            return
-        }
-
-        val now =
-            SystemClock.elapsedRealtime()
-
-        val retryAfter =
-            retryAfterElapsedTime[
-                uri
-            ] ?: 0L
-
-        if (
-            retryAfter > now
+            uri.isBlank()
         ) {
             return
         }
 
         /*
-         * CompletableDeferred replaces the previous 10 ms polling loop.
+         * Reuse an already successful result.
          *
-         * If two parts of the app request the same lyrics simultaneously,
-         * the second simply awaits the first.
+         * A cached null is different: it may have been caused by a
+         * temporary lookup race, so allow another attempt after the
+         * short retry delay.
          */
-        val ourLoad =
-            CompletableDeferred<EmbeddedLyricsResult?>()
-
-        val existingLoad =
-            inFlightLoads.putIfAbsent(
-                uri,
-                ourLoad
+        if (
+            !forceReload &&
+            lyricsCache.containsKey(
+                uri
+            ) &&
+            !inFlightLoads.containsKey(
+                uri
             )
+        ) {
+            val cachedResult =
+                lyricsCache[uri]
+
+            if (
+                cachedResult != null
+            ) {
+                completedAttempts.add(
+                    uri
+                )
+
+                return
+            }
+        }
+
+        /*
+         * Never perform multiple simultaneous searches for the same track.
+         */
+        val existingLoad =
+            inFlightLoads[
+                uri
+            ]
 
         if (
             existingLoad != null
         ) {
             existingLoad.await()
+            return
+        }
 
+        val deferred =
+            CompletableDeferred<EmbeddedLyricsResult?>()
+
+        val competingLoad =
+            inFlightLoads.putIfAbsent(
+                uri,
+                deferred
+            )
+
+        if (
+            competingLoad != null
+        ) {
+            competingLoad.await()
             return
         }
 
         try {
-            val result =
-                withContext(
-                    Dispatchers.IO
+            /*
+             * Try several times before accepting that lyrics are unavailable.
+             *
+             * This specifically prevents the first Now Playing composition
+             * from permanently caching "No lyrics were found" when the
+             * library/SAF metadata becomes available a moment later.
+             */
+            var result:
+                    EmbeddedLyricsResult? =
+                null
+
+            val retryDelays =
+                longArrayOf(
+                    0L,
+                    500L,
+                    1_000L,
+                    2_000L,
+                    3_000L
+                )
+
+            for (
+            delayMs in retryDelays
+            ) {
+                if (
+                    delayMs > 0L
                 ) {
-                    try {
-                        loadLyricsInternal(
-                            context =
-                                context.applicationContext,
-                            track = track
-                        )
-                    } catch (_: Throwable) {
-                        null
-                    }
+                    kotlinx.coroutines.delay(
+                        delayMs
+                    )
                 }
+
+                result =
+                    withContext(
+                        Dispatchers.IO
+                    ) {
+                        try {
+                            loadLyricsInternal(
+                                context =
+                                    context.applicationContext,
+                                track =
+                                    track
+                            )
+                        } catch (
+                            _: Throwable
+                        ) {
+                            null
+                        }
+                    }
+
+                if (
+                    result != null
+                ) {
+                    break
+                }
+            }
 
             lyricsCache[
                 uri
@@ -131,46 +186,42 @@ object LyricsState {
                 uri
             )
 
-            if (
-                result == null
-            ) {
-                retryAfterElapsedTime[
-                    uri
-                ] =
-                    SystemClock.elapsedRealtime() +
-                            FAILED_LOOKUP_RETRY_MS
-            } else {
-                retryAfterElapsedTime.remove(
-                    uri
-                )
-            }
+            retryAfterElapsedTime.remove(
+                uri
+            )
 
             cacheRevision.value +=
                 1
 
-            ourLoad.complete(
+            deferred.complete(
                 result
             )
         } catch (
-            throwable: Throwable
+            _: Throwable
         ) {
+            lyricsCache[
+                uri
+            ] =
+                null
+
             completedAttempts.add(
                 uri
             )
 
-            retryAfterElapsedTime[
+            retryAfterElapsedTime.remove(
                 uri
-            ] =
-                SystemClock.elapsedRealtime() +
-                        FAILED_LOOKUP_RETRY_MS
+            )
 
-            ourLoad.complete(
+            cacheRevision.value +=
+                1
+
+            deferred.complete(
                 null
             )
         } finally {
             inFlightLoads.remove(
                 uri,
-                ourLoad
+                deferred
             )
         }
     }
@@ -209,10 +260,14 @@ object LyricsState {
 
         inFlightLoads.clear()
 
-        LrcLyricsFinder.invalidateIndex()
-
         cacheRevision.value +=
             1
+    }
+
+    fun invalidateLyricsFileIndex() {
+        LrcLyricsFinder.invalidateIndex()
+
+        clearCache()
     }
 
     fun isNavidromeTrack(
@@ -227,36 +282,81 @@ object LyricsState {
         context: Context,
         track: MusicTrack
     ): EmbeddedLyricsResult? {
-        if (
+
+        val duetLyricsEnabled =
             LyricsPreferences.getDuetLyricsEnabled(
                 context
             )
+
+        /*
+         * 1. When Duet Lyrics is enabled, exhaust BOTH .dlrc lookup paths
+         * before looking for a normal .lrc.
+         *
+         * This is important when both:
+         *
+         *     Song.lrc
+         *     Song.dlrc
+         *
+         * exist beside the same audio file.
+         *
+         * The .dlrc must win whenever Duet Lyrics is enabled.
+         */
+        if (
+            duetLyricsEnabled
         ) {
-            val duetLyrics =
-                LrcLyricsFinder.findDuetLyricsForTrack(
+            val quickDuetLyrics =
+                LrcLyricsFinder.findDuetLyricsForTrackQuick(
                     context = context,
                     track = track
                 )
 
             if (
-                duetLyrics != null
+                quickDuetLyrics != null
             ) {
-                return duetLyrics
+                return quickDuetLyrics
+            }
+
+            val indexedDuetLyrics =
+                LrcLyricsFinder.findDuetLyricsForTrackIndexed(
+                    context = context,
+                    track = track
+                )
+
+            if (
+                indexedDuetLyrics != null
+            ) {
+                return indexedDuetLyrics
             }
         }
 
-        val externalLrc =
-            LrcLyricsFinder.findLyricsForTrack(
+        /*
+         * 2. Only look for a normal .lrc after all possible .dlrc
+         * lookups have failed.
+         *
+         * Duet enabled + .dlrc found
+         *             -> .dlrc / DUET_SYNCED
+         *
+         * Duet enabled + no .dlrc
+         *             -> normal .lrc
+         *
+         * Duet disabled
+         *             -> normal .lrc
+         */
+        val quickExternalLyrics =
+            LrcLyricsFinder.findLyricsForTrackQuick(
                 context = context,
                 track = track
             )
 
         if (
-            externalLrc != null
+            quickExternalLyrics != null
         ) {
-            return externalLrc
+            return quickExternalLyrics
         }
 
+        /*
+         * 3. Navidrome lyrics.
+         */
         val songId =
             getNavidromeSongIdFromStreamUrl(
                 track.uri
@@ -268,22 +368,62 @@ object LyricsState {
             val credentials =
                 NavidromePreferences.getCredentials(
                     context
-                ) ?: return null
-
-            return try {
-                NavidromeClient(
-                    credentials
-                ).getLyricsForSongId(
-                    songId
                 )
-            } catch (_: Throwable) {
-                null
+
+            if (
+                credentials != null
+            ) {
+                val navidromeLyrics =
+                    try {
+                        NavidromeClient(
+                            credentials
+                        ).getLyricsForSongId(
+                            songId
+                        )
+                    } catch (
+                        _: Throwable
+                    ) {
+                        null
+                    }
+
+                if (
+                    navidromeLyrics != null
+                ) {
+                    return navidromeLyrics
+                }
             }
         }
 
-        return EmbeddedLyricsExtractor.getEmbeddedLyrics(
+        /*
+         * 4. Embedded lyrics.
+         */
+        val embeddedLyrics =
+            try {
+                EmbeddedLyricsExtractor.getEmbeddedLyrics(
+                    context = context,
+                    trackUri = track.uri
+                )
+            } catch (
+                _: Throwable
+            ) {
+                null
+            }
+
+        if (
+            embeddedLyrics != null
+        ) {
+            return embeddedLyrics
+        }
+
+        /*
+          * 5. Normal .lrc indexed/picked-folder fallback.
+          *
+          * Any possible .dlrc has already been checked above, so reaching
+          * this point means there is no usable Duet Lyrics file.
+          */
+        return LrcLyricsFinder.findLyricsForTrackIndexed(
             context = context,
-            trackUri = track.uri
+            track = track
         )
     }
 
@@ -318,7 +458,9 @@ object LyricsState {
             )?.takeIf {
                 it.isNotBlank()
             }
-        } catch (_: Throwable) {
+        } catch (
+            _: Throwable
+        ) {
             null
         }
     }

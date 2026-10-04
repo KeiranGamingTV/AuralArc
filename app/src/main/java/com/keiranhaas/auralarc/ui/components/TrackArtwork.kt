@@ -24,6 +24,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
 import com.keiranhaas.auralarc.utils.ArtworkBitmapLoader
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.fillMaxSize
+import com.keiranhaas.auralarc.ui.components.AuralArcCard
+import com.keiranhaas.auralarc.ui.theme.AuralArcMotion
 
 @Composable
 fun TrackArtwork(
@@ -87,7 +93,7 @@ fun TrackArtwork(
             )
     }
 
-    Card(
+    AuralArcCard(
         modifier = Modifier.size(
             size
         ),
@@ -99,36 +105,48 @@ fun TrackArtwork(
         val loadedBitmap =
             bitmap
 
-        if (
-            loadedBitmap != null
-        ) {
-            Image(
-                bitmap =
-                    loadedBitmap.asImageBitmap(),
-                contentDescription =
-                    "Album artwork",
-                contentScale =
-                    ContentScale.Crop
-            )
-        } else {
-            Box(
-                modifier = Modifier
-                    .size(
-                        size
-                    )
-                    .background(
-                        AuralArcStyle.SurfaceBright
-                    ),
-                contentAlignment =
-                    Alignment.Center
-            ) {
-                Text(
-                    text = "♪",
-                    style =
-                        MaterialTheme.typography.h4,
-                    color =
-                        AuralArcStyle.TextMuted
+        Crossfade(
+            targetState = loadedBitmap,
+            animationSpec =
+                tween(
+                    durationMillis =
+                        AuralArcMotion.FAST,
+                    easing =
+                        FastOutSlowInEasing
                 )
+        ) { artwork ->
+            if (
+                artwork != null
+            ) {
+                Image(
+                    bitmap =
+                        artwork.asImageBitmap(),
+                    contentDescription =
+                        "Album artwork",
+                    modifier =
+                        Modifier.fillMaxSize(),
+                    contentScale =
+                        ContentScale.Crop
+                )
+            } else {
+                Box(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .background(
+                                AuralArcStyle.SurfaceBright
+                            ),
+                    contentAlignment =
+                        Alignment.Center
+                ) {
+                    Text(
+                        text = "♪",
+                        style =
+                            MaterialTheme.typography.h4,
+                        color =
+                            AuralArcStyle.TextMuted
+                    )
+                }
             }
         }
     }

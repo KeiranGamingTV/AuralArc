@@ -129,6 +129,13 @@ object PlayerManager {
         Handler(
             Looper.getMainLooper()
         )
+
+    private var lastSessionSavePosition =
+        -1L
+
+    private var lastSessionSaveTime =
+        0L
+
     private var pendingSeekPosition: Long? =
         null
 
@@ -362,9 +369,35 @@ object PlayerManager {
                         IDLE_PROGRESS_UPDATE_INTERVAL_MS
                     }
 
+                /*
+                 * Keep the UI responsive while also periodically persisting
+                 * the playback position.
+                 */
+                val now =
+                    android.os.SystemClock.elapsedRealtime()
+
+                if (
+                    activePlayer != null &&
+                    now - lastSessionSaveTime >= 5_000L &&
+                    kotlin.math.abs(
+                        activePlayer.currentPosition -
+                                lastSessionSavePosition
+                    ) >= 1_000L
+                ) {
+                    saveCurrentSessionIfNeeded(
+                        force = false
+                    )
+
+                    lastSessionSaveTime =
+                        now
+
+                    lastSessionSavePosition =
+                        activePlayer.currentPosition
+                }
+
                 progressHandler.postDelayed(
                     this,
-                    nextUpdateDelay
+                    500L
                 )
             }
         }
@@ -1948,7 +1981,8 @@ object PlayerManager {
         synchronous: Boolean = false
     ) {
         val context =
-            appContext ?: return
+            appContext
+                ?: return
 
         if (
             isRestoringSession
@@ -1957,7 +1991,8 @@ object PlayerManager {
         }
 
         val currentTrack =
-            QueueManager.currentTrack() ?: return
+            QueueManager.currentTrack()
+                ?: return
 
         val queue =
             QueueManager.getQueue()

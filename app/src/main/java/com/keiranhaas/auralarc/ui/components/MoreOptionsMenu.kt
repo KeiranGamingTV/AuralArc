@@ -24,7 +24,7 @@ fun MoreOptionsButton(
     track: MusicTrack,
     queueTracks: List<MusicTrack>,
     modifier: Modifier = Modifier,
-    showAddAlbumToPlaylist: Boolean = false,
+    showAddAlbumToPlaylist: Boolean = true,
     showAddToQueue: Boolean = true,
     showPlayNext: Boolean = true,
     onOpenLyrics: ((MusicTrack) -> Unit)? = null,

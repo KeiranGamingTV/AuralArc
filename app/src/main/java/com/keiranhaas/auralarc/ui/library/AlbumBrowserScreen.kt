@@ -13,6 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.keiranhaas.auralarc.data.MusicTrack
+import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
 
 @Composable
@@ -70,7 +71,7 @@ fun AlbumBrowserScreen(
                         "Unknown Artist"
                     }
 
-            Card(
+            AuralArcCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(

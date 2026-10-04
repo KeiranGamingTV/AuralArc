@@ -2,9 +2,11 @@ package com.keiranhaas.auralarc.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,22 +15,23 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Card
-import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
-import androidx.compose.material.Slider
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.RepeatOne
 import androidx.compose.material.icons.filled.Shuffle
@@ -40,39 +43,36 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.keiranhaas.auralarc.data.MusicTrack
 import com.keiranhaas.auralarc.navigation.Screen
 import com.keiranhaas.auralarc.player.AuralArcRepeatMode
+import com.keiranhaas.auralarc.player.PlaybackService
 import com.keiranhaas.auralarc.player.PlaybackState
 import com.keiranhaas.auralarc.player.PlayerManager
 import com.keiranhaas.auralarc.player.QueueManager
-import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.gestures.animateScrollBy
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.ui.platform.LocalDensity
-import kotlin.math.abs
-import com.keiranhaas.auralarc.utils.audioQualitySummary
-import androidx.compose.runtime.snapshotFlow
-import kotlinx.coroutines.delay
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.graphics.Color
 import com.keiranhaas.auralarc.storage.DuetLrcParser
 import com.keiranhaas.auralarc.storage.DuetLyricRow
 import com.keiranhaas.auralarc.storage.EmbeddedLyricsType
-import androidx.compose.ui.unit.sp
-import com.keiranhaas.auralarc.player.PlaybackService
+import com.keiranhaas.auralarc.storage.LyricsPreferences
+import com.keiranhaas.auralarc.ui.components.AuralArcCard
+import com.keiranhaas.auralarc.ui.components.AuralArcSlider
+import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
+import com.keiranhaas.auralarc.utils.audioQualitySummary
+import kotlinx.coroutines.delay
+import kotlin.math.abs
 
 private val DuetSingerOneColor =
     Color(
@@ -335,7 +335,7 @@ private fun NowPlayingMainContent(
             ),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Card(
+        AuralArcCard(
             shape = AuralArcStyle.CardShape,
             backgroundColor = AuralArcStyle.SurfaceBright,
             elevation = 14.dp,
@@ -428,21 +428,21 @@ private fun NowPlayingMainContent(
                 modifier = Modifier.fillMaxWidth()
             )
         } else {
-            Slider(
+            AuralArcSlider(
                 value =
-                if (
-                    userIsSeeking
-                ) {
-                    latestDraggedPosition.coerceIn(
-                        0f,
-                        duration.toFloat()
-                    )
-                } else {
-                    sliderPosition.coerceIn(
-                        0f,
-                        duration.toFloat()
-                    )
-                },
+                    if (
+                        userIsSeeking
+                    ) {
+                        latestDraggedPosition.coerceIn(
+                            0f,
+                            duration.toFloat()
+                        )
+                    } else {
+                        sliderPosition.coerceIn(
+                            0f,
+                            duration.toFloat()
+                        )
+                    },
                 onValueChange = { newPosition ->
                     latestDraggedPosition =
                         newPosition
@@ -476,8 +476,10 @@ private fun NowPlayingMainContent(
                         false
                     )
                 },
-                valueRange = 0f..duration.toFloat(),
-                modifier = Modifier.fillMaxWidth()
+                valueRange =
+                    0f..duration.toFloat(),
+                modifier =
+                    Modifier.fillMaxWidth()
             )
         }
 
@@ -587,7 +589,7 @@ private fun NowPlayingMainContent(
                 )
             }
 
-            Card(
+            AuralArcCard(
                 shape = AuralArcStyle.CardShape,
                 backgroundColor = AuralArcStyle.Purple,
                 elevation = 12.dp
@@ -745,7 +747,6 @@ private fun NowPlayingMainContent(
                                 currentTrack
                             )
                         },
-                        showAddAlbumToPlaylist = false,
                         showAddToQueue = false,
                         showPlayNext = false,
                         onOpenTrackInfo = { track ->
@@ -943,7 +944,7 @@ private fun LyricsPreviewCard(
             }
         }
 
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(
@@ -1201,9 +1202,15 @@ private fun NowPlayingLyricsCard(
     val cacheRevision =
         LyricsState.cacheRevision.value
 
+    val duetLyricsEnabled =
+        LyricsPreferences.getDuetLyricsEnabled(
+            context
+        )
+
     LaunchedEffect(
         track.uri,
-        cacheRevision
+        cacheRevision,
+        duetLyricsEnabled
     ) {
         unsyncedScrollState.scrollTo(
             0
@@ -1211,7 +1218,8 @@ private fun NowPlayingLyricsCard(
 
         LyricsState.preloadLyrics(
             context = context.applicationContext,
-            track = track
+            track = track,
+            forceReload = false
         )
     }
 
@@ -1237,7 +1245,7 @@ private fun NowPlayingLyricsCard(
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        Card(
+        AuralArcCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(
@@ -1356,7 +1364,7 @@ private fun LyricsPlaybackBar(
     val context =
         LocalContext.current
 
-    Card(
+    AuralArcCard(
         modifier = Modifier.fillMaxWidth(),
         shape = AuralArcStyle.CardShape,
         backgroundColor = AuralArcStyle.SurfaceBright,

@@ -18,6 +18,7 @@ import com.keiranhaas.auralarc.data.MusicTrack
 import com.keiranhaas.auralarc.player.PlayerManager
 import com.keiranhaas.auralarc.player.QueueManager
 import com.keiranhaas.auralarc.storage.AppearancePreferences
+import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
 
 @Composable
@@ -132,7 +133,7 @@ private fun MusicTrackRow(
             54.dp
         }
 
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
