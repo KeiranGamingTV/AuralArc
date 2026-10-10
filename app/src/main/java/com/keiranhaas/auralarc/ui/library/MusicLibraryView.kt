@@ -76,6 +76,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import com.keiranhaas.auralarc.ui.components.AuralArcCard
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.derivedStateOf
 
 private suspend fun loadTracksSafely(
     context: Context
@@ -664,6 +667,34 @@ fun MusicLibraryView(
         mutableStateOf<String?>(
             null
         )
+    }
+
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val headerCollapseThresholdPx = with(density) { 56.dp.roundToPx() }
+
+    val albumDetailListState = rememberLazyListState()
+    val artistDetailListState = rememberLazyListState()
+
+    val albumHeaderCollapsed by remember(
+        albumDetailListState,
+        headerCollapseThresholdPx
+    ) {
+        derivedStateOf {
+            albumDetailListState.firstVisibleItemIndex > 0 ||
+                    albumDetailListState.firstVisibleItemScrollOffset >
+                    headerCollapseThresholdPx
+        }
+    }
+
+    val artistHeaderCollapsed by remember(
+        artistDetailListState,
+        headerCollapseThresholdPx
+    ) {
+        derivedStateOf {
+            artistDetailListState.firstVisibleItemIndex > 0 ||
+                    artistDetailListState.firstVisibleItemScrollOffset >
+                    headerCollapseThresholdPx
+        }
     }
 
     var selectedPlaylistId by rememberSaveable {
@@ -1395,7 +1426,8 @@ fun MusicLibraryView(
 @Composable
 private fun ArtistAlbumsForArtistScreen(
     artistTracks: List<MusicTrack>,
-    onAlbumSelected: (String) -> Unit
+    onAlbumSelected: (String) -> Unit,
+    listState: LazyListState
 ) {
     val albums =
         artistAlbumGroups(
@@ -1403,6 +1435,7 @@ private fun ArtistAlbumsForArtistScreen(
         )
 
     LazyColumn(
+        state = listState,
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
             top = 6.dp,
@@ -1763,6 +1796,34 @@ private fun LibraryTabContent(
     onSelectedPlaylistChange: (String?) -> Unit,
     librarySource: LibrarySource
 ) {
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val headerCollapseThresholdPx = with(density) { 56.dp.roundToPx() }
+
+    val albumDetailListState = rememberLazyListState()
+    val artistDetailListState = rememberLazyListState()
+
+    val albumHeaderCollapsed by remember(
+        albumDetailListState,
+        headerCollapseThresholdPx
+    ) {
+        derivedStateOf {
+            albumDetailListState.firstVisibleItemIndex > 0 ||
+                    albumDetailListState.firstVisibleItemScrollOffset >
+                    headerCollapseThresholdPx
+        }
+    }
+
+    val artistHeaderCollapsed by remember(
+        artistDetailListState,
+        headerCollapseThresholdPx
+    ) {
+        derivedStateOf {
+            artistDetailListState.firstVisibleItemIndex > 0 ||
+                    artistDetailListState.firstVisibleItemScrollOffset >
+                    headerCollapseThresholdPx
+        }
+    }
+
     val scope =
         rememberCoroutineScope()
 
@@ -2044,7 +2105,7 @@ private fun LibraryTabContent(
                     bottom = 6.dp
                 ),
             verticalAlignment =
-            Alignment.CenterVertically
+                Alignment.CenterVertically
         ) {
             Text(
                 text = categorySummary,
@@ -2058,6 +2119,53 @@ private fun LibraryTabContent(
                     1f
                 )
             )
+
+            if (
+                libraryMode == LibraryMode.SONGS &&
+                searchedTracks.isNotEmpty()
+            ) {
+                AuralArcIconButton(
+                    onClick = {
+                        playTracks(
+                            context = context,
+                            tracks = searchedTracks
+                        )
+                    },
+                    modifier = Modifier.size(
+                        40.dp
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = "Play all songs",
+                        tint = AuralArcStyle.PurpleBright,
+                        modifier = Modifier.size(
+                            22.dp
+                        )
+                    )
+                }
+
+                AuralArcIconButton(
+                    onClick = {
+                        shufflePlayTracks(
+                            context = context,
+                            tracks = searchedTracks
+                        )
+                    },
+                    modifier = Modifier.size(
+                        40.dp
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Shuffle,
+                        contentDescription = "Shuffle play all songs",
+                        tint = AuralArcStyle.PurpleBright,
+                        modifier = Modifier.size(
+                            22.dp
+                        )
+                    )
+                }
+            }
 
             AuralArcIconButton(
                 onClick = onOpenFilter,
@@ -2118,15 +2226,27 @@ private fun LibraryTabContent(
                             totalDuration = totalDurationText(
                                 albumTracks
                             ),
+                            releaseDate = albumTracks
+                                .firstOrNull { it.releaseYear > 0 }
+                                ?.releaseYear
+                                ?.toString()
+                                ?: "Unknown release date",
+                            collapsed = albumHeaderCollapsed,
                             albumArtPath = albumArtPath,
                             showAddArtwork =
-                            librarySource ==
-                                    LibrarySource.LOCAL &&
-                                    albumArtPath.isNullOrBlank() &&
-                                    albumTracks.isNotEmpty(),
+                                librarySource ==
+                                        LibrarySource.LOCAL &&
+                                        albumArtPath.isNullOrBlank() &&
+                                        albumTracks.isNotEmpty(),
                             onBack = {
                                 onSelectedAlbumChange(
                                     null
+                                )
+                            },
+                            onPlayAll = {
+                                playTracks(
+                                    context,
+                                    albumTracks
                                 )
                             },
                             onShufflePlay = {
@@ -2164,7 +2284,8 @@ private fun LibraryTabContent(
                                 navController.navigate(
                                     Screen.TrackInfo.route
                                 )
-                            }
+                            },
+                            listState = albumDetailListState,
                         )
                     }
                 }
@@ -2208,6 +2329,7 @@ private fun LibraryTabContent(
                             totalDuration = totalDurationText(
                                 artistTracks
                             ),
+                            collapsed = artistHeaderCollapsed,
                             artistArtPath = artistArtPath,
                             onBack = {
                                 onSelectedArtistChange(
@@ -2234,7 +2356,8 @@ private fun LibraryTabContent(
                                 onSelectedAlbumChange(
                                     albumName
                                 )
-                            }
+                            },
+                            listState = artistDetailListState,
                         )
                     }
                 }
@@ -4007,9 +4130,12 @@ private fun AlbumDetailHeader(
     artistName: String,
     songCount: Int,
     totalDuration: String,
+    releaseDate: String,
     albumArtPath: String?,
     showAddArtwork: Boolean,
+    collapsed: Boolean,
     onBack: () -> Unit,
+    onPlayAll: () -> Unit,
     onShufflePlay: () -> Unit,
     onAddArtwork: () -> Unit
 ) {
@@ -4018,103 +4144,187 @@ private fun AlbumDetailHeader(
             .fillMaxWidth()
             .padding(
                 horizontal = 10.dp,
-                vertical = 8.dp
-            ),
+                vertical = if (collapsed) 4.dp else 8.dp
+            )
+            .animateContentSize(),
         shape = AuralArcStyle.CardShape,
         backgroundColor = AuralArcStyle.SurfaceBright,
         elevation = 8.dp
     ) {
-        Column(
-            modifier = Modifier.padding(
-                12.dp
-            )
-        ) {
+        if (collapsed) {
             Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                AuralArcIconButton(
-                    onClick = onBack
-                ) {
+                AuralArcIconButton(onClick = onBack) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
+                        contentDescription = "Back to albums",
                         tint = AuralArcStyle.TextPrimary
                     )
                 }
 
-                Text(
-                    text = "Album",
-                    style = MaterialTheme.typography.caption,
-                    color = AuralArcStyle.TextMuted
-                )
-            }
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
                 TrackArtwork(
                     albumArtPath = albumArtPath,
-                    size = 96.dp
+                    size = 44.dp
                 )
 
-                Spacer(
-                    modifier = Modifier.width(
-                        14.dp
-                    )
-                )
+                Spacer(Modifier.width(10.dp))
 
                 Column(
-                    modifier = Modifier.weight(
-                        1f
-                    )
+                    modifier = Modifier.weight(1f)
                 ) {
                     Text(
                         text = albumName,
-                        style = MaterialTheme.typography.h6,
+                        style = MaterialTheme.typography.subtitle1,
                         fontWeight = FontWeight.Bold,
                         color = AuralArcStyle.TextPrimary,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-
-                    Text(
-                        text = artistName,
-                        style = MaterialTheme.typography.body2,
-                        color = AuralArcStyle.TextSecondary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
 
                     Text(
-                        text = "$songCount songs • $totalDuration",
+                        text = artistName,
                         style = MaterialTheme.typography.caption,
-                        color = AuralArcStyle.TextMuted
+                        color = AuralArcStyle.TextSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
-                Column(
-                    horizontalAlignment =
-                    Alignment.CenterHorizontally
+                AuralArcIconButton(
+                    onClick = onShufflePlay,
+                    modifier = Modifier.size(40.dp)
                 ) {
-                    AuralArcIconButton(
-                        onClick = onShufflePlay
-                    ) {
+                    Icon(
+                        imageVector = Icons.Default.Shuffle,
+                        contentDescription = "Shuffle play album",
+                        tint = AuralArcStyle.PurpleBright
+                    )
+                }
+
+                AuralArcIconButton(
+                    onClick = onPlayAll,
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = "Play album",
+                        tint = AuralArcStyle.PurpleBright
+                    )
+                }
+
+                if (showAddArtwork) {
+                    AlbumArtworkMoreOptionsButton(
+                        onAddArtwork = onAddArtwork
+                    )
+                }
+            }
+        } else {
+            Column(
+                modifier = Modifier.padding(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    AuralArcIconButton(onClick = onBack) {
                         Icon(
-                            imageVector =
-                            Icons.Default.Shuffle,
-                            contentDescription =
-                            "Shuffle play album",
-                            tint =
-                            AuralArcStyle.PurpleBright
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back to albums",
+                            tint = AuralArcStyle.TextPrimary
                         )
                     }
 
-                    if (
-                        showAddArtwork
-                    ) {
+                    Spacer(Modifier.weight(1f))
+
+                    if (showAddArtwork) {
                         AlbumArtworkMoreOptionsButton(
-                            onAddArtwork =
-                            onAddArtwork
+                            onAddArtwork = onAddArtwork
+                        )
+                    }
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TrackArtwork(
+                        albumArtPath = albumArtPath,
+                        size = 104.dp
+                    )
+
+                    Spacer(Modifier.width(14.dp))
+
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = albumName,
+                            style = MaterialTheme.typography.h6,
+                            fontWeight = FontWeight.Bold,
+                            color = AuralArcStyle.TextPrimary,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+
+                        Text(
+                            text = artistName,
+                            style = MaterialTheme.typography.body2,
+                            color = AuralArcStyle.TextSecondary,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = releaseDate,
+                            style = MaterialTheme.typography.body2,
+                            color = AuralArcStyle.TextSecondary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+
+                        Text(
+                            text = "$songCount songs • $totalDuration",
+                            style = MaterialTheme.typography.caption,
+                            color = AuralArcStyle.TextMuted,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    AuralArcIconButton(
+                        onClick = onShufflePlay,
+                        modifier = Modifier.size(44.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Shuffle,
+                            contentDescription = "Shuffle play album",
+                            tint = AuralArcStyle.PurpleBright
+                        )
+                    }
+
+                    AuralArcIconButton(
+                        onClick = onPlayAll,
+                        modifier = Modifier.size(44.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = "Play album",
+                            tint = AuralArcStyle.PurpleBright
                         )
                     }
                 }
@@ -4181,6 +4391,7 @@ private fun ArtistDetailHeader(
     songCount: Int,
     totalDuration: String,
     artistArtPath: String?,
+    collapsed: Boolean,
     onBack: () -> Unit,
     onPlayAll: () -> Unit,
     onShufflePlay: () -> Unit
@@ -4190,95 +4401,152 @@ private fun ArtistDetailHeader(
             .fillMaxWidth()
             .padding(
                 horizontal = 10.dp,
-                vertical = 8.dp
-            ),
+                vertical = if (collapsed) 4.dp else 8.dp
+            )
+            .animateContentSize(),
         shape = AuralArcStyle.CardShape,
         backgroundColor = AuralArcStyle.SurfaceBright,
         elevation = 8.dp
     ) {
-        Column(
-            modifier = Modifier.padding(
-                12.dp
-            )
-        ) {
+        if (collapsed) {
             Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                AuralArcIconButton(
-                    onClick = onBack
-                ) {
+                AuralArcIconButton(onClick = onBack) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
+                        contentDescription = "Back to artists",
                         tint = AuralArcStyle.TextPrimary
                     )
                 }
 
-                Text(
-                    text = "Artist",
-                    style = MaterialTheme.typography.caption,
-                    color = AuralArcStyle.TextMuted
-                )
-            }
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
                 TrackArtwork(
                     albumArtPath = artistArtPath,
-                    size = 96.dp
+                    size = 44.dp
                 )
 
-                Spacer(
-                    modifier = Modifier.width(
-                        14.dp
-                    )
-                )
+                Spacer(Modifier.width(10.dp))
 
                 Column(
-                    modifier = Modifier.weight(
-                        1f
-                    )
+                    modifier = Modifier.weight(1f)
                 ) {
                     Text(
                         text = artistName,
-                        style = MaterialTheme.typography.h6,
+                        style = MaterialTheme.typography.subtitle1,
                         fontWeight = FontWeight.Bold,
                         color = AuralArcStyle.TextPrimary,
-                        maxLines = 2,
+                        maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
 
                     Text(
                         text = "$albumCount albums • $songCount songs",
-                        style = MaterialTheme.typography.body2,
-                        color = AuralArcStyle.TextSecondary
-                    )
-
-                    Text(
-                        text = totalDuration,
                         style = MaterialTheme.typography.caption,
-                        color = AuralArcStyle.TextMuted
+                        color = AuralArcStyle.TextMuted,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
 
-                Row {
+                AuralArcIconButton(
+                    onClick = onShufflePlay,
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Shuffle,
+                        contentDescription = "Shuffle play artist",
+                        tint = AuralArcStyle.PurpleBright
+                    )
+                }
+
+                AuralArcIconButton(
+                    onClick = onPlayAll,
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = "Play artist songs in order",
+                        tint = AuralArcStyle.PurpleBright
+                    )
+                }
+            }
+        } else {
+            Column(
+                modifier = Modifier.padding(12.dp)
+            ) {
+                AuralArcIconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back to artists",
+                        tint = AuralArcStyle.TextPrimary
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TrackArtwork(
+                        albumArtPath = artistArtPath,
+                        size = 104.dp
+                    )
+
+                    Spacer(Modifier.width(14.dp))
+
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = artistName,
+                            style = MaterialTheme.typography.h6,
+                            fontWeight = FontWeight.Bold,
+                            color = AuralArcStyle.TextPrimary,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+
+                        Text(
+                            text = "$albumCount albums • $songCount songs",
+                            style = MaterialTheme.typography.body2,
+                            color = AuralArcStyle.TextSecondary
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = totalDuration,
+                        style = MaterialTheme.typography.body2,
+                        color = AuralArcStyle.TextSecondary,
+                        modifier = Modifier.weight(1f)
+                    )
+
                     AuralArcIconButton(
-                        onClick = onPlayAll
+                        onClick = onShufflePlay,
+                        modifier = Modifier.size(44.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.PlayArrow,
-                            contentDescription = "Play all artist songs in order",
+                            imageVector = Icons.Default.Shuffle,
+                            contentDescription = "Shuffle play artist",
                             tint = AuralArcStyle.PurpleBright
                         )
                     }
 
                     AuralArcIconButton(
-                        onClick = onShufflePlay
+                        onClick = onPlayAll,
+                        modifier = Modifier.size(44.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Shuffle,
-                            contentDescription = "Shuffle play artist",
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = "Play artist songs in order",
                             tint = AuralArcStyle.PurpleBright
                         )
                     }

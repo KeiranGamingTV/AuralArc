@@ -84,6 +84,50 @@ private val DuetSingerTwoColor =
         0xFFFF5252
     )
 
+private fun duetColorFromHex(
+    hex: String?,
+    fallback: Color
+): Color {
+
+    if (
+        hex.isNullOrBlank()
+    ) {
+        return fallback
+    }
+
+    val normalized =
+        hex
+            .trim()
+            .removePrefix("#")
+
+    return try {
+        when (
+            normalized.length
+        ) {
+            6 ->
+                Color(
+                    android.graphics.Color.parseColor(
+                        "#$normalized"
+                    )
+                )
+
+            8 ->
+                Color(
+                    android.graphics.Color.parseColor(
+                        "#$normalized"
+                    )
+                )
+
+            else ->
+                fallback
+        }
+    } catch (
+        _: IllegalArgumentException
+    ) {
+        fallback
+    }
+}
+
 @Composable
 fun NowPlayingScreen(
     navController: NavHostController
@@ -1090,15 +1134,27 @@ private fun DuetLyricsPreviewRow(
                 style = previewTextStyle,
                 fontWeight = fontWeight,
                 color =
-                if (
-                    isActive
-                ) {
-                    AuralArcStyle.TextPrimary
-                } else {
-                    AuralArcStyle.TextSecondary.copy(
-                        alpha = inactiveAlpha
-                    )
-                },
+                    duetColorFromHex(
+                        hex =
+                            row.sharedColorHex,
+                        fallback =
+                            if (
+                                isActive
+                            ) {
+                                AuralArcStyle.TextPrimary
+                            } else {
+                                AuralArcStyle.TextSecondary
+                            }
+                    ).copy(
+                        alpha =
+                            if (
+                                isActive
+                            ) {
+                                1f
+                            } else {
+                                inactiveAlpha
+                            }
+                    ),
                 textAlign = TextAlign.Center,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -1125,16 +1181,22 @@ private fun DuetLyricsPreviewRow(
                     text = row.singerOneText,
                     style = previewTextStyle,
                     fontWeight = fontWeight,
-                    color = DuetSingerOneColor.copy(
-                        alpha =
-                        if (
-                            isActive
-                        ) {
-                            1f
-                        } else {
-                            inactiveAlpha
-                        }
-                    ),
+                    color =
+                        duetColorFromHex(
+                            hex =
+                                row.singerOneColorHex,
+                            fallback =
+                                DuetSingerOneColor
+                        ).copy(
+                            alpha =
+                                if (
+                                    isActive
+                                ) {
+                                    1f
+                                } else {
+                                    inactiveAlpha
+                                }
+                        ),
                     textAlign = TextAlign.Start,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -1152,16 +1214,22 @@ private fun DuetLyricsPreviewRow(
                     text = row.singerTwoText,
                     style = previewTextStyle,
                     fontWeight = fontWeight,
-                    color = DuetSingerTwoColor.copy(
-                        alpha =
-                        if (
-                            isActive
-                        ) {
-                            1f
-                        } else {
-                            inactiveAlpha
-                        }
-                    ),
+                    color =
+                        duetColorFromHex(
+                            hex =
+                                row.singerTwoColorHex,
+                            fallback =
+                                DuetSingerTwoColor
+                        ).copy(
+                            alpha =
+                                if (
+                                    isActive
+                                ) {
+                                    1f
+                                } else {
+                                    inactiveAlpha
+                                }
+                        ),
                     textAlign = TextAlign.End,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -1755,15 +1823,27 @@ private fun DuetFullLyricsRow(
                 style = sharedTextStyle,
                 fontWeight = activeFontWeight,
                 color =
-                if (
-                    isActive
-                ) {
-                    AuralArcStyle.TextPrimary
-                } else {
-                    AuralArcStyle.TextSecondary.copy(
-                        alpha = inactiveAlpha
-                    )
-                },
+                    duetColorFromHex(
+                        hex =
+                            row.sharedColorHex,
+                        fallback =
+                            if (
+                                isActive
+                            ) {
+                                AuralArcStyle.TextPrimary
+                            } else {
+                                AuralArcStyle.TextSecondary
+                            }
+                    ).copy(
+                        alpha =
+                            if (
+                                isActive
+                            ) {
+                                1f
+                            } else {
+                                inactiveAlpha
+                            }
+                    ),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -1794,16 +1874,22 @@ private fun DuetFullLyricsRow(
                     text = row.singerOneText,
                     style = singerTextStyle,
                     fontWeight = activeFontWeight,
-                    color = DuetSingerOneColor.copy(
-                        alpha =
-                        if (
-                            isActive
-                        ) {
-                            1f
-                        } else {
-                            inactiveAlpha
-                        }
-                    ),
+                    color =
+                        duetColorFromHex(
+                            hex =
+                                row.singerOneColorHex,
+                            fallback =
+                                DuetSingerOneColor
+                        ).copy(
+                            alpha =
+                                if (
+                                    isActive
+                                ) {
+                                    1f
+                                } else {
+                                    inactiveAlpha
+                                }
+                        ),
                     textAlign = TextAlign.Start,
                     modifier = Modifier
                         .weight(
@@ -1819,16 +1905,22 @@ private fun DuetFullLyricsRow(
                     text = row.singerTwoText,
                     style = singerTextStyle,
                     fontWeight = activeFontWeight,
-                    color = DuetSingerTwoColor.copy(
-                        alpha =
-                        if (
-                            isActive
-                        ) {
-                            1f
-                        } else {
-                            inactiveAlpha
-                        }
-                    ),
+                    color =
+                        duetColorFromHex(
+                            hex =
+                                row.singerTwoColorHex,
+                            fallback =
+                                DuetSingerTwoColor
+                        ).copy(
+                            alpha =
+                                if (
+                                    isActive
+                                ) {
+                                    1f
+                                } else {
+                                    inactiveAlpha
+                                }
+                        ),
                     textAlign = TextAlign.End,
                     modifier = Modifier
                         .weight(

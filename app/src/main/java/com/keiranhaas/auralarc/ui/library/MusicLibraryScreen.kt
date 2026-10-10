@@ -20,16 +20,21 @@ import com.keiranhaas.auralarc.player.QueueManager
 import com.keiranhaas.auralarc.storage.AppearancePreferences
 import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 
 @Composable
 fun MusicLibraryScreen(
     tracks: List<MusicTrack>,
     showAddAlbumToPlaylist: Boolean = false,
     onOpenLyrics: (MusicTrack) -> Unit = {},
-    onOpenTrackInfo: (MusicTrack) -> Unit = {}
+    onOpenTrackInfo: (MusicTrack) -> Unit = {},
+    listState: LazyListState? = null
 ) {
     val context =
         LocalContext.current
+
+    val effectiveListState = listState ?: rememberLazyListState()
 
     if (
         tracks.isEmpty()
@@ -57,6 +62,7 @@ fun MusicLibraryScreen(
         }
 
     LazyColumn(
+        state = effectiveListState,
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
             bottom = 10.dp

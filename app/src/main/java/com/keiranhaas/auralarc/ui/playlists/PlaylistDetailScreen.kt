@@ -40,6 +40,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import com.keiranhaas.auralarc.storage.PlaylistArtworkStore
 import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import kotlinx.coroutines.launch
+import androidx.compose.animation.animateContentSize
 
 @Composable
 fun PlaylistDetailScreen(
@@ -669,9 +670,9 @@ private fun PlaylistDetailHeader(
                 }
             } else {
                 Column(
-                    modifier = Modifier.padding(
-                        12.dp
-                    )
+                    modifier = Modifier
+                        .padding(12.dp)
+                        .animateContentSize()
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -681,24 +682,13 @@ private fun PlaylistDetailHeader(
                             onClick = onBack
                         ) {
                             Icon(
-                                imageVector =
-                                    Icons.AutoMirrored.Filled.ArrowBack,
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back to playlists",
                                 tint = AuralArcStyle.TextPrimary
                             )
                         }
 
-                        Text(
-                            text = sourceLabel,
-                            style = MaterialTheme.typography.caption,
-                            color = AuralArcStyle.TextMuted
-                        )
-
-                        Spacer(
-                            modifier = Modifier.weight(
-                                1f
-                            )
-                        )
+                        Spacer(Modifier.weight(1f))
 
                         PlaylistHeaderOptionsButton(
                             canEdit = canEdit,
@@ -717,20 +707,14 @@ private fun PlaylistDetailHeader(
                         PlaylistArtwork(
                             playlist = playlist,
                             tracks = tracks,
-                            size = 86.dp,
+                            size = 104.dp,
                             refreshKey = artworkRefreshKey
                         )
 
-                        Spacer(
-                            modifier = Modifier.width(
-                                14.dp
-                            )
-                        )
+                        Spacer(Modifier.width(14.dp))
 
                         Column(
-                            modifier = Modifier.weight(
-                                1f
-                            )
+                            modifier = Modifier.weight(1f)
                         ) {
                             Text(
                                 text = playlist.name,
@@ -745,35 +729,45 @@ private fun PlaylistDetailHeader(
                                 text = songCountText,
                                 style = MaterialTheme.typography.body2,
                                 color = AuralArcStyle.TextSecondary,
-                                maxLines = 1,
+                                maxLines = 2,
                                 overflow = TextOverflow.Ellipsis
                             )
                         }
+                    }
 
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
+                    Spacer(Modifier.height(12.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = totalDuration,
+                            style = MaterialTheme.typography.body2,
+                            color = AuralArcStyle.TextSecondary,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        AuralArcIconButton(
+                            enabled = trackCount > 0,
+                            onClick = onShuffle
                         ) {
-                            AuralArcIconButton(
-                                enabled = trackCount > 0,
-                                onClick = onPlay
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.PlayArrow,
-                                    contentDescription = "Play playlist",
-                                    tint = AuralArcStyle.PurpleBright
-                                )
-                            }
+                            Icon(
+                                imageVector = Icons.Default.Shuffle,
+                                contentDescription = "Shuffle playlist",
+                                tint = AuralArcStyle.PurpleBright
+                            )
+                        }
 
-                            AuralArcIconButton(
-                                enabled = trackCount > 0,
-                                onClick = onShuffle
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Shuffle,
-                                    contentDescription = "Shuffle playlist",
-                                    tint = AuralArcStyle.PurpleBright
-                                )
-                            }
+                        AuralArcIconButton(
+                            enabled = trackCount > 0,
+                            onClick = onPlay
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.PlayArrow,
+                                contentDescription = "Play playlist",
+                                tint = AuralArcStyle.PurpleBright
+                            )
                         }
                     }
                 }

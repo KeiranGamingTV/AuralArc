@@ -460,27 +460,9 @@ fun AboutSettingsScreen(
 
     val releaseNotes =
         listOf(
-            "Another major file overhaul.",
-            "Fixed the 'smooth' animations and made them more fluid.",
-            "Fixed transitions between app elements.",
-            "Added an initial setup page.",
-            "Added back the import and export M3U capabilities.",
-            "Fixed Navidrome timing out and not loading large music libraries.",
-            "Optimized Navidrome library loading.",
-            "Fixed queue visually jumping to the top when a song is removed or moved around.",
-            "Fixed the app sometimes not saving a song's position when the app is closed.",
-            "Fixed app randomly crashing in the background after a small period of time.",
-            "Optimized library loading.",
-            "Optimized library scanning.",
-            "Optimized and improved lyric scanning to be more reliable.",
-            "Optimized UI and navigation.",
-            "Optimized battery usage.",
-            "Optimized background tasks.",
-            "Optimized app cache size.",
-            "Improved animations, animation speed, and animation jittering.",
-            "Improved app stability.",
-            "Starting adding Material3 styling to the app.",
-            "Made AuralArc an externally discoverable music application (to use with KWGT, for example)."
+            "Added support for Duet LRC line-by-line color notation.",
+            "Added shuffle and play buttons to album, artist, and playlist headers.",
+            "Added shuffle and play buttons to Songs page."
         )
 
     SettingsMenuScaffold(
