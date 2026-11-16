@@ -116,6 +116,9 @@ object PlayerManager {
     private var playbackModeJob: Job? =
         null
 
+    private var autoplayJob: Job? =
+        null
+
     private var audioManager: AudioManager? =
         null
 
@@ -556,6 +559,10 @@ object PlayerManager {
                                 saveCurrentSessionIfNeeded(
                                     force = true
                                 )
+
+                                maybeAutoplay(
+                                    context.applicationContext
+                                )
                             }
 
                             override fun onPlaybackStateChanged(
@@ -613,6 +620,11 @@ object PlayerManager {
 
                                     saveCurrentSessionIfNeeded(
                                         force = true
+                                    )
+
+                                    maybeAutoplay(
+                                        context = context.applicationContext,
+                                        advanceWhenDone = true
                                     )
                                 }
                             }
@@ -884,6 +896,9 @@ object PlayerManager {
         saveCurrentSessionIfNeeded(
             force = true
         )
+        maybeAutoplay(
+            context.applicationContext
+        )
     }
 
     fun playSong(
@@ -919,7 +934,14 @@ object PlayerManager {
         val nextTrack =
             QueueManager.nextTrack(
                 fromAuto = false
-            ) ?: return
+            ) ?: run {
+                maybeAutoplay(
+                    context = context,
+                    advanceWhenDone = true
+                )
+
+                return
+            }
 
         val nextIndex =
             QueueManager.currentIndex
@@ -1434,6 +1456,124 @@ object PlayerManager {
                 ensurePlaybackNotification(
                     context
                 )
+            }
+    }
+
+    /**
+     * Autoplay: when the current song is the last one in the queue,
+     * append songs that are similar to what was just played.
+     */
+    fun maybeAutoplay(
+        context: Context,
+        advanceWhenDone: Boolean = false
+    ) {
+        val appContext =
+            context.applicationContext
+
+        if (
+            !AudioBehaviorPreferences.getAutoplayEnabled(
+                appContext
+            )
+        ) {
+            return
+        }
+
+        if (
+            PlaybackState.repeatMode.value !=
+            AuralArcRepeatMode.OFF
+        ) {
+            return
+        }
+
+        if (
+            !QueueManager.isAtEndOfQueue()
+        ) {
+            return
+        }
+
+        if (
+            autoplayJob?.isActive == true
+        ) {
+            return
+        }
+
+        val startEntryId =
+            QueueManager.getCurrentEntryId()
+                ?: return
+
+        val queueSnapshot =
+            QueueManager.getQueueEntries()
+
+        val library =
+            AutoplayManager.getCurrentLibrary(
+                appContext
+            )
+
+        if (
+            library.isEmpty()
+        ) {
+            return
+        }
+
+        autoplayJob =
+            playbackModeScope.launch {
+                val pickedTracks =
+                    withContext(
+                        Dispatchers.Default
+                    ) {
+                        AutoplayManager.pickSimilarTracks(
+                            seedTracks = queueSnapshot
+                                .takeLast(
+                                    5
+                                )
+                                .map { entry ->
+                                    entry.track
+                                },
+                            queueTracks = queueSnapshot
+                                .map { entry ->
+                                    entry.track
+                                },
+                            library = library
+                        )
+                    }
+
+                if (
+                    pickedTracks.isEmpty()
+                ) {
+                    return@launch
+                }
+
+                /*
+                 * If the user changed songs or the queue while the
+                 * similar songs were being chosen, skip this batch.
+                 * The next song change checks again.
+                 */
+                if (
+                    !QueueManager.isAtEndOfQueue() ||
+                    QueueManager.getCurrentEntryId() !=
+                    startEntryId
+                ) {
+                    return@launch
+                }
+
+                QueueManager.appendTracksToEnd(
+                    pickedTracks
+                )
+
+                syncQueueAfterQueueChange(
+                    context = appContext,
+                    resetPosition = false
+                )
+
+                if (
+                    advanceWhenDone ||
+                    player?.playbackState ==
+                    Player.STATE_ENDED
+                ) {
+                    next(
+                        appContext
+                    )
+                }
             }
     }
 

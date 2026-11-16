@@ -31,11 +31,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import com.keiranhaas.auralarc.ui.theme.AuralArcMotion
 import com.keiranhaas.auralarc.ui.theme.AuralArcCrossfade
+import androidx.compose.ui.graphics.Shape
 
 @Composable
 fun TrackArtwork(
     albumArtPath: String?,
-    size: Dp
+    size: Dp,
+    shape: Shape = AuralArcStyle.CardShape
 ) {
     val context =
         LocalContext.current
@@ -98,7 +100,7 @@ fun TrackArtwork(
         modifier = Modifier.size(
             size
         ),
-        shape = AuralArcStyle.CardShape,
+        shape = shape,
         backgroundColor =
             AuralArcStyle.Surface,
         elevation = 4.dp

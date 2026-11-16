@@ -27,12 +27,17 @@ import com.keiranhaas.auralarc.storage.LibraryCacheStore
 import androidx.compose.material.icons.filled.Add
 import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import com.keiranhaas.auralarc.storage.LikedSongsStore
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items as gridItems
 
 @Composable
 fun PlaylistBrowserScreen(
     allTracks: List<MusicTrack>,
     librarySource: LibrarySource,
-    onPlaylistSelected: (String) -> Unit
+    onPlaylistSelected: (String) -> Unit,
+    viewMode: LibraryViewMode = LibraryViewMode.LIST
 ) {
     val context =
         LocalContext.current
@@ -160,6 +165,15 @@ fun PlaylistBrowserScreen(
                 EmptyPlaylistBrowser(
                     title = "Loading playlists...",
                     message = "Please wait while AuralArc loads ${librarySource.name.lowercase()} playlists."
+                )
+            }
+
+            viewMode == LibraryViewMode.GRID -> {
+                PlaylistGrid(
+                    playlists = playlists,
+                    allTracks = allTracks,
+                    librarySource = librarySource,
+                    onPlaylistSelected = onPlaylistSelected
                 )
             }
 
@@ -668,4 +682,158 @@ private fun DeletePlaylistDialog(
             }
         }
     )
+}
+
+@Composable
+private fun PlaylistGrid(
+    playlists: List<Playlist>,
+    allTracks: List<MusicTrack>,
+    librarySource: LibrarySource,
+    onPlaylistSelected: (String) -> Unit
+) {
+    val context =
+        LocalContext.current
+
+    val likedTracks =
+        remember(
+            allTracks,
+            LikedSongsStore.revision.value
+        ) {
+            LikedSongsStore.getLikedTracks(
+                context = context,
+                allTracks = allTracks
+            )
+        }
+
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(
+            minSize = 112.dp
+        ),
+        contentPadding = PaddingValues(
+            start = 12.dp,
+            end = 12.dp,
+            top = 6.dp,
+            bottom = 12.dp
+        ),
+        horizontalArrangement = Arrangement.spacedBy(
+            12.dp
+        ),
+        verticalArrangement = Arrangement.spacedBy(
+            8.dp
+        )
+    ) {
+        item(
+            key = LikedSongsStore.PLAYLIST_ID
+        ) {
+            LibraryGridTile(
+                title = LikedSongsStore.PLAYLIST_NAME,
+                subtitle =
+                    if (
+                        likedTracks.size == 1
+                    ) {
+                        "Playlist • 1 song"
+                    } else {
+                        "Playlist • ${likedTracks.size} songs"
+                    },
+                onClick = {
+                    onPlaylistSelected(
+                        LikedSongsStore.PLAYLIST_ID
+                    )
+                }
+            ) { artSize ->
+                PlaylistArtwork(
+                    playlist = LikedSongsStore.asPlaylist(
+                        trackCount = likedTracks.size
+                    ),
+                    tracks = likedTracks,
+                    size = artSize
+                )
+            }
+        }
+
+        if (
+            playlists.isEmpty()
+        ) {
+            item(
+                span = {
+                    GridItemSpan(
+                        maxLineSpan
+                    )
+                }
+            ) {
+                EmptyPlaylistBrowser(
+                    title =
+                        if (
+                            librarySource == LibrarySource.NAVIDROME
+                        ) {
+                            "No Navidrome playlists"
+                        } else {
+                            "No other playlists yet"
+                        },
+                    message =
+                        if (
+                            librarySource == LibrarySource.NAVIDROME
+                        ) {
+                            "Create playlists in Navidrome, then refresh this screen."
+                        } else {
+                            "Create a playlist, then add songs from your library."
+                        }
+                )
+            }
+        }
+
+        gridItems(
+            playlists
+        ) { playlist ->
+            val playlistTracks =
+                remember(
+                    playlist,
+                    allTracks,
+                    librarySource
+                ) {
+                    if (
+                        librarySource == LibrarySource.LOCAL
+                    ) {
+                        PlaylistStore.getTracksForPlaylist(
+                            playlist = playlist,
+                            allTracks = allTracks
+                        )
+                    } else {
+                        emptyList()
+                    }
+                }
+
+            val trackCount =
+                if (
+                    librarySource == LibrarySource.NAVIDROME
+                ) {
+                    playlist.trackCount
+                } else {
+                    playlistTracks.size
+                }
+
+            LibraryGridTile(
+                title = playlist.name,
+                subtitle =
+                    if (
+                        trackCount == 1
+                    ) {
+                        "Playlist • 1 song"
+                    } else {
+                        "Playlist • $trackCount songs"
+                    },
+                onClick = {
+                    onPlaylistSelected(
+                        playlist.id
+                    )
+                }
+            ) { artSize ->
+                PlaylistArtwork(
+                    playlist = playlist,
+                    tracks = playlistTracks,
+                    size = artSize
+                )
+            }
+        }
+    }
 }

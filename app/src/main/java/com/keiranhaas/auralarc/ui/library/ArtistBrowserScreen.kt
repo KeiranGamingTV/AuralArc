@@ -15,6 +15,10 @@ import androidx.compose.ui.unit.dp
 import com.keiranhaas.auralarc.data.MusicTrack
 import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items as gridItems
+import androidx.compose.foundation.shape.CircleShape
 
 internal fun artistCategoryName(
     track: MusicTrack
@@ -49,7 +53,8 @@ internal fun artistCategoryName(
 @Composable
 fun ArtistBrowserScreen(
     tracks: List<MusicTrack>,
-    onArtistSelected: (String) -> Unit
+    onArtistSelected: (String) -> Unit,
+    viewMode: LibraryViewMode = LibraryViewMode.LIST
 ) {
     val artists =
         tracks
@@ -67,6 +72,16 @@ fun ArtistBrowserScreen(
             .sortedBy { artistGroup ->
                 artistGroup.first.lowercase()
             }
+    if (
+        viewMode == LibraryViewMode.GRID
+    ) {
+        ArtistGrid(
+            artists = artists,
+            onArtistSelected = onArtistSelected
+        )
+
+        return
+    }
 
     LazyColumn(
         contentPadding =
@@ -178,6 +193,78 @@ fun ArtistBrowserScreen(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ArtistGrid(
+    artists: List<Pair<String, List<MusicTrack>>>,
+    onArtistSelected: (String) -> Unit
+) {
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(
+            minSize = 112.dp
+        ),
+        contentPadding = PaddingValues(
+            start = 12.dp,
+            end = 12.dp,
+            top = 6.dp,
+            bottom = 12.dp
+        ),
+        horizontalArrangement = Arrangement.spacedBy(
+            12.dp
+        ),
+        verticalArrangement = Arrangement.spacedBy(
+            8.dp
+        )
+    ) {
+        gridItems(
+            artists
+        ) { artistGroup ->
+            val artistName =
+                artistGroup.first
+
+            val artistTracks =
+                artistGroup.second
+
+            val albumCount =
+                artistTracks
+                    .map {
+                        it.album
+                    }
+                    .distinct()
+                    .size
+
+            val artistArtPath =
+                artistTracks
+                    .firstOrNull {
+                        !it.albumArtPath.isNullOrBlank()
+                    }
+                    ?.albumArtPath
+
+            LibraryGridTile(
+                title = artistName,
+                subtitle =
+                    if (
+                        albumCount == 1
+                    ) {
+                        "1 album"
+                    } else {
+                        "$albumCount albums"
+                    },
+                onClick = {
+                    onArtistSelected(
+                        artistName
+                    )
+                }
+            ) { artSize ->
+                TrackArtwork(
+                    albumArtPath = artistArtPath,
+                    size = artSize,
+                    shape = CircleShape
+                )
             }
         }
     }

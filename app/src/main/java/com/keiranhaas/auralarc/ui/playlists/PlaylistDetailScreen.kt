@@ -709,14 +709,18 @@ private fun PlaylistDetailHeader(
                         )
                     }
 
-                    PlaylistHeaderOptionsButton(
-                        canEdit = canEdit,
-                        hasCustomArtwork = hasCustomArtwork,
-                        onRename = onRename,
-                        onDelete = onDelete,
-                        onChangeArtwork = onChangeArtwork,
-                        onRemoveArtwork = onRemoveArtwork
-                    )
+                    if (
+                        playlist.id != LikedSongsStore.PLAYLIST_ID
+                    ) {
+                        PlaylistHeaderOptionsButton(
+                            canEdit = canEdit,
+                            hasCustomArtwork = hasCustomArtwork,
+                            onRename = onRename,
+                            onDelete = onDelete,
+                            onChangeArtwork = onChangeArtwork,
+                            onRemoveArtwork = onRemoveArtwork
+                        )
+                    }
                 }
             } else {
                 Column(
@@ -740,14 +744,18 @@ private fun PlaylistDetailHeader(
 
                         Spacer(Modifier.weight(1f))
 
-                        PlaylistHeaderOptionsButton(
-                            canEdit = canEdit,
-                            hasCustomArtwork = hasCustomArtwork,
-                            onRename = onRename,
-                            onDelete = onDelete,
-                            onChangeArtwork = onChangeArtwork,
-                            onRemoveArtwork = onRemoveArtwork
-                        )
+                        if (
+                            playlist.id != LikedSongsStore.PLAYLIST_ID
+                        ) {
+                            PlaylistHeaderOptionsButton(
+                                canEdit = canEdit,
+                                hasCustomArtwork = hasCustomArtwork,
+                                onRename = onRename,
+                                onDelete = onDelete,
+                                onChangeArtwork = onChangeArtwork,
+                                onRemoveArtwork = onRemoveArtwork
+                            )
+                        }
                     }
 
                     Row(

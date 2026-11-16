@@ -79,6 +79,8 @@ import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.material.icons.automirrored.filled.ViewList
+import com.keiranhaas.auralarc.storage.LibraryViewModePreferences
 
 private suspend fun loadTracksSafely(
     context: Context
@@ -331,6 +333,68 @@ private fun shufflePlayTracks(
     )
 
     PlayerManager.applyPlaybackModes()
+}
+
+/**
+ * CD Shuffle: albums are shuffled, but every album plays from its
+ * first track to its last, like a stack of CDs.
+ */
+private fun cdShufflePlayAlbums(
+    context: Context,
+    tracks: List<MusicTrack>
+) {
+    if (
+        tracks.isEmpty()
+    ) {
+        return
+    }
+
+    val albumsInRandomOrder =
+        tracks
+            .groupBy { track ->
+                val albumArtist =
+                    track.albumArtist.ifBlank {
+                        track.artist
+                    }
+
+                track.album
+                    .trim()
+                    .lowercase() +
+                        "|" +
+                        albumArtist
+                            .trim()
+                            .lowercase()
+            }
+            .values
+            .map { albumTracks ->
+                albumTracks.sortedWith(
+                    compareBy<MusicTrack> { track ->
+                        if (
+                            track.discNumber > 0
+                        ) {
+                            track.discNumber
+                        } else {
+                            1
+                        }
+                    }.thenBy { track ->
+                        if (
+                            track.trackNumber > 0
+                        ) {
+                            track.trackNumber
+                        } else {
+                            Int.MAX_VALUE
+                        }
+                    }.thenBy { track ->
+                        track.title.lowercase()
+                    }
+                )
+            }
+            .shuffled()
+
+    playTracks(
+        context = context,
+        tracks = albumsInRandomOrder.flatten()
+    )
 }
 
 private fun totalDurationText(
@@ -2090,6 +2154,38 @@ private fun LibraryTabContent(
             }
         }
 
+    val viewModes =
+        remember {
+            mutableStateMapOf<LibraryMode, LibraryViewMode>().apply {
+                listOf(
+                    LibraryMode.ALBUMS,
+                    LibraryMode.ARTISTS,
+                    LibraryMode.PLAYLISTS
+                ).forEach { mode ->
+                    put(
+                        mode,
+                        LibraryViewModePreferences.get(
+                            context,
+                            mode
+                        )
+                    )
+                }
+            }
+        }
+
+    val currentViewMode =
+        viewModes[libraryMode] ?: LibraryViewMode.LIST
+
+    val canChangeViewMode =
+        selectedAlbum == null &&
+                selectedArtist == null &&
+                selectedPlaylistId == null &&
+                (
+                        libraryMode == LibraryMode.ALBUMS ||
+                                libraryMode == LibraryMode.ARTISTS ||
+                                libraryMode == LibraryMode.PLAYLISTS
+                        )
+
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -2170,6 +2266,86 @@ private fun LibraryTabContent(
                         imageVector = Icons.Default.Shuffle,
                         contentDescription = "Shuffle play all songs",
                         tint = AuralArcStyle.PurpleBright,
+                        modifier = Modifier.size(
+                            22.dp
+                        )
+                    )
+                }
+            }
+
+            if (
+                libraryMode == LibraryMode.ALBUMS &&
+                selectedAlbum == null &&
+                selectedArtist == null &&
+                searchedTracks.isNotEmpty()
+            ) {
+                AuralArcIconButton(
+                    onClick = {
+                        cdShufflePlayAlbums(
+                            context = context,
+                            tracks = searchedTracks
+                        )
+                    },
+                    modifier = Modifier.size(
+                        40.dp
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Shuffle,
+                        contentDescription = "CD Shuffle albums",
+                        tint = AuralArcStyle.PurpleBright,
+                        modifier = Modifier.size(
+                            22.dp
+                        )
+                    )
+                }
+            }
+
+            if (
+                canChangeViewMode
+            ) {
+                AuralArcIconButton(
+                    onClick = {
+                        val newViewMode =
+                            if (
+                                currentViewMode == LibraryViewMode.GRID
+                            ) {
+                                LibraryViewMode.LIST
+                            } else {
+                                LibraryViewMode.GRID
+                            }
+
+                        viewModes[libraryMode] =
+                            newViewMode
+
+                        LibraryViewModePreferences.set(
+                            context,
+                            libraryMode,
+                            newViewMode
+                        )
+                    },
+                    modifier = Modifier.size(
+                        40.dp
+                    )
+                ) {
+                    Icon(
+                        imageVector =
+                            if (
+                                currentViewMode == LibraryViewMode.GRID
+                            ) {
+                                Icons.AutoMirrored.Filled.ViewList
+                            } else {
+                                Icons.Default.GridView
+                            },
+                        contentDescription =
+                            if (
+                                currentViewMode == LibraryViewMode.GRID
+                            ) {
+                                "Switch to list view"
+                            } else {
+                                "Switch to grid view"
+                            },
+                        tint = AuralArcStyle.TextPrimary,
                         modifier = Modifier.size(
                             22.dp
                         )
@@ -2398,6 +2574,8 @@ private fun LibraryTabContent(
                 libraryMode == LibraryMode.ALBUMS -> {
                     AlbumBrowserScreen(
                         tracks = searchedTracks,
+                        viewMode = currentViewMode,
+                        tracks = searchedTracks,
                         onAlbumSelected = { album ->
                             onSelectedAlbumChange(
                                 album
@@ -2409,6 +2587,7 @@ private fun LibraryTabContent(
                 libraryMode == LibraryMode.ARTISTS -> {
                     ArtistBrowserScreen(
                         tracks = searchedTracks,
+                        viewMode = currentViewMode,
                         onArtistSelected = { artist ->
                             onSelectedArtistChange(
                                 artist
@@ -2430,6 +2609,7 @@ private fun LibraryTabContent(
                             PlaylistBrowserScreen(
                                 allTracks = tracks,
                                 librarySource = librarySource,
+                                viewMode = currentViewMode,
                                 onPlaylistSelected = { playlistId ->
                                     onSelectedPlaylistChange(
                                         playlistId

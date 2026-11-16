@@ -641,6 +641,36 @@ object QueueManager {
         return null
     }
 
+    fun isAtEndOfQueue(): Boolean {
+        return queue.isNotEmpty() &&
+                currentIndex == queue.lastIndex
+    }
+
+    fun appendTracksToEnd(
+        tracks: List<MusicTrack>
+    ) {
+        if (
+            tracks.isEmpty()
+        ) {
+            return
+        }
+
+        val entries =
+            createEntries(
+                tracks
+            )
+
+        queue.addAll(
+            entries
+        )
+
+        normalQueue.addAll(
+            entries
+        )
+
+        notifyQueueChanged()
+    }
+
     fun addToQueue(
         track: MusicTrack
     ) {

@@ -19,6 +19,36 @@ object AudioBehaviorPreferences {
     private const val KEY_SMART_SHUFFLE_LEVEL =
         "smart_shuffle_level"
 
+    private const val KEY_AUTOPLAY_ENABLED =
+        "autoplay_enabled"
+
+    fun getAutoplayEnabled(
+        context: Context
+    ): Boolean {
+        return context.getSharedPreferences(
+            PREFS_NAME,
+            Context.MODE_PRIVATE
+        ).getBoolean(
+            KEY_AUTOPLAY_ENABLED,
+            true
+        )
+    }
+
+    fun setAutoplayEnabled(
+        context: Context,
+        enabled: Boolean
+    ) {
+        context.getSharedPreferences(
+            PREFS_NAME,
+            Context.MODE_PRIVATE
+        ).edit()
+            .putBoolean(
+                KEY_AUTOPLAY_ENABLED,
+                enabled
+            )
+            .apply()
+    }
+
     fun getStopWhenAppClosed(
         context: Context
     ): Boolean {

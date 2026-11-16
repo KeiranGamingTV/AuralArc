@@ -117,15 +117,15 @@ fun PlaylistArtwork(
 
     val artworkPaths =
         if (
+            isLikedSongs
+        ) {
+            emptyList()
+        } else if (
             !customArtworkPath.isNullOrBlank()
         ) {
             listOf(
                 customArtworkPath
             )
-        } else if (
-            isLikedSongs
-        ) {
-            emptyList()
         } else {
             automaticArtworkPaths
         }

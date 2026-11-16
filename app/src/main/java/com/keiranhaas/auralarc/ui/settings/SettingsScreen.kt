@@ -460,6 +460,14 @@ fun AudioBehaviorSettingsScreen(
         )
     }
 
+    var autoplayEnabled by remember {
+        mutableStateOf(
+            AudioBehaviorPreferences.getAutoplayEnabled(
+                context
+            )
+        )
+    }
+
     var smartShuffleLevel by remember {
         mutableStateOf(
             AudioBehaviorPreferences.getSmartShuffleLevel(
@@ -521,6 +529,21 @@ fun AudioBehaviorSettingsScreen(
 
                 PlayerManager.applyAudioBehaviorPreferences(
                     context
+                )
+            }
+        )
+
+        SettingsToggleCard(
+            title = "Autoplay",
+            subtitle = "When your queue ends, keep playing songs similar to what you were just listening to.",
+            checked = autoplayEnabled,
+            onCheckedChange = { enabled ->
+                autoplayEnabled =
+                    enabled
+
+                AudioBehaviorPreferences.setAutoplayEnabled(
+                    context,
+                    enabled
                 )
             }
         )
