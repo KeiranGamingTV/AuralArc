@@ -31,6 +31,7 @@ import com.keiranhaas.auralarc.R
 import com.keiranhaas.auralarc.navigation.Screen
 import com.keiranhaas.auralarc.player.PlayerManager
 import com.keiranhaas.auralarc.storage.AppearancePreferences
+import com.keiranhaas.auralarc.storage.PowerSavingPreferences
 import com.keiranhaas.auralarc.storage.AudioBehaviorPreferences
 import com.keiranhaas.auralarc.storage.FolderManager
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
@@ -48,6 +49,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import com.keiranhaas.auralarc.ui.components.AuralArcSlider
 import com.keiranhaas.auralarc.ui.components.AuralArcSwitch
+import com.keiranhaas.auralarc.storage.DrivingModePreferences
 
 @Composable
 fun SettingsScreen(
@@ -55,6 +57,25 @@ fun SettingsScreen(
 ) {
     val context =
         LocalContext.current
+
+    var drivingModeEnabled by remember {
+        mutableStateOf(
+            DrivingModePreferences.isDrivingModeEnabled(context)
+        )
+    }
+
+
+    PowerSavingPreferences.initialize(context)
+
+    var powerSavingEnabled by remember {
+        mutableStateOf(
+            PowerSavingPreferences.isEnabled()
+        )
+    }
+
+    var showPowerSavingConfirmation by remember {
+        mutableStateOf(false)
+    }
 
     var duetLyricsEnabled by remember {
         mutableStateOf(
@@ -69,6 +90,75 @@ fun SettingsScreen(
         navController = navController
     ) {
         SettingsToggleCard(
+            title = "Power Saving Mode",
+            subtitle = if (powerSavingEnabled) {
+                "Enabled. Navidrome access is blocked and Fluid UI Motion is disabled."
+            } else {
+                "Reduce background network activity, interface motion, and visual effects."
+            },
+            checked = powerSavingEnabled,
+            onCheckedChange = { enabled ->
+                if (enabled) {
+                    showPowerSavingConfirmation = true
+                } else {
+                    PowerSavingPreferences.setEnabled(
+                        context,
+                        false
+                    )
+                    powerSavingEnabled = false
+                }
+            }
+        )
+
+        if (showPowerSavingConfirmation) {
+            AlertDialog(
+                onDismissRequest = {
+                    showPowerSavingConfirmation = false
+                },
+                title = {
+                    Text(
+                        text = "Enable Power Saving Mode?",
+                        color = AuralArcStyle.TextPrimary
+                    )
+                },
+                text = {
+                    Text(
+                        text = "This mode is designed to reduce battery use by disabling Navidrome access, " +
+                                "turning off Fluid UI Motion, and using a black interface. " +
+                                "Local music playback remains available. Audio quality for local files " +
+                                "will not be changed.",
+                        color = AuralArcStyle.TextSecondary
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            PowerSavingPreferences.setEnabled(
+                                context,
+                                true
+                            )
+                            PlayerManager.pauseNetworkPlaybackForPowerSaving()
+                            powerSavingEnabled = true
+                            showPowerSavingConfirmation = false
+                        }
+                    ) {
+                        Text("Enable")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            showPowerSavingConfirmation = false
+                        }
+                    ) {
+                        Text("Keep Disabled")
+                    }
+                },
+                backgroundColor = AuralArcStyle.Surface
+            )
+        }
+
+        SettingsToggleCard(
             title = "Enable Duet Lyrics",
             subtitle = "Use matching .dlrc files with separate synchronized lyrics for two singers.",
             checked = duetLyricsEnabled,
@@ -82,6 +172,24 @@ fun SettingsScreen(
                 )
 
                 LyricsState.invalidateLyricsFileIndex()
+            }
+        )
+
+        SettingsToggleCard(
+            title = "Driving Mode",
+            subtitle = if (drivingModeEnabled) {
+                "Enabled. Large driving controls and configured Bluetooth activation are available."
+            } else {
+                "Disabled. Enable this to use the simplified, high-visibility driving interface."
+            },
+            checked = drivingModeEnabled,
+            onCheckedChange = { enabled ->
+                DrivingModePreferences.setDrivingModeEnabled(
+                    context,
+                    enabled
+                )
+
+                drivingModeEnabled = enabled
             }
         )
 
@@ -460,9 +568,7 @@ fun AboutSettingsScreen(
 
     val releaseNotes =
         listOf(
-            "Added support for Duet LRC line-by-line color notation.",
-            "Added shuffle and play buttons to album, artist, and playlist headers.",
-            "Added shuffle and play buttons to Songs page."
+            "Added Power Saving Mode."
         )
 
     SettingsMenuScaffold(
@@ -586,21 +692,21 @@ fun AboutSettingsScreen(
 
                         Icon(
                             imageVector =
-                            if (
-                                releaseNotesExpanded
-                            ) {
-                                Icons.Default.ExpandLess
-                            } else {
-                                Icons.Default.ExpandMore
-                            },
+                                if (
+                                    releaseNotesExpanded
+                                ) {
+                                    Icons.Default.ExpandLess
+                                } else {
+                                    Icons.Default.ExpandMore
+                                },
                             contentDescription =
-                            if (
-                                releaseNotesExpanded
-                            ) {
-                                "Collapse release notes"
-                            } else {
-                                "Expand release notes"
-                            },
+                                if (
+                                    releaseNotesExpanded
+                                ) {
+                                    "Collapse release notes"
+                                } else {
+                                    "Expand release notes"
+                                },
                             tint = AuralArcStyle.TextSecondary
                         )
                     }

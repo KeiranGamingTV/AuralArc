@@ -73,6 +73,8 @@ import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
 import com.keiranhaas.auralarc.utils.audioQualitySummary
 import kotlinx.coroutines.delay
 import kotlin.math.abs
+import com.keiranhaas.auralarc.storage.PowerSavingPreferences
+import androidx.compose.foundation.gestures.scrollBy
 
 private val DuetSingerOneColor =
     Color(
@@ -1686,19 +1688,25 @@ private fun DuetSyncedLyricsText(
                             scrollDistance
                         ) > 4
                     ) {
-                        listState.animateScrollBy(
-                            scrollDistance.toFloat()
-                        )
+                        if (PowerSavingPreferences.isEnabled()) {
+                            listState.scrollBy(
+                                scrollDistance.toFloat()
+                            )
+                        } else {
+                            listState.animateScrollBy(
+                                scrollDistance.toFloat()
+                            )
+                        }
                     }
                 } else {
-                    listState.animateScrollToItem(
-                        (
-                                activeIndex -
-                                        3
-                                ).coerceAtLeast(
-                                0
-                            )
-                    )
+                    val targetIndex =
+                        (activeIndex - 3).coerceAtLeast(0)
+
+                    if (PowerSavingPreferences.isEnabled()) {
+                        listState.scrollToItem(targetIndex)
+                    } else {
+                        listState.animateScrollToItem(targetIndex)
+                    }
                 }
             }
         } finally {
@@ -2095,9 +2103,15 @@ private fun SyncedLyricsText(
                         scrollDistance
                     ) > 4
                 ) {
-                    listState.animateScrollBy(
-                        scrollDistance.toFloat()
-                    )
+                    if (PowerSavingPreferences.isEnabled()) {
+                        listState.scrollBy(
+                            scrollDistance.toFloat()
+                        )
+                    } else {
+                        listState.animateScrollBy(
+                            scrollDistance.toFloat()
+                        )
+                    }
                 }
             } else {
                 /*
@@ -2113,9 +2127,11 @@ private fun SyncedLyricsText(
                             0
                         )
 
-                listState.animateScrollToItem(
-                    anchorIndex
-                )
+                if (PowerSavingPreferences.isEnabled()) {
+                    listState.scrollToItem(anchorIndex)
+                } else {
+                    listState.animateScrollToItem(anchorIndex)
+                }
 
                 delay(
                     16L
@@ -2156,9 +2172,15 @@ private fun SyncedLyricsText(
                             finalScrollDistance
                         ) > 4
                     ) {
-                        listState.animateScrollBy(
-                            finalScrollDistance.toFloat()
-                        )
+                        if (PowerSavingPreferences.isEnabled()) {
+                            listState.scrollBy(
+                                finalScrollDistance.toFloat()
+                            )
+                        } else {
+                            listState.animateScrollBy(
+                                finalScrollDistance.toFloat()
+                            )
+                        }
                     }
                 }
             }

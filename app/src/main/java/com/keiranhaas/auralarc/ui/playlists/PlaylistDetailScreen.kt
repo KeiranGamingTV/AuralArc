@@ -227,14 +227,19 @@ fun PlaylistDetailScreen(
             56.dp.roundToPx()
         }
 
-    val headerCollapsed by remember(
+    val headerCollapseProgress by remember(
         playlistListState,
         headerCollapseThresholdPx
     ) {
         derivedStateOf {
-            playlistListState.firstVisibleItemIndex > 0 ||
-                    playlistListState.firstVisibleItemScrollOffset >
-                    headerCollapseThresholdPx
+            if (playlistListState.firstVisibleItemIndex > 0) {
+                1f
+            } else {
+                (
+                        playlistListState.firstVisibleItemScrollOffset.toFloat() /
+                                headerCollapseThresholdPx.coerceAtLeast(1)
+                        ).coerceIn(0f, 1f)
+            }
         }
     }
 
@@ -302,7 +307,7 @@ fun PlaylistDetailScreen(
                 playlistTracks
             ),
             canEdit = canEdit,
-            collapsed = headerCollapsed,
+            collapseProgress = headerCollapseProgress,
             artworkRefreshKey = artworkRefreshKey,
             hasCustomArtwork = hasCustomArtwork,
             onBack = onBack,
@@ -496,7 +501,7 @@ private fun PlaylistDetailHeader(
     trackCount: Int,
     totalDuration: String,
     canEdit: Boolean,
-    collapsed: Boolean,
+    collapseProgress: Float,
     artworkRefreshKey: Int,
     hasCustomArtwork: Boolean,
     onBack: () -> Unit,
@@ -525,19 +530,15 @@ private fun PlaylistDetailHeader(
             "$trackCount songs • $totalDuration"
         }
 
+    val collapsed = collapseProgress >= 0.5f
+    val artworkSize = 104.dp * (1f - collapseProgress) + 44.dp * collapseProgress
+
     AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
                 horizontal = 10.dp,
-                vertical =
-                    if (
-                        collapsed
-                    ) {
-                        4.dp
-                    } else {
-                        8.dp
-                    }
+                vertical = 8.dp - 4.dp * collapseProgress
             ),
         shape = AuralArcStyle.CardShape,
         backgroundColor = AuralArcStyle.SurfaceBright,
@@ -603,7 +604,7 @@ private fun PlaylistDetailHeader(
                     PlaylistArtwork(
                         playlist = playlist,
                         tracks = tracks,
-                        size = 44.dp,
+                        size = artworkSize,
                         refreshKey = artworkRefreshKey
                     )
 
@@ -707,7 +708,7 @@ private fun PlaylistDetailHeader(
                         PlaylistArtwork(
                             playlist = playlist,
                             tracks = tracks,
-                            size = 104.dp,
+                            size = artworkSize,
                             refreshKey = artworkRefreshKey
                         )
 

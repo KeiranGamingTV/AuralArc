@@ -1802,25 +1802,35 @@ private fun LibraryTabContent(
     val albumDetailListState = rememberLazyListState()
     val artistDetailListState = rememberLazyListState()
 
-    val albumHeaderCollapsed by remember(
+    val albumCollapseProgress by remember(
         albumDetailListState,
         headerCollapseThresholdPx
     ) {
         derivedStateOf {
-            albumDetailListState.firstVisibleItemIndex > 0 ||
-                    albumDetailListState.firstVisibleItemScrollOffset >
-                    headerCollapseThresholdPx
+            if (albumDetailListState.firstVisibleItemIndex > 0) {
+                1f
+            } else {
+                (
+                        albumDetailListState.firstVisibleItemScrollOffset.toFloat() /
+                                headerCollapseThresholdPx.coerceAtLeast(1)
+                        ).coerceIn(0f, 1f)
+            }
         }
     }
 
-    val artistHeaderCollapsed by remember(
+    val artistCollapseProgress by remember(
         artistDetailListState,
         headerCollapseThresholdPx
     ) {
         derivedStateOf {
-            artistDetailListState.firstVisibleItemIndex > 0 ||
-                    artistDetailListState.firstVisibleItemScrollOffset >
-                    headerCollapseThresholdPx
+            if (artistDetailListState.firstVisibleItemIndex > 0) {
+                1f
+            } else {
+                (
+                        artistDetailListState.firstVisibleItemScrollOffset.toFloat() /
+                                headerCollapseThresholdPx.coerceAtLeast(1)
+                        ).coerceIn(0f, 1f)
+            }
         }
     }
 
@@ -2231,7 +2241,7 @@ private fun LibraryTabContent(
                                 ?.releaseYear
                                 ?.toString()
                                 ?: "Unknown release date",
-                            collapsed = albumHeaderCollapsed,
+                            collapseProgress = albumCollapseProgress,
                             albumArtPath = albumArtPath,
                             showAddArtwork =
                                 librarySource ==
@@ -2329,7 +2339,7 @@ private fun LibraryTabContent(
                             totalDuration = totalDurationText(
                                 artistTracks
                             ),
-                            collapsed = artistHeaderCollapsed,
+                            collapseProgress = artistCollapseProgress,
                             artistArtPath = artistArtPath,
                             onBack = {
                                 onSelectedArtistChange(
@@ -4133,18 +4143,21 @@ private fun AlbumDetailHeader(
     releaseDate: String,
     albumArtPath: String?,
     showAddArtwork: Boolean,
-    collapsed: Boolean,
+    collapseProgress: Float,
     onBack: () -> Unit,
     onPlayAll: () -> Unit,
     onShufflePlay: () -> Unit,
     onAddArtwork: () -> Unit
 ) {
+    val collapsed = collapseProgress >= 0.5f
+    val artworkSize = 104.dp * (1f - collapseProgress) + 44.dp * collapseProgress
+
     AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
                 horizontal = 10.dp,
-                vertical = if (collapsed) 4.dp else 8.dp
+                vertical = 8.dp - 4.dp * collapseProgress
             )
             .animateContentSize(),
         shape = AuralArcStyle.CardShape,
@@ -4168,7 +4181,7 @@ private fun AlbumDetailHeader(
 
                 TrackArtwork(
                     albumArtPath = albumArtPath,
-                    size = 44.dp
+                    size = artworkSize
                 )
 
                 Spacer(Modifier.width(10.dp))
@@ -4253,7 +4266,7 @@ private fun AlbumDetailHeader(
                 ) {
                     TrackArtwork(
                         albumArtPath = albumArtPath,
-                        size = 104.dp
+                        size = artworkSize
                     )
 
                     Spacer(Modifier.width(14.dp))
@@ -4391,17 +4404,20 @@ private fun ArtistDetailHeader(
     songCount: Int,
     totalDuration: String,
     artistArtPath: String?,
-    collapsed: Boolean,
+    collapseProgress: Float,
     onBack: () -> Unit,
     onPlayAll: () -> Unit,
     onShufflePlay: () -> Unit
 ) {
+    val collapsed = collapseProgress >= 0.5f
+    val artworkSize = 104.dp * (1f - collapseProgress) + 44.dp * collapseProgress
+
     AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
                 horizontal = 10.dp,
-                vertical = if (collapsed) 4.dp else 8.dp
+                vertical = 8.dp - 4.dp * collapseProgress
             )
             .animateContentSize(),
         shape = AuralArcStyle.CardShape,
@@ -4425,7 +4441,7 @@ private fun ArtistDetailHeader(
 
                 TrackArtwork(
                     albumArtPath = artistArtPath,
-                    size = 44.dp
+                    size = artworkSize
                 )
 
                 Spacer(Modifier.width(10.dp))
@@ -4491,7 +4507,7 @@ private fun ArtistDetailHeader(
                 ) {
                     TrackArtwork(
                         albumArtPath = artistArtPath,
-                        size = 104.dp
+                        size = artworkSize
                     )
 
                     Spacer(Modifier.width(14.dp))

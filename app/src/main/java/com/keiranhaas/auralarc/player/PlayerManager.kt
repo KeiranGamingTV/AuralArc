@@ -1022,6 +1022,25 @@ object PlayerManager {
         )
     }
 
+    fun pauseNetworkPlaybackForPowerSaving() {
+        val activePlayer = player ?: return
+
+        val currentUri =
+            activePlayer.currentMediaItem
+                ?.localConfiguration
+                ?.uri
+                ?: return
+
+        val scheme = currentUri.scheme.orEmpty()
+
+        if (
+            scheme.equals("http", ignoreCase = true) ||
+            scheme.equals("https", ignoreCase = true)
+        ) {
+            pause()
+        }
+    }
+
     fun pause() {
         player?.pause()
 

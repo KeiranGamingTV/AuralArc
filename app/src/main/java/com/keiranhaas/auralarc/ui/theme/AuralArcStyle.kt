@@ -4,6 +4,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.keiranhaas.auralarc.storage.PowerSavingPreferences
 
 object AuralArcStyle {
 
@@ -13,20 +14,43 @@ object AuralArcStyle {
      * ------------------------------------------------------------------------
      */
 
-    val BackgroundTop =
-        Color(0xFF140B24)
+    private val powerSavingBlack: Boolean
+        get() = PowerSavingPreferences.isEnabled()
 
-    val BackgroundBottom =
-        Color(0xFF05020A)
+    val BackgroundTop: Color
+        get() = if (powerSavingBlack) {
+            Color.Black
+        } else {
+            Color(0xFF140B24)
+        }
 
-    val Surface =
-        Color(0xFF171024)
+    val BackgroundBottom: Color
+        get() = if (powerSavingBlack) {
+            Color.Black
+        } else {
+            Color(0xFF05020A)
+        }
 
-    val SurfaceBright =
-        Color(0xFF211433)
+    val Surface: Color
+        get() = if (powerSavingBlack) {
+            Color(0xFF050505)
+        } else {
+            Color(0xFF171024)
+        }
 
-    val SurfaceSoft =
-        Color(0xFF2C1A45)
+    val SurfaceBright: Color
+        get() = if (powerSavingBlack) {
+            Color(0xFF101010)
+        } else {
+            Color(0xFF211433)
+        }
+
+    val SurfaceSoft: Color
+        get() = if (powerSavingBlack) {
+            Color(0xFF181818)
+        } else {
+            Color(0xFF2C1A45)
+        }
 
     val Purple =
         Color(0xFF9B5CFF)
@@ -62,20 +86,32 @@ object AuralArcStyle {
      * keeping the existing visual identity.
      */
 
-    val SurfaceContainerLowest =
-        Color(0xFF0B0612)
+    val SurfaceContainerLowest: Color
+        get() = if (powerSavingBlack) {
+            Color.Black
+        } else {
+            Color(0xFF0B0612)
+        }
 
-    val SurfaceContainerLow =
-        Color(0xFF120B1D)
+    val SurfaceContainerLow: Color
+        get() = if (powerSavingBlack) {
+            Color(0xFF050505)
+        } else {
+            Color(0xFF120B1D)
+        }
 
-    val SurfaceContainer =
-        Color(0xFF171024)
+    val SurfaceContainer: Color
+        get() = Surface
 
-    val SurfaceContainerHigh =
-        Color(0xFF211433)
+    val SurfaceContainerHigh: Color
+        get() = SurfaceBright
 
-    val SurfaceContainerHighest =
-        Color(0xFF2C1A45)
+    val SurfaceContainerHighest: Color
+        get() = if (powerSavingBlack) {
+            Color(0xFF181818)
+        } else {
+            Color(0xFF2C1A45)
+        }
 
     /*
      * ------------------------------------------------------------------------
@@ -129,23 +165,39 @@ object AuralArcStyle {
      */
 
     fun appBackgroundBrush(): Brush {
-        return Brush.verticalGradient(
-            colors =
-                listOf(
-                    BackgroundTop,
-                    BackgroundBottom
+        if (PowerSavingPreferences.isEnabled()) {
+            return Brush.verticalGradient(
+                colors = listOf(
+                    Color.Black,
+                    Color.Black
                 )
+            )
+        }
+
+        return Brush.verticalGradient(
+            colors = listOf(
+                BackgroundTop,
+                BackgroundBottom
+            )
         )
     }
 
     fun artworkBrush(): Brush {
-        return Brush.linearGradient(
-            colors =
-                listOf(
-                    PurpleBright,
-                    Purple,
-                    PurpleDark
+        if (PowerSavingPreferences.isEnabled()) {
+            return Brush.linearGradient(
+                colors = listOf(
+                    Color.Black,
+                    Color.Black
                 )
+            )
+        }
+
+        return Brush.linearGradient(
+            colors = listOf(
+                PurpleBright,
+                Purple,
+                PurpleDark
+            )
         )
     }
 }

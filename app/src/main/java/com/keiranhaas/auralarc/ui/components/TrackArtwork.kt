@@ -30,6 +30,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxSize
 import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import com.keiranhaas.auralarc.ui.theme.AuralArcMotion
+import com.keiranhaas.auralarc.ui.theme.AuralArcCrossfade
 
 @Composable
 fun TrackArtwork(
@@ -105,15 +106,8 @@ fun TrackArtwork(
         val loadedBitmap =
             bitmap
 
-        Crossfade(
-            targetState = loadedBitmap,
-            animationSpec =
-                tween(
-                    durationMillis =
-                        AuralArcMotion.FAST,
-                    easing =
-                        FastOutSlowInEasing
-                )
+        AuralArcCrossfade(
+            targetState = loadedBitmap
         ) { artwork ->
             if (
                 artwork != null

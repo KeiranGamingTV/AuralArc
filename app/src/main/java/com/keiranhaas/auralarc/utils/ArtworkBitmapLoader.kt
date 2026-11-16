@@ -19,6 +19,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
 import java.util.concurrent.ConcurrentHashMap
+import com.keiranhaas.auralarc.storage.PowerSavingPreferences
 
 object ArtworkBitmapLoader {
 
@@ -148,6 +149,23 @@ object ArtworkBitmapLoader {
             key
         )?.let { cached ->
             return cached
+        }
+
+        val isRemoteArtwork =
+            cleanPath.startsWith(
+                "http://",
+                ignoreCase = true
+            ) ||
+                    cleanPath.startsWith(
+                        "https://",
+                        ignoreCase = true
+                    )
+
+        if (
+            isRemoteArtwork &&
+            PowerSavingPreferences.isEnabled()
+        ) {
+            return null
         }
 
         val existingLoad =

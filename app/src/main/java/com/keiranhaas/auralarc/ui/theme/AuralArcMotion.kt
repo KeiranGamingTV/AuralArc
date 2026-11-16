@@ -109,21 +109,8 @@ fun <T> AuralArcContentTransition(
     val motionEnabled =
         rememberAuralArcMotionEnabled()
 
-    if (
-        !motionEnabled
-    ) {
-        Crossfade(
-            targetState = targetState,
-            animationSpec = tween(
-                durationMillis =
-                    AuralArcMotion.NORMAL
-            )
-        ) { state ->
-            content(
-                state
-            )
-        }
-
+    if (!motionEnabled) {
+        content(targetState)
         return
     }
 
@@ -194,15 +181,20 @@ fun <T> AuralArcCrossfade(
     targetState: T,
     content: @Composable (T) -> Unit
 ) {
+    val motionEnabled =
+        rememberAuralArcMotionEnabled()
+
+    if (!motionEnabled) {
+        content(targetState)
+        return
+    }
+
     Crossfade(
         targetState = targetState,
         animationSpec = tween(
-            durationMillis =
-                AuralArcMotion.NORMAL
+            durationMillis = AuralArcMotion.NORMAL
         )
     ) { state ->
-        content(
-            state
-        )
+        content(state)
     }
 }

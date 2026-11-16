@@ -22,13 +22,23 @@ import android.graphics.Color
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.keiranhaas.auralarc.storage.SetupPreferences
+import com.keiranhaas.auralarc.storage.PowerSavingPreferences
 import com.keiranhaas.auralarc.ui.setup.FirstRunSetupScreen
 import com.keiranhaas.auralarc.utils.ArtworkBitmapLoader
+import androidx.compose.runtime.mutableStateOf
 
 class MainActivity : ComponentActivity() {
 
+    companion object {
+        const val EXTRA_OPEN_DRIVING_MODE =
+            "com.keiranhaas.auralarc.OPEN_DRIVING_MODE"
+    }
+
     private var appContentShown =
         false
+
+    private val openDrivingModeRequest =
+        mutableStateOf(false)
 
     private var pendingIntentToHandle: Intent? =
         null
@@ -41,11 +51,26 @@ class MainActivity : ComponentActivity() {
         )
 
         configureForegroundWindow()
+        PowerSavingPreferences.initialize(this)
 
         preferHighRefreshRate()
 
         pendingIntentToHandle =
             intent
+
+        openDrivingModeRequest.value =
+            intent.getBooleanExtra(
+                EXTRA_OPEN_DRIVING_MODE,
+                false
+            )
+
+        if (openDrivingModeRequest.value) {
+            (
+                    getSystemService(
+                        android.content.Context.NOTIFICATION_SERVICE
+                    ) as android.app.NotificationManager
+                    ).cancel(4102)
+        }
 
         FolderManager.folders =
             FolderPreferences.loadFolders(
@@ -108,6 +133,20 @@ class MainActivity : ComponentActivity() {
 
         pendingIntentToHandle =
             intent
+
+        openDrivingModeRequest.value =
+            intent.getBooleanExtra(
+                EXTRA_OPEN_DRIVING_MODE,
+                false
+            )
+
+        if (openDrivingModeRequest.value) {
+            (
+                    getSystemService(
+                        android.content.Context.NOTIFICATION_SERVICE
+                    ) as android.app.NotificationManager
+                    ).cancel(4102)
+        }
 
         if (
             appContentShown ||
@@ -230,7 +269,13 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             AuralArcTheme {
-                AuralArcNavigation()
+                AuralArcNavigation(
+                    openDrivingModeRequest =
+                        openDrivingModeRequest.value,
+                    onDrivingModeRequestHandled = {
+                        openDrivingModeRequest.value = false
+                    }
+                )
             }
         }
 

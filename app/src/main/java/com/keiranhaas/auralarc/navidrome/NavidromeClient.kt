@@ -15,6 +15,7 @@ import java.net.URL
 import java.security.MessageDigest
 import com.keiranhaas.auralarc.utils.codecLabelFromMimeOrName
 import com.keiranhaas.auralarc.utils.inferLossless
+import com.keiranhaas.auralarc.storage.PowerSavingPreferences
 
 class NavidromeClient(
     private val credentials: NavidromeCredentials
@@ -963,6 +964,10 @@ class NavidromeClient(
         endpoint: String,
         extraParams: Map<String, String> = emptyMap()
     ): String {
+        check(!PowerSavingPreferences.isEnabled()) {
+            "Navidrome is disabled while Power Saving Mode is enabled."
+        }
+
         val cleanBaseUrl =
             credentials.serverUrl
                 .trim()

@@ -29,6 +29,7 @@ import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.Locale
+import com.keiranhaas.auralarc.storage.PowerSavingPreferences
 
 @Composable
 fun ListeningStatsScreen(
@@ -100,14 +101,16 @@ fun ListeningStatsScreen(
     LaunchedEffect(
         metadataFingerprint
     ) {
+        if (PowerSavingPreferences.isEnabled()) {
+            return@LaunchedEffect
+        }
+
         withContext(
             Dispatchers.IO
         ) {
             ListeningStatsStore.refreshTrackMetadata(
-                context =
-                    context.applicationContext,
-                tracks =
-                    allTracks
+                context = context.applicationContext,
+                tracks = allTracks
             )
         }
 

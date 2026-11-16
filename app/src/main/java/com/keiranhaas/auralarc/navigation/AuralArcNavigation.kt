@@ -17,14 +17,27 @@ import com.keiranhaas.auralarc.ui.theme.AuralArcMotion
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import com.keiranhaas.auralarc.storage.AppearancePreferences
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import com.keiranhaas.auralarc.storage.DrivingModePreferences
+import com.keiranhaas.auralarc.ui.driving.DrivingModeScreen
 
 @Composable
-fun AuralArcNavigation() {
+fun AuralArcNavigation(
+    openDrivingModeRequest: Boolean = false,
+    onDrivingModeRequestHandled: () -> Unit = {}
+) {
     val navController =
         rememberNavController()
 
     val context =
         LocalContext.current
+
+    DrivingModePreferences.initialize(context)
+
+    val drivingModeEnabled =
+        DrivingModePreferences.drivingModeEnabled
 
     AppearancePreferences.initializePageAnimations(
         context
@@ -35,303 +48,329 @@ fun AuralArcNavigation() {
 
     ListeningStatsTracker()
 
-    NavHost(
-        navController = navController,
-        startDestination = Screen.Library.route,
-        enterTransition = {
-            if (
-                pageAnimationsEnabled
-            ) {
-                scaleIn(
-                    initialScale =
-                        AuralArcMotion.CONTENT_ENTER_SCALE,
-                    animationSpec = spring(
-                        dampingRatio =
-                            AuralArcMotion.DAMPING_RATIO,
-                        stiffness =
-                            AuralArcMotion.STIFFNESS
-                    )
-                ) +
-                        fadeIn(
-                            animationSpec = tween(
-                                durationMillis = 90
-                            )
-                        )
-            } else {
-                fadeIn(
-                    animationSpec = tween(
-                        durationMillis =
-                            AuralArcMotion.NORMAL
-                    )
-                )
-            }
-        },
+    LaunchedEffect(openDrivingModeRequest) {
+        if (openDrivingModeRequest) {
+            DrivingModePreferences.setDrivingModeEnabled(
+                context,
+                true
+            )
 
-        exitTransition = {
-            if (
-                pageAnimationsEnabled
-            ) {
-                scaleOut(
-                    targetScale =
-                        AuralArcMotion.CONTENT_EXIT_SCALE,
-                    animationSpec = spring(
-                        dampingRatio =
-                            AuralArcMotion.DAMPING_RATIO,
-                        stiffness =
-                            AuralArcMotion.STIFFNESS
-                    )
-                ) +
-                        fadeOut(
-                            animationSpec = tween(
-                                durationMillis = 110
-                            )
-                        )
-            } else {
-                fadeOut(
-                    animationSpec = tween(
-                        durationMillis =
-                            AuralArcMotion.NORMAL
-                    )
-                )
-            }
-        },
-
-        popEnterTransition = {
-            if (
-                pageAnimationsEnabled
-            ) {
-                scaleIn(
-                    initialScale =
-                        AuralArcMotion.CONTENT_EXIT_SCALE,
-                    animationSpec = spring(
-                        dampingRatio =
-                            AuralArcMotion.DAMPING_RATIO,
-                        stiffness =
-                            AuralArcMotion.STIFFNESS
-                    )
-                ) +
-                        fadeIn(
-                            animationSpec = tween(
-                                durationMillis = 90
-                            )
-                        )
-            } else {
-                fadeIn(
-                    animationSpec = tween(
-                        durationMillis =
-                            AuralArcMotion.NORMAL
-                    )
-                )
-            }
-        },
-
-        popExitTransition = {
-            if (
-                pageAnimationsEnabled
-            ) {
-                scaleOut(
-                    targetScale =
-                        AuralArcMotion.CONTENT_ENTER_SCALE,
-                    animationSpec = spring(
-                        dampingRatio =
-                            AuralArcMotion.DAMPING_RATIO,
-                        stiffness =
-                            AuralArcMotion.STIFFNESS
-                    )
-                ) +
-                        fadeOut(
-                            animationSpec = tween(
-                                durationMillis = 110
-                            )
-                        )
-            } else {
-                fadeOut(
-                    animationSpec = tween(
-                        durationMillis =
-                            AuralArcMotion.NORMAL
-                    )
-                )
-            }
+            onDrivingModeRequestHandled()
         }
+    }
+
+    Box(
+        modifier = Modifier.fillMaxSize()
     ) {
-        composable(
-            Screen.Library.route
-        ) {
-            MusicLibraryView(
-                navController = navController
-            )
-        }
+        if (!drivingModeEnabled) {
+            NavHost(
+                navController = navController,
+                startDestination = Screen.Library.route,
+                enterTransition = {
+                    if (
+                        pageAnimationsEnabled
+                    ) {
+                        scaleIn(
+                            initialScale =
+                                AuralArcMotion.CONTENT_ENTER_SCALE,
+                            animationSpec = spring(
+                                dampingRatio =
+                                    AuralArcMotion.DAMPING_RATIO,
+                                stiffness =
+                                    AuralArcMotion.STIFFNESS
+                            )
+                        ) +
+                                fadeIn(
+                                    animationSpec = tween(
+                                        durationMillis = 90
+                                    )
+                                )
+                    } else {
+                        fadeIn(
+                            animationSpec = tween(
+                                durationMillis =
+                                    AuralArcMotion.NORMAL
+                            )
+                        )
+                    }
+                },
 
-        composable(
-            Screen.NowPlaying.route
-        ) {
-            NowPlayingScreen(
-                navController = navController
-            )
-        }
+                exitTransition = {
+                    if (
+                        pageAnimationsEnabled
+                    ) {
+                        scaleOut(
+                            targetScale =
+                                AuralArcMotion.CONTENT_EXIT_SCALE,
+                            animationSpec = spring(
+                                dampingRatio =
+                                    AuralArcMotion.DAMPING_RATIO,
+                                stiffness =
+                                    AuralArcMotion.STIFFNESS
+                            )
+                        ) +
+                                fadeOut(
+                                    animationSpec = tween(
+                                        durationMillis = 110
+                                    )
+                                )
+                    } else {
+                        fadeOut(
+                            animationSpec = tween(
+                                durationMillis =
+                                    AuralArcMotion.NORMAL
+                            )
+                        )
+                    }
+                },
 
-        composable(
-            Screen.Queue.route
-        ) {
-            QueueScreen(
-                navController = navController
-            )
-        }
+                popEnterTransition = {
+                    if (
+                        pageAnimationsEnabled
+                    ) {
+                        scaleIn(
+                            initialScale =
+                                AuralArcMotion.CONTENT_EXIT_SCALE,
+                            animationSpec = spring(
+                                dampingRatio =
+                                    AuralArcMotion.DAMPING_RATIO,
+                                stiffness =
+                                    AuralArcMotion.STIFFNESS
+                            )
+                        ) +
+                                fadeIn(
+                                    animationSpec = tween(
+                                        durationMillis = 90
+                                    )
+                                )
+                    } else {
+                        fadeIn(
+                            animationSpec = tween(
+                                durationMillis =
+                                    AuralArcMotion.NORMAL
+                            )
+                        )
+                    }
+                },
 
-        composable(
-            Screen.Settings.route
-        ) {
-            SettingsScreen(
-                navController = navController
-            )
-        }
-
-        composable(
-            Screen.NavidromeSettings.route
-        ) {
-            NavidromeSettingsScreen(
-                navController = navController
-            )
-        }
-
-        composable(
-            Screen.LibraryFolderSettings.route
-        ) {
-            LibraryFolderSettingsScreen(
-                navController = navController
-            )
-        }
-
-        composable(
-            Screen.ListeningStats.route
-        ) {
-            ListeningStatsScreen(
-                navController = navController
-            )
-        }
-
-        composable(
-            Screen.AppearanceSettings.route
-        ) {
-            AppearanceSettingsScreen(
-                navController = navController
-            )
-        }
-
-        composable(
-            Screen.AudioBehaviorSettings.route
-        ) {
-            AudioBehaviorSettingsScreen(
-                navController = navController
-            )
-        }
-
-        composable(
-            Screen.AboutSettings.route
-        ) {
-            AboutSettingsScreen(
-                navController = navController
-            )
-        }
-
-        composable(
-            Screen.TrackInfo.route
-        ) {
-            val selectedTrack = TrackInfoNavigationState.selectedTrack.value
-
-            if (
-                selectedTrack != null
+                popExitTransition = {
+                    if (
+                        pageAnimationsEnabled
+                    ) {
+                        scaleOut(
+                            targetScale =
+                                AuralArcMotion.CONTENT_ENTER_SCALE,
+                            animationSpec = spring(
+                                dampingRatio =
+                                    AuralArcMotion.DAMPING_RATIO,
+                                stiffness =
+                                    AuralArcMotion.STIFFNESS
+                            )
+                        ) +
+                                fadeOut(
+                                    animationSpec = tween(
+                                        durationMillis = 110
+                                    )
+                                )
+                    } else {
+                        fadeOut(
+                            animationSpec = tween(
+                                durationMillis =
+                                    AuralArcMotion.NORMAL
+                            )
+                        )
+                    }
+                }
             ) {
-                TrackInfoScreen(
-                    track = selectedTrack,
-                    navController = navController
-                )
-            } else {
-                LaunchedEffect(
-                    Unit
+                composable(
+                    Screen.Library.route
                 ) {
-                    navController.popBackStack()
+                    MusicLibraryView(
+                        navController = navController
+                    )
+                }
+
+                composable(
+                    Screen.NowPlaying.route
+                ) {
+                    NowPlayingScreen(
+                        navController = navController
+                    )
+                }
+
+                composable(
+                    Screen.Queue.route
+                ) {
+                    QueueScreen(
+                        navController = navController
+                    )
+                }
+
+                composable(
+                    Screen.Settings.route
+                ) {
+                    SettingsScreen(
+                        navController = navController
+                    )
+                }
+
+                composable(
+                    Screen.NavidromeSettings.route
+                ) {
+                    NavidromeSettingsScreen(
+                        navController = navController
+                    )
+                }
+
+                composable(
+                    Screen.LibraryFolderSettings.route
+                ) {
+                    LibraryFolderSettingsScreen(
+                        navController = navController
+                    )
+                }
+
+                composable(
+                    Screen.ListeningStats.route
+                ) {
+                    ListeningStatsScreen(
+                        navController = navController
+                    )
+                }
+
+                composable(
+                    Screen.AppearanceSettings.route
+                ) {
+                    AppearanceSettingsScreen(
+                        navController = navController
+                    )
+                }
+
+                composable(
+                    Screen.AudioBehaviorSettings.route
+                ) {
+                    AudioBehaviorSettingsScreen(
+                        navController = navController
+                    )
+                }
+
+                composable(
+                    Screen.AboutSettings.route
+                ) {
+                    AboutSettingsScreen(
+                        navController = navController
+                    )
+                }
+
+                composable(
+                    Screen.TrackInfo.route
+                ) {
+                    val selectedTrack = TrackInfoNavigationState.selectedTrack.value
+
+                    if (
+                        selectedTrack != null
+                    ) {
+                        TrackInfoScreen(
+                            track = selectedTrack,
+                            navController = navController
+                        )
+                    } else {
+                        LaunchedEffect(
+                            Unit
+                        ) {
+                            navController.popBackStack()
+                        }
+                    }
+                }
+
+                composable(
+                    Screen.FolderPickerSettings.route
+                ) {
+                    FolderPickerSettingsScreen(
+                        navController = navController
+                    )
+                }
+
+                composable(
+                    Screen.LibraryCleanupSettings.route
+                ) {
+                    LibraryCleanupSettingsScreen(
+                        navController = navController
+                    )
+                }
+
+                composable(
+                    Screen.NavidromeDiagnostics.route
+                ) {
+                    NavidromeDiagnosticsScreen(
+                        navController = navController
+                    )
+                }
+
+                composable(
+                    Screen.NavidromeMenu.route
+                ) {
+                    NavidromeMenuScreen(
+                        navController = navController
+                    )
+                }
+
+                composable(
+                    Screen.LibraryMenu.route
+                ) {
+                    LibraryMenuScreen(
+                        navController = navController
+                    )
+                }
+
+                composable(
+                    Screen.AudioMenu.route
+                ) {
+                    AudioMenuScreen(
+                        navController = navController
+                    )
+                }
+
+                composable(
+                    Screen.AudioAdvancedMenu.route
+                ) {
+                    AdvancedAudioMenuScreen(
+                        navController = navController
+                    )
+                }
+
+                composable(
+                    Screen.AudioInfoSettings.route
+                ) {
+                    AudioInfoSettingsScreen(
+                        navController = navController
+                    )
+                }
+
+                composable(
+                    Screen.AudioFocusSettings.route
+                ) {
+                    AudioFocusSettingsScreen(
+                        navController = navController
+                    )
+                }
+
+                composable(
+                    Screen.DirectVolumeControlSettings.route
+                ) {
+                    DirectVolumeControlSettingsScreen(
+                        navController = navController
+                    )
                 }
             }
-        }
-
-        composable(
-            Screen.FolderPickerSettings.route
-        ) {
-            FolderPickerSettingsScreen(
-                navController = navController
-            )
-        }
-
-        composable(
-            Screen.LibraryCleanupSettings.route
-        ) {
-            LibraryCleanupSettingsScreen(
-                navController = navController
-            )
-        }
-
-        composable(
-            Screen.NavidromeDiagnostics.route
-        ) {
-            NavidromeDiagnosticsScreen(
-                navController = navController
-            )
-        }
-
-        composable(
-            Screen.NavidromeMenu.route
-        ) {
-            NavidromeMenuScreen(
-                navController = navController
-            )
-        }
-
-        composable(
-            Screen.LibraryMenu.route
-        ) {
-            LibraryMenuScreen(
-                navController = navController
-            )
-        }
-
-        composable(
-            Screen.AudioMenu.route
-        ) {
-            AudioMenuScreen(
-                navController = navController
-            )
-        }
-
-        composable(
-            Screen.AudioAdvancedMenu.route
-        ) {
-            AdvancedAudioMenuScreen(
-                navController = navController
-            )
-        }
-
-        composable(
-            Screen.AudioInfoSettings.route
-        ) {
-            AudioInfoSettingsScreen(
-                navController = navController
-            )
-        }
-
-        composable(
-            Screen.AudioFocusSettings.route
-        ) {
-            AudioFocusSettingsScreen(
-                navController = navController
-            )
-        }
-
-        composable(
-            Screen.DirectVolumeControlSettings.route
-        ) {
-            DirectVolumeControlSettingsScreen(
-                navController = navController
+        } else {
+            DrivingModeScreen(
+                onExit = {
+                    DrivingModePreferences.setDrivingModeEnabled(
+                        context,
+                        false
+                    )
+                }
             )
         }
     }
