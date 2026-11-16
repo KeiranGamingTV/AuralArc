@@ -41,6 +41,7 @@ import com.keiranhaas.auralarc.storage.PlaylistArtworkStore
 import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import kotlinx.coroutines.launch
 import androidx.compose.animation.animateContentSize
+import com.keiranhaas.auralarc.storage.LikedSongsStore
 
 @Composable
 fun PlaylistDetailScreen(
@@ -141,6 +142,29 @@ fun PlaylistDetailScreen(
         isLoading =
             true
 
+        if (
+            playlistId == LikedSongsStore.PLAYLIST_ID
+        ) {
+            val likedTracks =
+                LikedSongsStore.getLikedTracks(
+                    context = context,
+                    allTracks = allTracks
+                )
+
+            playlist =
+                LikedSongsStore.asPlaylist(
+                    trackCount = likedTracks.size
+                )
+
+            playlistTracks =
+                likedTracks
+
+            isLoading =
+                false
+
+            return
+        }
+
         when (
             librarySource
         ) {
@@ -214,8 +238,12 @@ fun PlaylistDetailScreen(
             return
         }
 
+    val isLikedSongs =
+        playlistId == LikedSongsStore.PLAYLIST_ID
+
     val canEdit =
-        librarySource == LibrarySource.LOCAL
+        librarySource == LibrarySource.LOCAL &&
+                !isLikedSongs
 
     val playlistListState =
         rememberLazyListState()
@@ -366,7 +394,7 @@ fun PlaylistDetailScreen(
                 ) { index, track ->
                     PlaylistTrackRow(
                         track = track,
-                        canRemove = canEdit,
+                        canRemove = canEdit || isLikedSongs,
                         canMoveUp =
                             canEdit &&
                                     index > 0,
@@ -399,6 +427,27 @@ fun PlaylistDetailScreen(
                         },
                         onRemove = {
                             if (
+                                isLikedSongs
+                            ) {
+                                LikedSongsStore.unlike(
+                                    context = context,
+                                    track = track
+                                )
+
+                                val likedTracks =
+                                    LikedSongsStore.getLikedTracks(
+                                        context = context,
+                                        allTracks = allTracks
+                                    )
+
+                                playlist =
+                                    LikedSongsStore.asPlaylist(
+                                        trackCount = likedTracks.size
+                                    )
+
+                                playlistTracks =
+                                    likedTracks
+                            } else if (
                                 canEdit
                             ) {
                                 PlaylistStore.removeTrackFromPlaylist(

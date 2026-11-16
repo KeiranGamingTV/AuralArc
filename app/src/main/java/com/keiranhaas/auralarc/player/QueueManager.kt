@@ -202,6 +202,113 @@ object QueueManager {
         notifyQueueChanged()
     }
 
+    fun setQueueWithOriginalOrder(
+        originalTracks: List<MusicTrack>,
+        liveTracks: List<MusicTrack>,
+        startTrack: MusicTrack
+    ) {
+        resetAddToQueueInsertIndex()
+
+        if (
+            liveTracks.isEmpty()
+        ) {
+            clearQueue()
+            return
+        }
+
+        val originalEntries =
+            createEntries(
+                originalTracks
+            )
+
+        val entriesById =
+            HashMap<String, ArrayDeque<QueueEntry>>()
+
+        originalEntries.forEach { entry ->
+            entriesById.getOrPut(
+                TrackIdentity.getStableId(
+                    entry.track
+                )
+            ) {
+                ArrayDeque()
+            }.addLast(
+                entry
+            )
+        }
+
+        val matchedEntryIds =
+            HashSet<String>()
+
+        val liveEntries =
+            liveTracks.map { track ->
+                val match =
+                    entriesById[
+                        TrackIdentity.getStableId(
+                            track
+                        )
+                    ]?.removeFirstOrNull()
+
+                if (
+                    match != null
+                ) {
+                    matchedEntryIds.add(
+                        match.entryId
+                    )
+
+                    match
+                } else {
+                    createEntry(
+                        track
+                    )
+                }
+            }
+
+        val normalEntries =
+            originalEntries
+                .filter { entry ->
+                    entry.entryId in matchedEntryIds
+                }
+                .toMutableList()
+
+        liveEntries.forEach { entry ->
+            if (
+                entry.entryId !in matchedEntryIds
+            ) {
+                normalEntries.add(
+                    entry
+                )
+            }
+        }
+
+        normalQueue.clear()
+
+        normalQueue.addAll(
+            normalEntries
+        )
+
+        queue.clear()
+
+        queue.addAll(
+            liveEntries
+        )
+
+        val startStableId =
+            TrackIdentity.getStableId(
+                startTrack
+            )
+
+        currentIndex =
+            queue.indexOfFirst { entry ->
+                TrackIdentity.getStableId(
+                    entry.track
+                ) == startStableId
+            }.takeIf { index ->
+                index >= 0
+            } ?: 0
+
+        notifyQueueChanged()
+    }
+
     fun rebuildForCurrentShuffleState(
         currentTrack: MusicTrack?
     ) {

@@ -26,6 +26,7 @@ import com.keiranhaas.auralarc.storage.PlaylistArtworkStore
 import com.keiranhaas.auralarc.storage.LibraryCacheStore
 import androidx.compose.material.icons.filled.Add
 import com.keiranhaas.auralarc.ui.components.AuralArcCard
+import com.keiranhaas.auralarc.storage.LikedSongsStore
 
 @Composable
 fun PlaylistBrowserScreen(
@@ -144,7 +145,7 @@ fun PlaylistBrowserScreen(
             .fillMaxSize()
     ) {
         PlaylistBrowserHeader(
-            playlistCount = playlists.size,
+            playlistCount = playlists.size + 1,
             librarySource = librarySource,
             isLoading = isLoading,
             onCreateClick = {
@@ -162,28 +163,18 @@ fun PlaylistBrowserScreen(
                 )
             }
 
-            playlists.isEmpty() -> {
-                EmptyPlaylistBrowser(
-                    title =
-                    if (
-                        librarySource == LibrarySource.NAVIDROME
-                    ) {
-                        "No Navidrome playlists"
-                    } else {
-                        "No playlists yet"
-                    },
-                    message =
-                    if (
-                        librarySource == LibrarySource.NAVIDROME
-                    ) {
-                        "Create playlists in Navidrome, then refresh this screen."
-                    } else {
-                        "Create a playlist, then add songs from your library."
-                    }
-                )
-            }
-
             else -> {
+                val likedTracks =
+                    remember(
+                        allTracks,
+                        LikedSongsStore.revision.value
+                    ) {
+                        LikedSongsStore.getLikedTracks(
+                            context = context,
+                            allTracks = allTracks
+                        )
+                    }
+
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize(),
@@ -191,6 +182,50 @@ fun PlaylistBrowserScreen(
                         bottom = 10.dp
                     )
                 ) {
+                    item(
+                        key = LikedSongsStore.PLAYLIST_ID
+                    ) {
+                        PlaylistBrowserRow(
+                            playlist = LikedSongsStore.asPlaylist(
+                                trackCount = likedTracks.size
+                            ),
+                            tracks = likedTracks,
+                            trackCount = likedTracks.size,
+                            canDelete = false,
+                            onClick = {
+                                onPlaylistSelected(
+                                    LikedSongsStore.PLAYLIST_ID
+                                )
+                            },
+                            onDelete = {}
+                        )
+                    }
+
+                    if (
+                        playlists.isEmpty()
+                    ) {
+                        item {
+                            EmptyPlaylistBrowser(
+                                title =
+                                    if (
+                                        librarySource == LibrarySource.NAVIDROME
+                                    ) {
+                                        "No Navidrome playlists"
+                                    } else {
+                                        "No other playlists yet"
+                                    },
+                                message =
+                                    if (
+                                        librarySource == LibrarySource.NAVIDROME
+                                    ) {
+                                        "Create playlists in Navidrome, then refresh this screen."
+                                    } else {
+                                        "Create a playlist, then add songs from your library."
+                                    }
+                            )
+                        }
+                    }
+
                     items(
                         playlists
                     ) { playlist ->
@@ -220,7 +255,7 @@ fun PlaylistBrowserScreen(
                             tracks = playlistTracks,
                             trackCount = trackCount,
                             canDelete =
-                            librarySource == LibrarySource.LOCAL,
+                                librarySource == LibrarySource.LOCAL,
                             onClick = {
                                 onPlaylistSelected(
                                     playlist.id
@@ -417,12 +452,15 @@ private fun PlaylistBrowserRow(
     onDelete: () -> Unit
 ) {
     val sourceLabel =
-        if (
-            playlist.source == "NAVIDROME"
-        ) {
-            "Navidrome"
-        } else {
-            "Local"
+        when {
+            playlist.id == LikedSongsStore.PLAYLIST_ID ->
+                "Automatic"
+
+            playlist.source == "NAVIDROME" ->
+                "Navidrome"
+
+            else ->
+                "Local"
         }
 
     AuralArcCard(

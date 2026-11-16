@@ -75,6 +75,9 @@ import kotlinx.coroutines.delay
 import kotlin.math.abs
 import com.keiranhaas.auralarc.storage.PowerSavingPreferences
 import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
+import com.keiranhaas.auralarc.storage.LikedSongsStore
 
 private val DuetSingerOneColor =
     Color(
@@ -459,6 +462,59 @@ private fun NowPlayingMainContent(
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
+            if (
+                currentTrack != null
+            ) {
+                val isLiked =
+                    remember(
+                        currentTrack.uri,
+                        LikedSongsStore.revision.value
+                    ) {
+                        LikedSongsStore.isLiked(
+                            context,
+                            currentTrack
+                        )
+                    }
+
+                AuralArcIconButton(
+                    onClick = {
+                        LikedSongsStore.toggle(
+                            context,
+                            currentTrack
+                        )
+                    },
+                    modifier = Modifier.size(
+                        44.dp
+                    )
+                ) {
+                    Icon(
+                        imageVector =
+                            if (
+                                isLiked
+                            ) {
+                                Icons.Default.Favorite
+                            } else {
+                                Icons.Default.FavoriteBorder
+                            },
+                        contentDescription =
+                            if (
+                                isLiked
+                            ) {
+                                "Remove from Liked Songs"
+                            } else {
+                                "Add to Liked Songs"
+                            },
+                        tint =
+                            if (
+                                isLiked
+                            ) {
+                                AuralArcStyle.PurpleBright
+                            } else {
+                                AuralArcStyle.TextMuted
+                            }
+                    )
+                }
+            }
         }
 
         Spacer(

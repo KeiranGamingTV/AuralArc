@@ -74,6 +74,9 @@ object PlayerManager {
     private const val KEY_QUEUE_KEYS =
         "queue_keys"
 
+    private const val KEY_NORMAL_QUEUE_KEYS =
+        "normal_queue_keys"
+
     private const val KEY_SHUFFLE =
         "shuffle"
 
@@ -795,10 +798,26 @@ object PlayerManager {
         if (
             currentQueueAlreadyMatches
         ) {
-            QueueManager.setQueuePreservingOrder(
-                cleanedQueue,
-                track
-            )
+            /*
+             * The live queue already holds these tracks in this exact
+             * order. With Shuffle on that is the shuffled order, so it
+             * must not be saved as the original. Keep the existing
+             * entries and only move the current index.
+             */
+            val liveIndex =
+                currentQueueKeys.indexOf(
+                    stableTrackKey(
+                        track
+                    )
+                )
+
+            if (
+                liveIndex >= 0
+            ) {
+                QueueManager.setCurrentQueueIndex(
+                    liveIndex
+                )
+            }
         } else {
             QueueManager.setQueue(
                 cleanedQueue,
@@ -1839,10 +1858,30 @@ object PlayerManager {
                 AuralArcRepeatMode.OFF
             }
 
-        QueueManager.setQueuePreservingOrder(
-            restoredQueue,
-            startTrack
-        )
+        val restoredNormalQueue =
+            readStringArray(
+                prefs.getString(
+                    KEY_NORMAL_QUEUE_KEYS,
+                    "[]"
+                ) ?: "[]"
+            ).mapNotNull { key ->
+                trackByKey[key]
+            }
+
+        if (
+            restoredNormalQueue.isNotEmpty()
+        ) {
+            QueueManager.setQueueWithOriginalOrder(
+                originalTracks = restoredNormalQueue,
+                liveTracks = restoredQueue,
+                startTrack = startTrack
+            )
+        } else {
+            QueueManager.setQueuePreservingOrder(
+                restoredQueue,
+                startTrack
+            )
+        }
 
         val startIndex =
             QueueManager.currentIndex.coerceAtLeast(
@@ -2034,6 +2073,17 @@ object PlayerManager {
             )
         }
 
+        val normalQueueKeysArray =
+            JSONArray()
+
+        QueueManager.getNormalQueue().forEach { track ->
+            normalQueueKeysArray.put(
+                stableTrackKey(
+                    track
+                )
+            )
+        }
+
         val positionToSave =
             (
                     pendingSeekPosition
@@ -2097,6 +2147,10 @@ object PlayerManager {
                 .putString(
                     KEY_QUEUE_KEYS,
                     queueKeysArray.toString()
+                )
+                .putString(
+                    KEY_NORMAL_QUEUE_KEYS,
+                    normalQueueKeysArray.toString()
                 )
                 .putBoolean(
                     KEY_SHUFFLE,
