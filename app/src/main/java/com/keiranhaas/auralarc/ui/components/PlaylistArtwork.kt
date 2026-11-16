@@ -24,6 +24,10 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalDensity
 import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import com.keiranhaas.auralarc.utils.ArtworkBitmapLoader
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Brush
+import com.keiranhaas.auralarc.storage.LikedSongsStore
 
 @Composable
 fun PlaylistArtwork(
@@ -108,6 +112,9 @@ fun PlaylistArtwork(
                 )
                 .toList()
         }
+    val isLikedSongs =
+        playlist.id == LikedSongsStore.PLAYLIST_ID
+
     val artworkPaths =
         if (
             !customArtworkPath.isNullOrBlank()
@@ -115,6 +122,10 @@ fun PlaylistArtwork(
             listOf(
                 customArtworkPath
             )
+        } else if (
+            isLikedSongs
+        ) {
+            emptyList()
         } else {
             automaticArtworkPaths
         }
@@ -131,24 +142,52 @@ fun PlaylistArtwork(
             artworkPaths.size
         ) {
             0 -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            AuralArcStyle.SurfaceSoft
-                        )
+                if (
+                    isLikedSongs
                 ) {
-                    Icon(
-                        imageVector =
-                        Icons.AutoMirrored.Filled.QueueMusic,
-                        contentDescription = "Playlist artwork",
-                        tint = AuralArcStyle.PurpleBright,
+                    Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(
-                                size / 4f
+                            .background(
+                                Brush.linearGradient(
+                                    colors = listOf(
+                                        AuralArcStyle.Purple,
+                                        AuralArcStyle.PurpleBright
+                                    )
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector =
+                                Icons.Default.Favorite,
+                            contentDescription = "Liked Songs",
+                            tint = AuralArcStyle.TextPrimary,
+                            modifier = Modifier.size(
+                                size / 2f
                             )
-                    )
+                        )
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                AuralArcStyle.SurfaceSoft
+                            )
+                    ) {
+                        Icon(
+                            imageVector =
+                                Icons.AutoMirrored.Filled.QueueMusic,
+                            contentDescription = "Playlist artwork",
+                            tint = AuralArcStyle.PurpleBright,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(
+                                    size / 4f
+                                )
+                        )
+                    }
                 }
             }
 
