@@ -55,6 +55,10 @@ sealed class Screen(
         "settings_folder_picker"
     )
 
+    object DrivingModeSettings : Screen(
+        "settings_driving_mode"
+    )
+
     object LibraryCleanupSettings : Screen(
         "settings_library_cleanup"
     )
