@@ -145,12 +145,31 @@ object PlaylistTransferManager {
                     "Imported Playlist"
                 }
 
+        /*
+         * An M3U named "Liked Songs" fills the built-in Liked Songs
+         * playlist instead of creating a second playlist.
+         */
         val playlist =
-            PlaylistStore.createPlaylistFromTracks(
-                context = context,
-                rawName = playlistName,
-                tracks = resolvedTracks
-            )
+            if (
+                LikedSongsStore.isLikedSongsName(
+                    playlistName
+                )
+            ) {
+                LikedSongsStore.addTracks(
+                    context = context,
+                    tracks = resolvedTracks
+                )
+
+                LikedSongsStore.asPlaylist(
+                    trackCount = resolvedTracks.size
+                )
+            } else {
+                PlaylistStore.createPlaylistFromTracks(
+                    context = context,
+                    rawName = playlistName,
+                    tracks = resolvedTracks
+                )
+            }
 
         return ImportResult(
             playlist = playlist,
