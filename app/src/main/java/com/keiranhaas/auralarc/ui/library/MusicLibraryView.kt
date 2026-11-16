@@ -2575,7 +2575,6 @@ private fun LibraryTabContent(
                     AlbumBrowserScreen(
                         tracks = searchedTracks,
                         viewMode = currentViewMode,
-                        tracks = searchedTracks,
                         onAlbumSelected = { album ->
                             onSelectedAlbumChange(
                                 album
