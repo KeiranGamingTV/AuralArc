@@ -3,7 +3,12 @@ package com.keiranhaas.auralarc.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.Delete
@@ -398,7 +403,7 @@ private fun PlaylistBrowserHeader(
                     } else {
                         "Local Playlists"
                     },
-                    style = MaterialTheme.typography.h6,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = AuralArcStyle.TextPrimary
                 )
@@ -416,7 +421,7 @@ private fun PlaylistBrowserHeader(
                     } else {
                         "$playlistCount playlists"
                     },
-                    style = MaterialTheme.typography.caption,
+                    style = MaterialTheme.typography.bodySmall,
                     color = AuralArcStyle.TextMuted
                 )
             }
@@ -519,7 +524,7 @@ private fun PlaylistBrowserRow(
             ) {
                 Text(
                     text = playlist.name,
-                    style = MaterialTheme.typography.subtitle1,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = AuralArcStyle.TextPrimary,
                     maxLines = 1,
@@ -535,7 +540,7 @@ private fun PlaylistBrowserRow(
                     } else {
                         "$trackCount songs • $sourceLabel"
                     },
-                    style = MaterialTheme.typography.body2,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = AuralArcStyle.TextSecondary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -574,13 +579,13 @@ private fun EmptyPlaylistBrowser(
     ) {
         Text(
             text = title,
-            style = MaterialTheme.typography.h6,
+            style = MaterialTheme.typography.titleLarge,
             color = AuralArcStyle.TextPrimary
         )
 
         Text(
             text = message,
-            style = MaterialTheme.typography.body2,
+            style = MaterialTheme.typography.bodyMedium,
             color = AuralArcStyle.TextMuted
         )
     }
@@ -597,6 +602,7 @@ private fun CreatePlaylistDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = AuralArcStyle.Surface,
         title = {
             Text(
                 text = "Create Playlist"
@@ -653,6 +659,7 @@ private fun DeletePlaylistDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = AuralArcStyle.Surface,
         title = {
             Text(
                 text = "Delete Playlist"
