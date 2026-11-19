@@ -207,6 +207,91 @@ object LikedSongsStore {
         }
     }
 
+        /**
+     * Adds tracks to Liked Songs (for example from an imported M3U).
+     * Songs that are already liked stay where they are. New songs go
+     * to the top in the same order they were given. Returns how many
+     * songs were newly added.
+     */
+    fun addTracks(
+        context: Context,
+        tracks: List<MusicTrack>
+    ): Int {
+        synchronized(lock) {
+            val ids =
+                loadIds(
+                    context
+                )
+
+            val existingIds =
+                ids.toHashSet()
+
+            val newIds =
+                LinkedHashSet<String>()
+
+            tracks.forEach { track ->
+                val stableId =
+                    TrackIdentity.getStableId(
+                        track
+                    )
+
+                if (
+                    stableId !in existingIds
+                ) {
+                    newIds.add(
+                        stableId
+                    )
+                }
+            }
+
+            if (
+                newIds.isEmpty()
+            ) {
+                return 0
+            }
+
+            ids.addAll(
+                0,
+                newIds.toList()
+            )
+
+            saveIds(
+                context,
+                ids
+            )
+
+            revision.value += 1L
+
+            return newIds.size
+        }
+    }
+
+    /** True for playlist names like "Liked Songs" or "liked_songs". */
+    fun isLikedSongsName(
+        rawName: String
+    ): Boolean {
+        val normalized =
+            rawName
+                .replace(
+                    Regex(
+                        "[_\\-]+"
+                    ),
+                    " "
+                )
+                .replace(
+                    Regex(
+                        "\\s+"
+                    ),
+                    " "
+                )
+                .trim()
+
+        return normalized.equals(
+            PLAYLIST_NAME,
+            ignoreCase = true
+        )
+    }
+
     /** Returns true when the track is liked after the toggle. */
     fun toggle(
         context: Context,

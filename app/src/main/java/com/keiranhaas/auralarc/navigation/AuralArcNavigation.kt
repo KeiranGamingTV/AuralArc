@@ -284,6 +284,14 @@ fun AuralArcNavigation(
                 }
 
                 composable(
+                    Screen.DrivingModeSettings.route
+                ) {
+                    DrivingModeSettingsScreen(
+                        navController = navController
+                    )
+                }
+
+                composable(
                     Screen.FolderPickerSettings.route
                 ) {
                     FolderPickerSettingsScreen(

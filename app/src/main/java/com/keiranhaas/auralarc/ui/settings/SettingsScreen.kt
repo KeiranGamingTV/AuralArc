@@ -194,6 +194,16 @@ fun SettingsScreen(
         )
 
         SettingsIconRow(
+            title = "Driving Mode Bluetooth",
+            icon = Icons.Default.Bluetooth,
+            onClick = {
+                navController.navigate(
+                    Screen.DrivingModeSettings.route
+                )
+            }
+        )
+
+        SettingsIconRow(
             title = "Navidrome",
             icon = Icons.Default.Cloud,
             onClick = {
