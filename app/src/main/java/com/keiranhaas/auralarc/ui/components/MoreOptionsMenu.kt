@@ -6,7 +6,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
@@ -70,6 +76,7 @@ fun MoreOptionsButton(
             }
         ) {
             DropdownMenuItem(
+                text = { Text(text = "Add Song to Playlist") },
                 onClick = {
                     expanded =
                         false
@@ -82,16 +89,13 @@ fun MoreOptionsButton(
                             track
                         )
                 }
-            ) {
-                Text(
-                    text = "Add to Playlist"
-                )
-            }
+            )
 
             if (
                 showAddAlbumToPlaylist
             ) {
                 DropdownMenuItem(
+                    text = { Text(text = "Add Album to Playlist") },
                     onClick = {
                         expanded =
                             false
@@ -169,17 +173,13 @@ fun MoreOptionsButton(
                                 )
                             }
                     }
-                ) {
-                    Text(
-                        text = "Add Album to Playlist"
-                    )
-                }
-            }
+                )
 
             if (
                 showAddToQueue
             ) {
                 DropdownMenuItem(
+                    text = { Text(text = "Add to Queue") },
                     onClick = {
                         expanded =
                             false
@@ -189,17 +189,13 @@ fun MoreOptionsButton(
                             track = track
                         )
                     }
-                ) {
-                    Text(
-                        text = "Add to Queue"
-                    )
-                }
-            }
+                )
 
             if (
                 showPlayNext
             ) {
                 DropdownMenuItem(
+                    text = { Text(text = "Play Next") },
                     onClick = {
                         expanded =
                             false
@@ -209,14 +205,10 @@ fun MoreOptionsButton(
                             track = track
                         )
                     }
-                ) {
-                    Text(
-                        text = "Play Next"
-                    )
-                }
-            }
+                )
 
             DropdownMenuItem(
+                text = { Text(text = "Track Info") },
                 onClick = {
                     expanded =
                         false
@@ -225,12 +217,7 @@ fun MoreOptionsButton(
                         track
                     )
                 }
-            ) {
-                Text(
-                    text = "Track Info"
-                )
-            }
-        }
+            )
     }
 
     tracksToAdd?.let { selectedTracks ->

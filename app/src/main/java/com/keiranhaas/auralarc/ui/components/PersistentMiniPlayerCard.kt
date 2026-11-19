@@ -1,10 +1,9 @@
 package com.keiranhaas.auralarc.ui
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Card
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -90,7 +89,7 @@ fun PersistentMiniPlayerCard(
                     text = PlayerManager.currentArtist.value.ifBlank {
                         "Unknown Artist"
                     },
-                    style = MaterialTheme.typography.body2,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = AuralArcStyle.TextSecondary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis

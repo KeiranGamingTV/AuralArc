@@ -17,12 +17,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.Card
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.LibraryMusic
@@ -125,7 +122,7 @@ fun FirstRunSetupScreen(
         ) {
             Text(
                 text = "AuralArc",
-                style = MaterialTheme.typography.h4,
+                style = MaterialTheme.typography.displayLarge,
                 fontWeight = FontWeight.Bold,
                 color = AuralArcStyle.TextPrimary
             )
@@ -309,7 +306,7 @@ private fun SetupStepContent(
 
         Text(
             text = title,
-            style = MaterialTheme.typography.h5,
+            style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
             color = AuralArcStyle.TextPrimary,
             textAlign = TextAlign.Center
@@ -323,7 +320,7 @@ private fun SetupStepContent(
 
         Text(
             text = message,
-            style = MaterialTheme.typography.body1,
+            style = MaterialTheme.typography.bodyLarge,
             color = AuralArcStyle.TextSecondary,
             textAlign = TextAlign.Center
         )

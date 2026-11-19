@@ -12,9 +12,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.graphics.Color
+import com.keiranhaas.auralarc.ui.components.AuralArcBackButton
+import com.keiranhaas.auralarc.ui.components.AuralArcTopBar
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -72,28 +76,18 @@ fun FolderPickerSettingsScreen(
         }
 
     Scaffold(
-        backgroundColor = AuralArcStyle.BackgroundBottom,
+        containerColor = Color.Transparent,
+        modifier = Modifier.background(
+            brush = AuralArcStyle.appBackgroundBrush()
+        ),
         topBar = {
-            TopAppBar(
-                backgroundColor = AuralArcStyle.BackgroundTop,
-                elevation = 0.dp,
+            AuralArcTopBar(
+                title = "Folder Picker",
                 navigationIcon = {
-                    AuralArcIconButton(
+                    AuralArcBackButton(
                         onClick = {
                             navController.popBackStack()
                         }
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = AuralArcStyle.TextPrimary
-                        )
-                    }
-                },
-                title = {
-                    Text(
-                        text = "Folder Picker",
-                        color = AuralArcStyle.TextPrimary
                     )
                 }
             )
@@ -104,9 +98,6 @@ fun FolderPickerSettingsScreen(
                 .fillMaxSize()
                 .padding(
                     innerPadding
-                )
-                .background(
-                    brush = AuralArcStyle.appBackgroundBrush()
                 )
                 .verticalScroll(
                     rememberScrollState()
@@ -247,14 +238,14 @@ private fun FolderUriCard(
         ) {
             Text(
                 text = "Folder",
-                style = MaterialTheme.typography.subtitle1,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = AuralArcStyle.TextPrimary
             )
 
             Text(
                 text = folderUri,
-                style = MaterialTheme.typography.body2,
+                style = MaterialTheme.typography.bodyMedium,
                 color = AuralArcStyle.TextMuted,
                 modifier = Modifier.padding(
                     top = 6.dp

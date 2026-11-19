@@ -8,9 +8,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.ui.graphics.Color
+import com.keiranhaas.auralarc.ui.components.AuralArcBackButton
+import com.keiranhaas.auralarc.ui.components.AuralArcTopBar
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -47,28 +50,18 @@ fun NavidromeDiagnosticsScreen(
     }
 
     Scaffold(
-        backgroundColor = AuralArcStyle.BackgroundBottom,
+        containerColor = Color.Transparent,
+        modifier = Modifier.background(
+            brush = AuralArcStyle.appBackgroundBrush()
+        ),
         topBar = {
-            TopAppBar(
-                backgroundColor = AuralArcStyle.BackgroundTop,
-                elevation = 0.dp,
+            AuralArcTopBar(
+                title = "Navidrome Diagnostics",
                 navigationIcon = {
-                    AuralArcIconButton(
+                    AuralArcBackButton(
                         onClick = {
                             navController.popBackStack()
                         }
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = AuralArcStyle.TextPrimary
-                        )
-                    }
-                },
-                title = {
-                    Text(
-                        text = "Navidrome Diagnostics",
-                        color = AuralArcStyle.TextPrimary
                     )
                 }
             )
@@ -79,9 +72,6 @@ fun NavidromeDiagnosticsScreen(
                 .fillMaxSize()
                 .padding(
                     innerPadding
-                )
-                .background(
-                    brush = AuralArcStyle.appBackgroundBrush()
                 )
                 .verticalScroll(
                     rememberScrollState()
@@ -192,7 +182,7 @@ private fun DiagnosticsCard(
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.h6,
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = AuralArcStyle.TextPrimary
             )
@@ -200,7 +190,7 @@ private fun DiagnosticsCard(
             rows.forEach { row ->
                 Text(
                     text = row.first,
-                    style = MaterialTheme.typography.caption,
+                    style = MaterialTheme.typography.bodySmall,
                     color = AuralArcStyle.TextMuted,
                     modifier = Modifier.padding(
                         top = 10.dp
@@ -209,7 +199,7 @@ private fun DiagnosticsCard(
 
                 Text(
                     text = row.second,
-                    style = MaterialTheme.typography.body2,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = AuralArcStyle.TextPrimary
                 )
             }

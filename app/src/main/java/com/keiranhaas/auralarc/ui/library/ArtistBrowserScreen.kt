@@ -3,9 +3,8 @@ package com.keiranhaas.auralarc.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.Card
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -159,7 +158,7 @@ fun ArtistBrowserScreen(
                     ) {
                         Text(
                             text = artistName,
-                            style = MaterialTheme.typography.subtitle1,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = AuralArcStyle.TextPrimary,
                             maxLines = 2,
@@ -175,7 +174,7 @@ fun ArtistBrowserScreen(
                             } else {
                                 "$albumCount albums"
                             },
-                            style = MaterialTheme.typography.body2,
+                            style = MaterialTheme.typography.bodyMedium,
                             color = AuralArcStyle.TextSecondary
                         )
 
@@ -188,7 +187,7 @@ fun ArtistBrowserScreen(
                             } else {
                                 "${artistTracks.size} songs"
                             },
-                            style = MaterialTheme.typography.caption,
+                            style = MaterialTheme.typography.bodySmall,
                             color = AuralArcStyle.TextMuted
                         )
                     }

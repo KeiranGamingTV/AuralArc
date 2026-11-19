@@ -5,9 +5,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.Card
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -138,7 +137,7 @@ fun TrackArtwork(
                     Text(
                         text = "♪",
                         style =
-                            MaterialTheme.typography.h4,
+                            MaterialTheme.typography.displayLarge,
                         color =
                             AuralArcStyle.TextMuted
                     )

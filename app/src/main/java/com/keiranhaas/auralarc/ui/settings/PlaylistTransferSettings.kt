@@ -11,11 +11,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.AlertDialog
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
-import androidx.compose.material.TextButton
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.FileUpload
@@ -351,7 +351,7 @@ fun PlaylistTransferSettingsSection() {
 
                                 Text(
                                     text = "${playlist.trackCount} song${if (playlist.trackCount == 1) "" else "s"}",
-                                    style = MaterialTheme.typography.caption,
+                                    style = MaterialTheme.typography.bodySmall,
                                     color = AuralArcStyle.TextMuted
                                 )
                             }
@@ -371,8 +371,9 @@ fun PlaylistTransferSettingsSection() {
                     )
                 }
             },
-            backgroundColor = AuralArcStyle.SurfaceBright,
-            contentColor = AuralArcStyle.TextPrimary
+            containerColor = AuralArcStyle.SurfaceBright,
+            titleContentColor = AuralArcStyle.TextPrimary,
+            textContentColor = AuralArcStyle.TextPrimary
         )
     }
 
@@ -405,8 +406,9 @@ fun PlaylistTransferSettingsSection() {
                     )
                 }
             },
-            backgroundColor = AuralArcStyle.SurfaceBright,
-            contentColor = AuralArcStyle.TextPrimary
+            containerColor = AuralArcStyle.SurfaceBright,
+            titleContentColor = AuralArcStyle.TextPrimary,
+            textContentColor = AuralArcStyle.TextPrimary
         )
     }
 }

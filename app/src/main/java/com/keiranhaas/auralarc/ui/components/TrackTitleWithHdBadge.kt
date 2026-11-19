@@ -9,8 +9,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,7 +29,7 @@ import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
 fun TrackTitleWithHdBadge(
     track: MusicTrack,
     modifier: Modifier = Modifier,
-    style: TextStyle = MaterialTheme.typography.body1,
+    style: TextStyle = MaterialTheme.typography.bodyLarge,
     color: Color = AuralArcStyle.TextPrimary,
     fontWeight: FontWeight? = FontWeight.Bold,
     maxLines: Int = 1,
@@ -147,7 +147,7 @@ fun AuralArcHdBadge(
     ) {
         Text(
             text = "HD",
-            style = MaterialTheme.typography.overline,
+            style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold,
             color = AuralArcStyle.TextPrimary,
             maxLines = 1

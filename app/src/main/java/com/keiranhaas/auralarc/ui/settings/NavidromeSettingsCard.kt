@@ -2,7 +2,11 @@ package com.keiranhaas.auralarc.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -64,7 +68,7 @@ fun NavidromeSettingsCard() {
         mutableStateOf(false)
     }
 
-    Card(
+    AuralArcCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
@@ -83,13 +87,13 @@ fun NavidromeSettingsCard() {
         ) {
             Text(
                 text = "Navidrome",
-                style = MaterialTheme.typography.h6,
+                style = MaterialTheme.typography.titleLarge,
                 color = AuralArcStyle.TextPrimary
             )
 
             Text(
                 text = "Use your Tailscale URL, like http://100.x.x.x:4533. Do not add /rest.",
-                style = MaterialTheme.typography.body2,
+                style = MaterialTheme.typography.bodyMedium,
                 color = AuralArcStyle.TextMuted
             )
 
@@ -175,7 +179,7 @@ fun NavidromeSettingsCard() {
 
             Text(
                 text = statusText,
-                style = MaterialTheme.typography.caption,
+                style = MaterialTheme.typography.bodySmall,
                 color = AuralArcStyle.TextSecondary
             )
 
