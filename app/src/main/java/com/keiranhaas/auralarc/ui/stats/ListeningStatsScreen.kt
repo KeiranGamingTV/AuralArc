@@ -6,9 +6,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.ui.graphics.Color
+import com.keiranhaas.auralarc.ui.components.AuralArcBackButton
+import com.keiranhaas.auralarc.ui.components.AuralArcTopBar
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -137,35 +142,18 @@ fun ListeningStatsScreen(
     }
 
     Scaffold(
-        backgroundColor =
-            AuralArcStyle.BackgroundBottom,
+        containerColor = Color.Transparent,
+        modifier = Modifier.background(
+            brush = AuralArcStyle.appBackgroundBrush()
+        ),
         topBar = {
-            TopAppBar(
-                backgroundColor =
-                    AuralArcStyle.BackgroundTop,
-                elevation = 0.dp,
+            AuralArcTopBar(
+                title = "Listening Stats",
                 navigationIcon = {
-                    AuralArcIconButton(
+                    AuralArcBackButton(
                         onClick = {
                             navController.popBackStack()
                         }
-                    ) {
-                        Icon(
-                            imageVector =
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription =
-                                "Back",
-                            tint =
-                                AuralArcStyle.TextPrimary
-                        )
-                    }
-                },
-                title = {
-                    Text(
-                        text =
-                            "Listening Stats",
-                        color =
-                            AuralArcStyle.TextPrimary
                     )
                 }
             )
@@ -182,11 +170,6 @@ fun ListeningStatsScreen(
                     .fillMaxSize()
                     .padding(
                         innerPadding
-                    )
-                    .background(
-                        brush =
-                            AuralArcStyle
-                                .appBackgroundBrush()
                     ),
                 contentAlignment =
                     Alignment.Center
@@ -202,11 +185,6 @@ fun ListeningStatsScreen(
                     .fillMaxSize()
                     .padding(
                         innerPadding
-                    )
-                    .background(
-                        brush =
-                            AuralArcStyle
-                                .appBackgroundBrush()
                     ),
                 contentPadding =
                     PaddingValues(
