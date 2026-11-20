@@ -174,6 +174,7 @@ fun MoreOptionsButton(
                             }
                     }
                 )
+            }
 
             if (
                 showAddToQueue
@@ -190,6 +191,7 @@ fun MoreOptionsButton(
                         )
                     }
                 )
+            }
 
             if (
                 showPlayNext
@@ -206,6 +208,7 @@ fun MoreOptionsButton(
                         )
                     }
                 )
+            }
 
             DropdownMenuItem(
                 text = { Text(text = "Track Info") },
@@ -218,6 +221,7 @@ fun MoreOptionsButton(
                     )
                 }
             )
+        }
     }
 
     tracksToAdd?.let { selectedTracks ->

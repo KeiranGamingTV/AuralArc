@@ -432,7 +432,7 @@ private fun StatsRangeSelector(
                             style =
                                 MaterialTheme
                                     .typography
-                                    .caption,
+                                    .bodySmall,
                             fontWeight =
                                 if (
                                     selected
@@ -483,7 +483,7 @@ private fun StatsSummaryCard(
                 text =
                     "Overview • ${summary.range.displayName}",
                 style =
-                    MaterialTheme.typography.h6,
+                    MaterialTheme.typography.titleLarge,
                 fontWeight =
                     FontWeight.Bold,
                 color =
@@ -537,7 +537,7 @@ private fun SectionTitle(
     Text(
         text = title,
         style =
-            MaterialTheme.typography.subtitle1,
+            MaterialTheme.typography.titleMedium,
         fontWeight =
             FontWeight.Bold,
         color =
@@ -589,7 +589,7 @@ private fun TrackStatRow(
                 text =
                     "${stat.artist} • ${stat.album}",
                 style =
-                    MaterialTheme.typography.body2,
+                    MaterialTheme.typography.bodyMedium,
                 color =
                     AuralArcStyle.TextSecondary,
                 maxLines = 1,
@@ -604,7 +604,7 @@ private fun TrackStatRow(
                             "${stat.completedCount} completed • " +
                             "${stat.skipCount} skips",
                 style =
-                    MaterialTheme.typography.caption,
+                    MaterialTheme.typography.bodySmall,
                 color =
                     AuralArcStyle.TextMuted,
                 maxLines = 2,
@@ -669,7 +669,7 @@ private fun GroupStatRow(
                                 stat.listeningMillis
                             ),
                 style =
-                    MaterialTheme.typography.caption,
+                    MaterialTheme.typography.bodySmall,
                 color =
                     AuralArcStyle.TextMuted
             )
@@ -730,7 +730,7 @@ private fun GenreStatRow(
                             stat.percentage
                         ),
                     style =
-                        MaterialTheme.typography.body2,
+                        MaterialTheme.typography.bodyMedium,
                     fontWeight =
                         FontWeight.Bold,
                     color =
@@ -745,14 +745,15 @@ private fun GenreStatRow(
             )
 
             LinearProgressIndicator(
-                progress =
+                progress = {
                     (
                             stat.percentage /
                                     100f
                             ).coerceIn(
                             0f,
                             1f
-                        ),
+                        )
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(
@@ -760,7 +761,7 @@ private fun GenreStatRow(
                     ),
                 color =
                     AuralArcStyle.PurpleBright,
-                backgroundColor =
+                trackColor =
                     AuralArcStyle.SurfaceBright
             )
 
@@ -776,7 +777,7 @@ private fun GenreStatRow(
                         stat.listeningMillis
                     ),
                 style =
-                    MaterialTheme.typography.caption,
+                    MaterialTheme.typography.bodySmall,
                 color =
                     AuralArcStyle.TextMuted
             )
@@ -791,7 +792,7 @@ private fun EmptyStatsMessage(
     Text(
         text = text,
         style =
-            MaterialTheme.typography.body2,
+            MaterialTheme.typography.bodyMedium,
         color =
             AuralArcStyle.TextMuted,
         modifier = Modifier.padding(

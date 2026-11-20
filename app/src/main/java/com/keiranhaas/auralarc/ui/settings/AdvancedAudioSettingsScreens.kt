@@ -3,11 +3,14 @@ package com.keiranhaas.auralarc.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
-import androidx.compose.material3.DropdownMenuItem as Material3DropdownMenuItem
-import androidx.compose.material3.DropdownMenu as Material3DropdownMenu
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.ui.graphics.Color
+import com.keiranhaas.auralarc.ui.components.AuralArcBackButton
+import com.keiranhaas.auralarc.ui.components.AuralArcTopBar
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SurroundSound
@@ -26,6 +29,7 @@ import com.keiranhaas.auralarc.ui.components.AuralArcSlider
 import com.keiranhaas.auralarc.ui.components.AuralArcSwitch
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
 import kotlin.math.roundToInt
+import androidx.compose.foundation.background
 
 @Composable
 fun AdvancedAudioMenuScreen(
@@ -306,29 +310,18 @@ fun AdvancedAudioScaffold(
     content: @Composable ColumnScope.() -> Unit
 ) {
     Scaffold(
-        backgroundColor = AuralArcStyle.BackgroundBottom,
+        containerColor = Color.Transparent,
+        modifier = Modifier.background(
+            brush = AuralArcStyle.appBackgroundBrush()
+        ),
         topBar = {
-            TopAppBar(
-                backgroundColor = AuralArcStyle.BackgroundTop,
-                elevation = 0.dp,
+            AuralArcTopBar(
+                title = title,
                 navigationIcon = {
-                    AuralArcIconButton(
+                    AuralArcBackButton(
                         onClick = {
                             navController.popBackStack()
                         }
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = AuralArcStyle.TextPrimary
-                        )
-                    }
-                },
-                title = {
-                    Text(
-                        text = title,
-                        color = AuralArcStyle.TextPrimary,
-                        fontWeight = FontWeight.Bold
                     )
                 }
             )
@@ -398,14 +391,14 @@ private fun AudioMenuRow(
             ) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.subtitle1,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = AuralArcStyle.TextPrimary
                 )
 
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.body2,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = AuralArcStyle.TextMuted,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
@@ -445,14 +438,14 @@ fun SwitchSetting(
             ) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.subtitle1,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = AuralArcStyle.TextPrimary
                 )
 
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.body2,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = AuralArcStyle.TextMuted
                 )
 
@@ -464,7 +457,7 @@ fun SwitchSetting(
 
                 Text(
                     text = "Select an option",
-                    style = MaterialTheme.typography.caption,
+                    style = MaterialTheme.typography.bodySmall,
                     color = AuralArcStyle.TextMuted
                 )
             }
@@ -502,14 +495,14 @@ private fun SliderSetting(
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.subtitle1,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = AuralArcStyle.TextPrimary
             )
 
             Text(
                 text = subtitle,
-                style = MaterialTheme.typography.body2,
+                style = MaterialTheme.typography.bodyMedium,
                 color = AuralArcStyle.TextMuted
             )
 
@@ -521,7 +514,7 @@ private fun SliderSetting(
 
             Text(
                 text = "Select an option",
-                style = MaterialTheme.typography.caption,
+                style = MaterialTheme.typography.bodySmall,
                 color = AuralArcStyle.TextMuted
             )
 
@@ -556,14 +549,14 @@ private fun AudioInfoNotice(
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.subtitle1,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = AuralArcStyle.TextPrimary
             )
 
             Text(
                 text = message,
-                style = MaterialTheme.typography.body2,
+                style = MaterialTheme.typography.bodyMedium,
                 color = AuralArcStyle.TextMuted,
                 modifier = Modifier.padding(
                     top = 4.dp

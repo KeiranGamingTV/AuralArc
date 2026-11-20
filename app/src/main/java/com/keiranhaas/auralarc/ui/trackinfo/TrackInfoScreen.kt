@@ -2,13 +2,11 @@ package com.keiranhaas.auralarc.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.Card
-import androidx.compose.material.Divider
-import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
@@ -41,10 +39,10 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.AlertDialog
-import androidx.compose.material.CircularProgressIndicator
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.TextButton
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.TextButton
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
@@ -54,6 +52,10 @@ import com.keiranhaas.auralarc.storage.AudioTagEditor
 import com.keiranhaas.auralarc.storage.EditableTrackMetadata
 import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import kotlinx.coroutines.launch
+import androidx.compose.ui.graphics.Color
+import com.keiranhaas.auralarc.ui.components.AuralArcBackButton
+import com.keiranhaas.auralarc.ui.components.AuralArcTopBar
+import androidx.compose.foundation.background
 
 @Composable
 fun TrackInfoScreen(
@@ -197,29 +199,18 @@ fun TrackInfoScreen(
     }
 
     Scaffold(
-        backgroundColor = AuralArcStyle.BackgroundBottom,
+        containerColor = Color.Transparent,
+        modifier = Modifier.background(
+            brush = AuralArcStyle.appBackgroundBrush()
+        ),
         topBar = {
-            TopAppBar(
-                backgroundColor = AuralArcStyle.BackgroundTop,
-                elevation = 0.dp,
+            AuralArcTopBar(
+                title = "Audio Info",
                 navigationIcon = {
-                    AuralArcIconButton(
+                    AuralArcBackButton(
                         onClick = {
                             navController.popBackStack()
                         }
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = AuralArcStyle.TextPrimary
-                        )
-                    }
-                },
-                title = {
-                    Text(
-                        text = "Audio Info",
-                        color = AuralArcStyle.TextPrimary,
-                        fontWeight = FontWeight.Bold
                     )
                 },
                 actions = {
@@ -456,6 +447,7 @@ fun TrackInfoScreen(
 
     editResultMessage?.let { message ->
         AlertDialog(
+            containerColor = AuralArcStyle.Surface,
             onDismissRequest = {
                 editResultMessage =
                     null
@@ -618,6 +610,7 @@ private fun MetadataEditDialog(
     }
 
     AlertDialog(
+        containerColor = AuralArcStyle.Surface,
         onDismissRequest = {
             if (
                 !saving
@@ -644,7 +637,7 @@ private fun MetadataEditDialog(
                     Text(
                         text = "AuralArc writes these values into the audio file itself. Unsupported tags are left unchanged.",
                         style =
-                        MaterialTheme.typography.body2,
+                        MaterialTheme.typography.bodyMedium,
                         color =
                         AuralArcStyle.TextMuted
                     )
@@ -773,9 +766,9 @@ private fun MetadataEditDialog(
                         Text(
                             text = message,
                             style =
-                            MaterialTheme.typography.body2,
+                            MaterialTheme.typography.bodyMedium,
                             color =
-                            MaterialTheme.colors.error,
+                            MaterialTheme.colorScheme.error,
                             modifier =
                             Modifier.padding(
                                 top = 6.dp
@@ -1004,7 +997,7 @@ private fun TrackInfoHeaderCard(
             ) {
                 TrackTitleWithHdBadge(
                     track = track,
-                    style = MaterialTheme.typography.h6,
+                    style = MaterialTheme.typography.titleLarge,
                     color = AuralArcStyle.TextPrimary,
                     fontWeight = FontWeight.Bold,
                     maxLines = 2,
@@ -1021,7 +1014,7 @@ private fun TrackInfoHeaderCard(
                     text = track.artist.ifBlank {
                         "Unknown Artist"
                     },
-                    style = MaterialTheme.typography.body1,
+                    style = MaterialTheme.typography.bodyLarge,
                     color = AuralArcStyle.TextSecondary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -1031,7 +1024,7 @@ private fun TrackInfoHeaderCard(
                     text = track.album.ifBlank {
                         "Unknown Album"
                     },
-                    style = MaterialTheme.typography.body2,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = AuralArcStyle.TextMuted,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -1047,7 +1040,7 @@ private fun TrackInfoHeaderCard(
                     text = audioQualitySummary(
                         track
                     ),
-                    style = MaterialTheme.typography.subtitle2,
+                    style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = AuralArcStyle.PurpleBright,
                     maxLines = 1,
@@ -1104,14 +1097,14 @@ private fun TrackInfoSectionCard(
                 ) {
                     Text(
                         text = title,
-                        style = MaterialTheme.typography.subtitle1,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = AuralArcStyle.TextPrimary
                     )
 
                     Text(
                         text = subtitle,
-                        style = MaterialTheme.typography.caption,
+                        style = MaterialTheme.typography.bodySmall,
                         color = AuralArcStyle.TextMuted
                     )
                 }
@@ -1159,7 +1152,7 @@ private fun TrackInfoRow(
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.caption,
+            style = MaterialTheme.typography.bodySmall,
             color = AuralArcStyle.TextMuted,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -1173,7 +1166,7 @@ private fun TrackInfoRow(
             ) {
                 monoTextStyle()
             } else {
-                MaterialTheme.typography.body2
+                MaterialTheme.typography.bodyMedium
             },
             color = AuralArcStyle.TextPrimary
         )
@@ -1182,7 +1175,7 @@ private fun TrackInfoRow(
 
 @Composable
 private fun TrackInfoDivider() {
-    Divider(
+    HorizontalDivider(
         color = AuralArcStyle.TextMuted.copy(
             alpha = 0.18f
         ),
@@ -1192,7 +1185,7 @@ private fun TrackInfoDivider() {
 
 @Composable
 private fun monoTextStyle(): TextStyle {
-    return MaterialTheme.typography.body2.copy(
+    return MaterialTheme.typography.bodyMedium.copy(
         fontFamily = FontFamily.Monospace
     )
 }
