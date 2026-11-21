@@ -2,159 +2,19 @@ package com.keiranhaas.auralarc.ui.theme
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.MaterialTheme as Material2Theme
-import androidx.compose.material.Shapes as Material2Shapes
-import androidx.compose.material.Typography as Material2Typography
-import androidx.compose.material.darkColors
-import androidx.compose.material.Surface as Material2Surface
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme as Material3Theme
 import androidx.compose.material3.Typography as Material3Typography
 import androidx.compose.material3.Shapes as Material3Shapes
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.Surface as Material3Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-/*
- * ---------------------------------------------------------------------------
- * Material 2 compatibility theme
- * ---------------------------------------------------------------------------
- *
- * AuralArc is being migrated screen-by-screen. These values remain available
- * so screens that have not yet been converted do not suddenly change style.
- */
-
-private val AuralArcMaterial2Colors =
-    darkColors(
-        primary =
-            AuralArcStyle.Purple,
-
-        primaryVariant =
-            AuralArcStyle.PurpleDark,
-
-        secondary =
-            AuralArcStyle.PurpleBright,
-
-        background =
-            AuralArcStyle.BackgroundBottom,
-
-        surface =
-            AuralArcStyle.Surface,
-
-        error =
-            AuralArcStyle.Error,
-
-        onPrimary =
-            AuralArcStyle.TextPrimary,
-
-        onSecondary =
-            AuralArcStyle.BackgroundBottom,
-
-        onBackground =
-            AuralArcStyle.TextPrimary,
-
-        onSurface =
-            AuralArcStyle.TextPrimary,
-
-        onError =
-            AuralArcStyle.TextPrimary
-    )
-
-private val AuralArcMaterial2Typography =
-    Material2Typography(
-        defaultFontFamily =
-            FontFamily.SansSerif,
-
-        h4 =
-            TextStyle(
-                fontWeight =
-                    FontWeight.ExtraBold,
-                fontSize =
-                    32.sp,
-                letterSpacing =
-                    (-0.5).sp
-            ),
-
-        h5 =
-            TextStyle(
-                fontWeight =
-                    FontWeight.ExtraBold,
-                fontSize =
-                    26.sp,
-                letterSpacing =
-                    (-0.25).sp
-            ),
-
-        h6 =
-            TextStyle(
-                fontWeight =
-                    FontWeight.Bold,
-                fontSize =
-                    20.sp
-            ),
-
-        subtitle1 =
-            TextStyle(
-                fontWeight =
-                    FontWeight.SemiBold,
-                fontSize =
-                    16.sp
-            ),
-
-        body1 =
-            TextStyle(
-                fontWeight =
-                    FontWeight.Normal,
-                fontSize =
-                    16.sp
-            ),
-
-        body2 =
-            TextStyle(
-                fontWeight =
-                    FontWeight.Normal,
-                fontSize =
-                    14.sp
-            ),
-
-        button =
-            TextStyle(
-                fontWeight =
-                    FontWeight.Bold,
-                fontSize =
-                    14.sp,
-                letterSpacing =
-                    0.25.sp
-            ),
-
-        caption =
-            TextStyle(
-                fontWeight =
-                    FontWeight.Medium,
-                fontSize =
-                    12.sp,
-                letterSpacing =
-                    0.2.sp
-            )
-    )
-
-private val AuralArcMaterial2Shapes =
-    Material2Shapes(
-        small =
-            AuralArcStyle.SmallShape,
-
-        medium =
-            AuralArcStyle.CardShape,
-
-        large =
-            AuralArcStyle.LargeShape
-    )
 
 /*
  * ---------------------------------------------------------------------------
@@ -439,46 +299,27 @@ private val AuralArcMaterial3Shapes =
 fun AuralArcTheme(
     content: @Composable () -> Unit
 ) {
-    Material2Theme(
-        colors =
-            AuralArcMaterial2Colors,
+    Material3Theme(
+        colorScheme =
+            AuralArcMaterial3Colors,
 
         typography =
-            AuralArcMaterial2Typography,
+            AuralArcMaterial3Typography,
 
         shapes =
-            AuralArcMaterial2Shapes
+            AuralArcMaterial3Shapes
     ) {
-        Material3Theme(
-            colorScheme =
-                AuralArcMaterial3Colors,
+        Material3Surface(
+            modifier =
+                Modifier.fillMaxSize(),
 
-            typography =
-                AuralArcMaterial3Typography,
+            color =
+                AuralArcStyle.BackgroundBottom,
 
-            shapes =
-                AuralArcMaterial3Shapes
+            contentColor =
+                AuralArcStyle.TextPrimary
         ) {
-            Material2Surface(
-                modifier =
-                    Modifier.fillMaxSize(),
-
-                color =
-                    AuralArcStyle.BackgroundBottom,
-
-                contentColor =
-                    AuralArcStyle.TextPrimary
-            ) {
-                CompositionLocalProvider(
-                    androidx.compose.material.LocalContentColor provides
-                            AuralArcStyle.TextPrimary,
-
-                    androidx.compose.material3.LocalContentColor provides
-                            AuralArcStyle.TextPrimary
-                ) {
-                    content()
-                }
-            }
+            content()
         }
     }
 }
