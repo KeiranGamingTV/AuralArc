@@ -8,9 +8,23 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.*
-import androidx.compose.material3.OutlinedTextField as Material3OutlinedTextField
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.ui.graphics.Color
+import com.keiranhaas.auralarc.ui.components.AuralArcTopBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
@@ -1109,28 +1123,23 @@ fun MusicLibraryView(
     }
 
     Scaffold(
-        backgroundColor = AuralArcStyle.BackgroundBottom,
+        containerColor = Color.Transparent,
+        modifier = Modifier.background(
+            brush = AuralArcStyle.appBackgroundBrush()
+        ),
         topBar = {
-            TopAppBar(
-                backgroundColor = AuralArcStyle.BackgroundTop,
-                elevation = 0.dp,
-                title = {
-                    Text(
-                        text =
-                        when (
-                            rootTab
-                        ) {
-                            LibraryRootTab.HOME ->
-                                "Home"
+            AuralArcTopBar(
+                title = when (
+                    rootTab
+                ) {
+                    LibraryRootTab.HOME ->
+                        "Home"
 
-                            LibraryRootTab.SEARCH ->
-                                "Search"
+                    LibraryRootTab.SEARCH ->
+                        "Search"
 
-                            LibraryRootTab.LIBRARY ->
-                                "Library"
-                        },
-                        color = AuralArcStyle.TextPrimary
-                    )
+                    LibraryRootTab.LIBRARY ->
+                        "Library"
                 },
                 actions = {
                     AuralArcIconButton(
@@ -1235,9 +1244,6 @@ fun MusicLibraryView(
                 .fillMaxSize()
                 .padding(
                     innerPadding
-                )
-                .background(
-                    brush = AuralArcStyle.appBackgroundBrush()
                 )
         ) {
             AuralArcContentTransition(
@@ -1390,7 +1396,7 @@ fun MusicLibraryView(
                             Alignment.TopCenter
                         ),
                     color = AuralArcStyle.PurpleBright,
-                    backgroundColor = AuralArcStyle.Divider
+                    trackColor = AuralArcStyle.Divider
                 )
             }
 
@@ -1419,6 +1425,7 @@ fun MusicLibraryView(
                 LibraryRuntimeState.navidromeFailedToLoad.value
             ) {
                 AlertDialog(
+                    containerColor = AuralArcStyle.Surface,
                     onDismissRequest = {
                         LibraryRuntimeState.navidromeFailedToLoad.value =
                             false
@@ -1554,7 +1561,7 @@ private fun ArtistAlbumsForArtistScreen(
                     ) {
                         Text(
                             text = album.albumName,
-                            style = MaterialTheme.typography.subtitle1,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = AuralArcStyle.TextPrimary,
                             maxLines = 2,
@@ -1570,7 +1577,7 @@ private fun ArtistAlbumsForArtistScreen(
                             } else {
                                 "Unknown release date"
                             },
-                            style = MaterialTheme.typography.body2,
+                            style = MaterialTheme.typography.bodyMedium,
                             color = AuralArcStyle.TextSecondary,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -1585,7 +1592,7 @@ private fun ArtistAlbumsForArtistScreen(
                             } else {
                                 "${album.tracks.size} songs"
                             },
-                            style = MaterialTheme.typography.caption,
+                            style = MaterialTheme.typography.bodySmall,
                             color = AuralArcStyle.TextMuted
                         )
                     }
@@ -1791,7 +1798,7 @@ private fun SearchTabContent(
                 } else {
                     "${searchedTracks.size} results"
                 },
-                style = MaterialTheme.typography.caption,
+                style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.Medium,
                 color = AuralArcStyle.TextMuted,
                 modifier = Modifier.padding(
@@ -2215,7 +2222,7 @@ private fun LibraryTabContent(
         ) {
             Text(
                 text = categorySummary,
-                style = MaterialTheme.typography.body2,
+                style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = AuralArcStyle.TextSecondary
             )
@@ -2637,6 +2644,7 @@ private fun LibraryTabContent(
         artworkEditInProgress
     ) {
         AlertDialog(
+            containerColor = AuralArcStyle.Surface,
             onDismissRequest = {},
             title = {
                 Text(
@@ -2676,6 +2684,7 @@ private fun LibraryTabContent(
 
     artworkEditMessage?.let { message ->
         AlertDialog(
+            containerColor = AuralArcStyle.Surface,
             onDismissRequest = {
                 artworkEditMessage =
                     null
@@ -2820,7 +2829,7 @@ private fun HomeSectionHeader(
 ) {
     Text(
         text = title,
-        style = MaterialTheme.typography.h6,
+        style = MaterialTheme.typography.titleLarge,
         fontWeight = FontWeight.Bold,
         color = AuralArcStyle.TextPrimary,
         modifier = Modifier.padding(
@@ -2831,7 +2840,7 @@ private fun HomeSectionHeader(
 
     Text(
         text = subtitle,
-        style = MaterialTheme.typography.caption,
+        style = MaterialTheme.typography.bodySmall,
         color = AuralArcStyle.TextMuted,
         modifier = Modifier.padding(
             bottom = 8.dp
@@ -2974,7 +2983,7 @@ private fun HomeTrackCard(
 
             TrackTitleWithHdBadge(
                 track = track,
-                style = MaterialTheme.typography.body1,
+                style = MaterialTheme.typography.bodyLarge,
                 color = AuralArcStyle.TextPrimary,
                 fontWeight = FontWeight.Bold,
                 maxLines = 2,
@@ -2986,7 +2995,7 @@ private fun HomeTrackCard(
                 trackArtistAlbumText(
                     track
                 ),
-                style = MaterialTheme.typography.caption,
+                style = MaterialTheme.typography.bodySmall,
                 color = AuralArcStyle.TextMuted,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -3040,7 +3049,7 @@ private fun HomeRecentlyListenedCard(
 
             TrackTitleWithHdBadge(
                 track = track,
-                style = MaterialTheme.typography.body1,
+                style = MaterialTheme.typography.bodyLarge,
                 color = AuralArcStyle.TextPrimary,
                 fontWeight = FontWeight.Bold,
                 maxLines = 2,
@@ -3052,7 +3061,7 @@ private fun HomeRecentlyListenedCard(
                 trackArtistAlbumText(
                     track
                 ),
-                style = MaterialTheme.typography.caption,
+                style = MaterialTheme.typography.bodySmall,
                 color = AuralArcStyle.TextMuted,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -3105,7 +3114,7 @@ private fun HomeWideTrackCard(
             ) {
                 TrackTitleWithHdBadge(
                     track = track,
-                    style = MaterialTheme.typography.body1,
+                    style = MaterialTheme.typography.bodyLarge,
                     color = AuralArcStyle.TextPrimary,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
@@ -3117,7 +3126,7 @@ private fun HomeWideTrackCard(
                     trackArtistAlbumText(
                         track
                     ),
-                    style = MaterialTheme.typography.caption,
+                    style = MaterialTheme.typography.bodySmall,
                     color = AuralArcStyle.TextMuted,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -3296,7 +3305,7 @@ private fun LibraryCategorySelector(
                             mode
                         ),
                         style =
-                            MaterialTheme.typography.caption,
+                            MaterialTheme.typography.bodySmall,
                         fontWeight =
                             if (
                                 selected
@@ -3333,6 +3342,7 @@ private fun LibraryFilterDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = AuralArcStyle.Surface,
         title = {
             Text(
                 text = "Sort Library"
@@ -3792,7 +3802,7 @@ private fun LibrarySearchBar(
                 )
             )
 
-            Material3OutlinedTextField(
+            OutlinedTextField(
                 value = query,
                 onValueChange = onQueryChange,
                 label = {
@@ -3908,7 +3918,7 @@ private fun MainBottomBar(
     onTabSelected: (LibraryRootTab) -> Unit
 ) {
     Surface(
-        elevation = 14.dp,
+        shadowElevation = 14.dp,
         color = AuralArcStyle.BackgroundBottom
     ) {
         Column(
@@ -3988,7 +3998,7 @@ private fun MainBottomBar(
                         navController = navController
                     )
 
-                    Divider(
+                    HorizontalDivider(
                         color = AuralArcStyle.Divider,
                         modifier = Modifier.padding(
                             top = 8.dp
@@ -4269,7 +4279,7 @@ private fun RowScope.RootTabButton(
 
             Text(
                 text = tab.label,
-                style = MaterialTheme.typography.caption,
+                style = MaterialTheme.typography.bodySmall,
                 fontWeight =
                     if (
                         selected
@@ -4370,7 +4380,7 @@ private fun AlbumDetailHeader(
                 ) {
                     Text(
                         text = albumName,
-                        style = MaterialTheme.typography.subtitle1,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = AuralArcStyle.TextPrimary,
                         maxLines = 1,
@@ -4379,7 +4389,7 @@ private fun AlbumDetailHeader(
 
                     Text(
                         text = artistName,
-                        style = MaterialTheme.typography.caption,
+                        style = MaterialTheme.typography.bodySmall,
                         color = AuralArcStyle.TextSecondary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -4455,7 +4465,7 @@ private fun AlbumDetailHeader(
                     ) {
                         Text(
                             text = albumName,
-                            style = MaterialTheme.typography.h6,
+                            style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = AuralArcStyle.TextPrimary,
                             maxLines = 2,
@@ -4464,7 +4474,7 @@ private fun AlbumDetailHeader(
 
                         Text(
                             text = artistName,
-                            style = MaterialTheme.typography.body2,
+                            style = MaterialTheme.typography.bodyMedium,
                             color = AuralArcStyle.TextSecondary,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis
@@ -4483,7 +4493,7 @@ private fun AlbumDetailHeader(
                     ) {
                         Text(
                             text = releaseDate,
-                            style = MaterialTheme.typography.body2,
+                            style = MaterialTheme.typography.bodyMedium,
                             color = AuralArcStyle.TextSecondary,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -4491,7 +4501,7 @@ private fun AlbumDetailHeader(
 
                         Text(
                             text = "$songCount songs • $totalDuration",
-                            style = MaterialTheme.typography.caption,
+                            style = MaterialTheme.typography.bodySmall,
                             color = AuralArcStyle.TextMuted,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -4560,18 +4570,18 @@ private fun AlbumArtworkMoreOptionsButton(
             }
         ) {
             DropdownMenuItem(
+                text = {
+                    Text(
+                        text = "Add Album Artwork"
+                    )
+                },
                 onClick = {
                     expanded =
                         false
 
                     onAddArtwork()
                 }
-            ) {
-                Text(
-                    text =
-                    "Add Album Artwork"
-                )
-            }
+            )
         }
     }
 }
@@ -4630,7 +4640,7 @@ private fun ArtistDetailHeader(
                 ) {
                     Text(
                         text = artistName,
-                        style = MaterialTheme.typography.subtitle1,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = AuralArcStyle.TextPrimary,
                         maxLines = 1,
@@ -4639,7 +4649,7 @@ private fun ArtistDetailHeader(
 
                     Text(
                         text = "$albumCount albums • $songCount songs",
-                        style = MaterialTheme.typography.caption,
+                        style = MaterialTheme.typography.bodySmall,
                         color = AuralArcStyle.TextMuted,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -4696,7 +4706,7 @@ private fun ArtistDetailHeader(
                     ) {
                         Text(
                             text = artistName,
-                            style = MaterialTheme.typography.h6,
+                            style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = AuralArcStyle.TextPrimary,
                             maxLines = 2,
@@ -4705,7 +4715,7 @@ private fun ArtistDetailHeader(
 
                         Text(
                             text = "$albumCount albums • $songCount songs",
-                            style = MaterialTheme.typography.body2,
+                            style = MaterialTheme.typography.bodyMedium,
                             color = AuralArcStyle.TextSecondary
                         )
                     }
@@ -4719,7 +4729,7 @@ private fun ArtistDetailHeader(
                 ) {
                     Text(
                         text = totalDuration,
-                        style = MaterialTheme.typography.body2,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = AuralArcStyle.TextSecondary,
                         modifier = Modifier.weight(1f)
                     )
@@ -4823,7 +4833,7 @@ private fun MiniPlayerBar(
 
                     Text(
                         text = PlayerManager.currentArtist.value,
-                        style = MaterialTheme.typography.body2,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = AuralArcStyle.TextSecondary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -4849,6 +4859,9 @@ private fun MiniPlayerBar(
                     elevation = 6.dp
                 ) {
                     IconButton(
+                        modifier = Modifier.size(
+                            48.dp
+                        ),
                         onClick = {
                             if (
                                 PlayerManager.isPlaying.value
@@ -4883,14 +4896,14 @@ private fun MiniPlayerBar(
             }
 
             LinearProgressIndicator(
-                progress = progress,
+                progress = { progress },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(
                         3.dp
                     ),
                 color = AuralArcStyle.PurpleBright,
-                backgroundColor = AuralArcStyle.Divider
+                trackColor = AuralArcStyle.Divider
             )
         }
     }
