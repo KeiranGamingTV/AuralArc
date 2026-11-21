@@ -21,12 +21,13 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Icon
-import androidx.compose.material.LinearProgressIndicator
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import com.keiranhaas.auralarc.ui.components.AuralArcBackButton
+import com.keiranhaas.auralarc.ui.components.AuralArcTopBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
@@ -230,35 +231,24 @@ fun NowPlayingScreen(
     }
 
     Scaffold(
-        backgroundColor = AuralArcStyle.BackgroundBottom,
+        containerColor = Color.Transparent,
+        modifier = Modifier.background(
+            brush = AuralArcStyle.appBackgroundBrush()
+        ),
         topBar = {
-            TopAppBar(
-                backgroundColor = AuralArcStyle.BackgroundTop,
-                elevation = 0.dp,
+            AuralArcTopBar(
+                title = if (
+                    showLyricsCard
+                ) {
+                    "Lyrics"
+                } else {
+                    "Now Playing"
+                },
                 navigationIcon = {
-                    AuralArcIconButton(
+                    AuralArcBackButton(
                         onClick = {
                             closeNowPlayingOrLyrics()
                         }
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = AuralArcStyle.TextPrimary
-                        )
-                    }
-                },
-                title = {
-                    Text(
-                        text =
-                        if (
-                            showLyricsCard
-                        ) {
-                            "Lyrics"
-                        } else {
-                            "Now Playing"
-                        },
-                        color = AuralArcStyle.TextPrimary
                     )
                 }
             )
@@ -269,9 +259,6 @@ fun NowPlayingScreen(
                 .fillMaxSize()
                 .padding(
                     innerPadding
-                )
-                .background(
-                    brush = AuralArcStyle.appBackgroundBrush()
                 )
         ) {
             Column(
@@ -419,7 +406,7 @@ private fun NowPlayingMainContent(
                 TrackTitleWithHdBadge(
                     track = currentTrack,
                     modifier = Modifier.fillMaxWidth(),
-                    style = MaterialTheme.typography.h5,
+                    style = MaterialTheme.typography.headlineLarge,
                     color = AuralArcStyle.TextPrimary,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
@@ -433,7 +420,7 @@ private fun NowPlayingMainContent(
             } else {
                 Text(
                     text = PlayerManager.currentTitle.value,
-                    style = MaterialTheme.typography.h5,
+                    style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Bold,
                     color = AuralArcStyle.TextPrimary,
                     maxLines = 1,
@@ -454,7 +441,7 @@ private fun NowPlayingMainContent(
                 PlayerManager.currentArtist.value.ifBlank {
                     "Unknown Artist"
                 },
-                style = MaterialTheme.typography.subtitle1,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = AuralArcStyle.TextSecondary,
                 maxLines = 1,
@@ -601,7 +588,7 @@ private fun NowPlayingMainContent(
                         sliderPosition.toLong()
                     )
                 },
-                style = MaterialTheme.typography.caption,
+                style = MaterialTheme.typography.bodySmall,
                 color = AuralArcStyle.TextMuted
             )
 
@@ -616,7 +603,7 @@ private fun NowPlayingMainContent(
                         duration
                     )
                 },
-                style = MaterialTheme.typography.caption,
+                style = MaterialTheme.typography.bodySmall,
                 color = AuralArcStyle.TextMuted
             )
         }
@@ -625,7 +612,7 @@ private fun NowPlayingMainContent(
             text = audioQualitySummary(
                 currentTrack
             ),
-            style = MaterialTheme.typography.caption,
+            style = MaterialTheme.typography.bodySmall,
             color = AuralArcStyle.TextSecondary,
             textAlign = TextAlign.Center,
             modifier = Modifier
@@ -825,7 +812,7 @@ private fun NowPlayingMainContent(
 
                 Text(
                     text = "Queue",
-                    style = MaterialTheme.typography.caption,
+                    style = MaterialTheme.typography.bodySmall,
                     color = AuralArcStyle.TextMuted
                 )
             }
@@ -866,7 +853,7 @@ private fun NowPlayingMainContent(
                     Text(
                         text = "More",
                         style =
-                        MaterialTheme.typography.caption,
+                        MaterialTheme.typography.bodySmall,
                         color = AuralArcStyle.TextMuted
                     )
                 }
@@ -1070,7 +1057,7 @@ private fun LyricsPreviewCard(
         ) {
             Text(
                 text = "Lyrics",
-                style = MaterialTheme.typography.subtitle2,
+                style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
                 color = AuralArcStyle.PurpleBright
             )
@@ -1085,7 +1072,7 @@ private fun LyricsPreviewCard(
                 !loadingFinished ->
                     Text(
                         text = "Loading lyrics…",
-                        style = MaterialTheme.typography.body2,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = AuralArcStyle.TextMuted
                     )
 
@@ -1106,14 +1093,14 @@ private fun LyricsPreviewCard(
                         EmbeddedLyricsType.DUET_SYNCED ->
                     Text(
                         text = "This Duet LRC file does not contain any valid synchronized lyric lines.",
-                        style = MaterialTheme.typography.body2,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = AuralArcStyle.TextMuted
                     )
 
                 normalPreviewLines.isEmpty() ->
                     Text(
                         text = "No lyrics were found.",
-                        style = MaterialTheme.typography.body2,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = AuralArcStyle.TextMuted
                     )
 
@@ -1125,9 +1112,9 @@ private fun LyricsPreviewCard(
                             if (
                                 index == 0
                             ) {
-                                MaterialTheme.typography.body1
+                                MaterialTheme.typography.bodyLarge
                             } else {
-                                MaterialTheme.typography.body2
+                                MaterialTheme.typography.bodyMedium
                             },
                             fontWeight =
                             if (
@@ -1172,7 +1159,7 @@ private fun DuetLyricsPreviewRow(
         }
 
     val previewTextStyle =
-        MaterialTheme.typography.body2.copy(
+        MaterialTheme.typography.bodyMedium.copy(
             fontSize = 15.sp,
             lineHeight = 19.sp
         )
@@ -1390,7 +1377,7 @@ private fun NowPlayingLyricsCard(
                         Text(
                             text = "Loading lyrics…",
                             style =
-                            MaterialTheme.typography.body1,
+                            MaterialTheme.typography.bodyLarge,
                             color = AuralArcStyle.TextMuted
                         )
                     }
@@ -1432,7 +1419,7 @@ private fun NowPlayingLyricsCard(
                         Text(
                             text = cleanedUnsyncedLyrics,
                             style =
-                            MaterialTheme.typography.body1,
+                            MaterialTheme.typography.bodyLarge,
                             color =
                             AuralArcStyle.TextPrimary,
                             modifier = Modifier
@@ -1462,7 +1449,7 @@ private fun NowPlayingLyricsCard(
                             text =
                             "No lyrics were found. Check your music folders for an LRC or DLRC file, and make sure it matches the name of the song.",
                             style =
-                            MaterialTheme.typography.body1,
+                            MaterialTheme.typography.bodyLarge,
                             color = AuralArcStyle.TextMuted,
                             textAlign = TextAlign.Center
                         )
@@ -1513,7 +1500,7 @@ private fun LyricsPlaybackBar(
                 Text(
                     text = track.title,
                     style =
-                    MaterialTheme.typography.subtitle2,
+                    MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = AuralArcStyle.TextPrimary,
                     maxLines = 1,
@@ -1524,7 +1511,7 @@ private fun LyricsPlaybackBar(
                     text = track.artist.ifBlank {
                         "Unknown Artist"
                     },
-                    style = MaterialTheme.typography.caption,
+                    style = MaterialTheme.typography.bodySmall,
                     color = AuralArcStyle.TextMuted,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -1784,7 +1771,7 @@ private fun DuetSyncedLyricsText(
         ) {
             Text(
                 text = "This Duet LRC file does not contain any valid synchronized lyric lines.",
-                style = MaterialTheme.typography.body1,
+                style = MaterialTheme.typography.bodyLarge,
                 color = AuralArcStyle.TextMuted,
                 textAlign = TextAlign.Center
             )
@@ -1843,7 +1830,7 @@ private fun DuetFullLyricsRow(
         }
 
     val singerTextStyle =
-        MaterialTheme.typography.body1.copy(
+        MaterialTheme.typography.bodyLarge.copy(
             fontSize =
             if (
                 isActive
@@ -1856,7 +1843,7 @@ private fun DuetFullLyricsRow(
         )
 
     val sharedTextStyle =
-        MaterialTheme.typography.body1.copy(
+        MaterialTheme.typography.bodyLarge.copy(
             fontSize =
             if (
                 isActive
@@ -2251,7 +2238,7 @@ private fun SyncedLyricsText(
     ) {
         Text(
             text = "No synced lyric lines found in this .lrc file.",
-            style = MaterialTheme.typography.body1,
+            style = MaterialTheme.typography.bodyLarge,
             color = AuralArcStyle.TextPrimary,
             modifier = Modifier
                 .fillMaxSize()
@@ -2286,9 +2273,9 @@ private fun SyncedLyricsText(
                     if (
                         isActive
                     ) {
-                        MaterialTheme.typography.h6
+                        MaterialTheme.typography.titleLarge
                     } else {
-                        MaterialTheme.typography.body1
+                        MaterialTheme.typography.bodyLarge
                     },
                     fontWeight =
                     if (

@@ -10,7 +10,18 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.graphics.Color
+import com.keiranhaas.auralarc.ui.components.AuralArcBackButton
+import com.keiranhaas.auralarc.ui.components.AuralArcTopBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
@@ -50,6 +61,7 @@ import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import com.keiranhaas.auralarc.ui.components.AuralArcSlider
 import com.keiranhaas.auralarc.ui.components.AuralArcSwitch
 import com.keiranhaas.auralarc.storage.DrivingModePreferences
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun SettingsScreen(
@@ -154,7 +166,7 @@ fun SettingsScreen(
                         Text("Keep Disabled")
                     }
                 },
-                backgroundColor = AuralArcStyle.Surface
+                containerColor = AuralArcStyle.Surface
             )
         }
 
@@ -293,14 +305,14 @@ fun LibraryFolderSettingsScreen(
             ) {
                 Text(
                     text = "Local Library Folders",
-                    style = MaterialTheme.typography.h6,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = AuralArcStyle.TextPrimary
                 )
 
                 Text(
                     text = "AuralArc currently scans these local folders.",
-                    style = MaterialTheme.typography.body2,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = AuralArcStyle.TextMuted,
                     modifier = Modifier.padding(
                         top = 6.dp
@@ -310,7 +322,7 @@ fun LibraryFolderSettingsScreen(
                 FolderManager.allowedFolders.forEach { folder ->
                     Text(
                         text = folder,
-                        style = MaterialTheme.typography.body2,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = AuralArcStyle.TextSecondary,
                         modifier = Modifier.padding(
                             top = 8.dp
@@ -349,7 +361,7 @@ fun LibraryFolderSettingsScreen(
 
                 Text(
                     text = "After changing folder settings, refresh the library from the main screen.",
-                    style = MaterialTheme.typography.caption,
+                    style = MaterialTheme.typography.bodySmall,
                     color = AuralArcStyle.TextMuted,
                     modifier = Modifier.padding(
                         top = 8.dp
@@ -619,7 +631,9 @@ fun AboutSettingsScreen(
         ) {
             Text(
                 text = "AuralArc",
-                style = MaterialTheme.typography.h3,
+                style = MaterialTheme.typography.displayLarge,
+                fontSize = 48.sp,
+                lineHeight = 56.sp,
                 fontWeight = FontWeight.Bold,
                 color = AuralArcStyle.TextPrimary,
                 textAlign = TextAlign.Center
@@ -679,7 +693,7 @@ fun AboutSettingsScreen(
 
             Text(
                 text = "Version $appVersion",
-                style = MaterialTheme.typography.h6,
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = AuralArcStyle.TextSecondary,
                 textAlign = TextAlign.Center
@@ -715,7 +729,7 @@ fun AboutSettingsScreen(
                     ) {
                         Text(
                             text = "View Release Notes",
-                            style = MaterialTheme.typography.subtitle1,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = AuralArcStyle.TextPrimary,
                             modifier = Modifier.weight(
@@ -747,7 +761,7 @@ fun AboutSettingsScreen(
                     if (
                         releaseNotesExpanded
                     ) {
-                        Divider(
+                        HorizontalDivider(
                             color = AuralArcStyle.TextMuted.copy(
                                 alpha = 0.25f
                             )
@@ -765,7 +779,7 @@ fun AboutSettingsScreen(
                         ) {
                             Text(
                                 text = "--- Release Notes ---",
-                                style = MaterialTheme.typography.subtitle1,
+                                style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = AuralArcStyle.TextPrimary,
                                 modifier = Modifier.fillMaxWidth(),
@@ -789,7 +803,7 @@ fun AboutSettingsScreen(
                                 ) {
                                     Text(
                                         text = "•",
-                                        style = MaterialTheme.typography.body1,
+                                        style = MaterialTheme.typography.bodyLarge,
                                         fontWeight = FontWeight.Bold,
                                         color = AuralArcStyle.PurpleBright
                                     )
@@ -802,7 +816,7 @@ fun AboutSettingsScreen(
 
                                     Text(
                                         text = note,
-                                        style = MaterialTheme.typography.body1,
+                                        style = MaterialTheme.typography.bodyLarge,
                                         color = AuralArcStyle.TextSecondary,
                                         modifier = Modifier.weight(
                                             1f
@@ -1007,7 +1021,7 @@ private fun SmartShuffleSliderCard(
         ) {
             Text(
                 text = "Smart Shuffle",
-                style = MaterialTheme.typography.subtitle1,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = AuralArcStyle.TextPrimary
             )
@@ -1016,7 +1030,7 @@ private fun SmartShuffleSliderCard(
                 text = smartShuffleDescription(
                     level
                 ),
-                style = MaterialTheme.typography.body2,
+                style = MaterialTheme.typography.bodyMedium,
                 color = AuralArcStyle.TextMuted,
                 modifier = Modifier.padding(
                     top = 3.dp,
@@ -1044,19 +1058,19 @@ private fun SmartShuffleSliderCard(
             ) {
                 Text(
                     text = "Random",
-                    style = MaterialTheme.typography.caption,
+                    style = MaterialTheme.typography.bodySmall,
                     color = AuralArcStyle.TextMuted
                 )
 
                 Text(
                     text = "Balanced",
-                    style = MaterialTheme.typography.caption,
+                    style = MaterialTheme.typography.bodySmall,
                     color = AuralArcStyle.TextMuted
                 )
 
                 Text(
                     text = "Least Played",
-                    style = MaterialTheme.typography.caption,
+                    style = MaterialTheme.typography.bodySmall,
                     color = AuralArcStyle.TextMuted
                 )
             }
@@ -1123,14 +1137,14 @@ private fun SettingsToggleCard(
             ) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.subtitle1,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = AuralArcStyle.TextPrimary
                 )
 
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.body2,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = AuralArcStyle.TextMuted,
                     modifier = Modifier.padding(
                         top = 3.dp
@@ -1172,14 +1186,14 @@ private fun SettingsChoiceCard(
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.subtitle1,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = AuralArcStyle.TextPrimary
             )
 
             Text(
                 text = subtitle,
-                style = MaterialTheme.typography.body2,
+                style = MaterialTheme.typography.bodyMedium,
                 color = AuralArcStyle.TextMuted,
                 modifier = Modifier.padding(
                     top = 3.dp,
@@ -1207,7 +1221,11 @@ private fun SettingsChoiceCard(
                             onSelected(
                                 option.first
                             )
-                        }
+                        },
+                        colors = RadioButtonDefaults.colors(
+                            selectedColor = AuralArcStyle.PurpleBright,
+                            unselectedColor = AuralArcStyle.TextSecondary
+                        )
                     )
 
                     Text(
@@ -1230,28 +1248,18 @@ private fun BasicSettingsSubScreen(
     content: @Composable () -> Unit
 ) {
     Scaffold(
-        backgroundColor = AuralArcStyle.BackgroundBottom,
+        containerColor = Color.Transparent,
+        modifier = Modifier.background(
+            brush = AuralArcStyle.appBackgroundBrush()
+        ),
         topBar = {
-            TopAppBar(
-                backgroundColor = AuralArcStyle.BackgroundTop,
-                elevation = 0.dp,
+            AuralArcTopBar(
+                title = title,
                 navigationIcon = {
-                    AuralArcIconButton(
+                    AuralArcBackButton(
                         onClick = {
                             navController.popBackStack()
                         }
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = AuralArcStyle.TextPrimary
-                        )
-                    }
-                },
-                title = {
-                    Text(
-                        text = title,
-                        color = AuralArcStyle.TextPrimary
                     )
                 }
             )
@@ -1262,9 +1270,6 @@ private fun BasicSettingsSubScreen(
                 .fillMaxSize()
                 .padding(
                     innerPadding
-                )
-                .background(
-                    brush = AuralArcStyle.appBackgroundBrush()
                 )
                 .verticalScroll(
                     rememberScrollState()
@@ -1285,28 +1290,18 @@ private fun SettingsMenuScaffold(
     content: @Composable () -> Unit
 ) {
     Scaffold(
-        backgroundColor = AuralArcStyle.BackgroundBottom,
+        containerColor = Color.Transparent,
+        modifier = Modifier.background(
+            brush = AuralArcStyle.appBackgroundBrush()
+        ),
         topBar = {
-            TopAppBar(
-                backgroundColor = AuralArcStyle.BackgroundTop,
-                elevation = 0.dp,
+            AuralArcTopBar(
+                title = title,
                 navigationIcon = {
-                    AuralArcIconButton(
+                    AuralArcBackButton(
                         onClick = {
                             navController.popBackStack()
                         }
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = AuralArcStyle.TextPrimary
-                        )
-                    }
-                },
-                title = {
-                    Text(
-                        text = title,
-                        color = AuralArcStyle.TextPrimary
                     )
                 }
             )
@@ -1317,9 +1312,6 @@ private fun SettingsMenuScaffold(
                 .fillMaxSize()
                 .padding(
                     innerPadding
-                )
-                .background(
-                    brush = AuralArcStyle.appBackgroundBrush()
                 )
                 .verticalScroll(
                     rememberScrollState()
@@ -1376,7 +1368,7 @@ fun SettingsIconRow(
 
             Text(
                 text = title,
-                style = MaterialTheme.typography.subtitle1,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = AuralArcStyle.TextPrimary
             )

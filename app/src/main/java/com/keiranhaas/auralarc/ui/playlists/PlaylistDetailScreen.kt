@@ -4,7 +4,14 @@ import android.content.Context
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
@@ -671,7 +678,7 @@ private fun PlaylistDetailHeader(
                         Text(
                             text = playlist.name,
                             style =
-                                MaterialTheme.typography.subtitle1,
+                                MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = AuralArcStyle.TextPrimary,
                             maxLines = 1,
@@ -680,7 +687,7 @@ private fun PlaylistDetailHeader(
 
                         Text(
                             text = songCountText,
-                            style = MaterialTheme.typography.caption,
+                            style = MaterialTheme.typography.bodySmall,
                             color = AuralArcStyle.TextMuted,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -776,7 +783,7 @@ private fun PlaylistDetailHeader(
                         ) {
                             Text(
                                 text = playlist.name,
-                                style = MaterialTheme.typography.h6,
+                                style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = AuralArcStyle.TextPrimary,
                                 maxLines = 2,
@@ -785,7 +792,7 @@ private fun PlaylistDetailHeader(
 
                             Text(
                                 text = songCountText,
-                                style = MaterialTheme.typography.body2,
+                                style = MaterialTheme.typography.bodyMedium,
                                 color = AuralArcStyle.TextSecondary,
                                 maxLines = 2,
                                 overflow = TextOverflow.Ellipsis
@@ -801,7 +808,7 @@ private fun PlaylistDetailHeader(
                     ) {
                         Text(
                             text = totalDuration,
-                            style = MaterialTheme.typography.body2,
+                            style = MaterialTheme.typography.bodyMedium,
                             color = AuralArcStyle.TextSecondary,
                             modifier = Modifier.weight(1f)
                         )
@@ -871,70 +878,63 @@ private fun PlaylistHeaderOptionsButton(
             }
         ) {
             DropdownMenuItem(
+                text = {
+                    Text(
+                        text =
+                            if (
+                                hasCustomArtwork
+                            ) {
+                                "Change Playlist Artwork"
+                            } else {
+                                "Choose Playlist Artwork"
+                            }
+                    )
+                },
                 onClick = {
                     menuExpanded =
                         false
 
                     onChangeArtwork()
                 }
-            ) {
-                Text(
-                    text =
-                        if (
-                            hasCustomArtwork
-                        ) {
-                            "Change Playlist Artwork"
-                        } else {
-                            "Choose Playlist Artwork"
-                        }
-                )
-            }
+            )
 
             if (
                 hasCustomArtwork
             ) {
                 DropdownMenuItem(
+                    text = { Text(text = "Remove Custom Artwork") },
                     onClick = {
                         menuExpanded =
                             false
 
                         onRemoveArtwork()
                     }
-                ) {
-                    Text(
-                        text = "Remove Custom Artwork"
-                    )
-                }
+                )
             }
 
             if (
                 canEdit
             ) {
                 DropdownMenuItem(
+                    text = { Text(text = "Rename Playlist") },
                     onClick = {
                         menuExpanded =
                             false
 
                         onRename()
                     }
-                ) {
-                    Text(
-                        text = "Rename Playlist"
-                    )
-                }
+                )
 
                 DropdownMenuItem(
+                    text = { Text(text = "Delete Playlist") },
+
                     onClick = {
                         menuExpanded =
                             false
 
                         onDelete()
                     }
-                ) {
-                    Text(
-                        text = "Delete Playlist"
-                    )
-                }
+                )
             }
         }
     }
@@ -1000,7 +1000,7 @@ private fun PlaylistTrackRow(
             ) {
                 TrackTitleWithHdBadge(
                     track = track,
-                    style = MaterialTheme.typography.body1,
+                    style = MaterialTheme.typography.bodyLarge,
                     color = AuralArcStyle.TextPrimary,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
@@ -1013,7 +1013,7 @@ private fun PlaylistTrackRow(
                             track
                         ),
                     style =
-                        MaterialTheme.typography.body2,
+                        MaterialTheme.typography.bodyMedium,
                     color =
                         AuralArcStyle.TextSecondary,
                     maxLines = 1,
@@ -1085,17 +1085,14 @@ private fun PlaylistTrackRow(
                         }
                     ) {
                         DropdownMenuItem(
+                            text = { Text(text = "Remove from Playlist") },
                             onClick = {
                                 menuExpanded =
                                     false
 
                                 onRemove()
                             }
-                        ) {
-                            Text(
-                                text = "Remove from Playlist"
-                            )
-                        }
+                        )
                     }
                 }
             }
@@ -1117,7 +1114,7 @@ private fun EmptyPlaylistDetail(
     ) {
         Text(
             text = "This playlist is empty",
-            style = MaterialTheme.typography.h6,
+            style = MaterialTheme.typography.titleLarge,
             color = AuralArcStyle.TextPrimary
         )
 
@@ -1130,7 +1127,7 @@ private fun EmptyPlaylistDetail(
                 } else {
                     "Go to your library and add songs to this playlist."
                 },
-            style = MaterialTheme.typography.body2,
+            style = MaterialTheme.typography.bodyMedium,
             color = AuralArcStyle.TextMuted
         )
     }
@@ -1148,13 +1145,13 @@ private fun LoadingPlaylistScreen() {
     ) {
         Text(
             text = "Loading playlist...",
-            style = MaterialTheme.typography.h6,
+            style = MaterialTheme.typography.titleLarge,
             color = AuralArcStyle.TextPrimary
         )
 
         Text(
             text = "Please wait.",
-            style = MaterialTheme.typography.body2,
+            style = MaterialTheme.typography.bodyMedium,
             color = AuralArcStyle.TextMuted
         )
     }
@@ -1174,7 +1171,7 @@ private fun MissingPlaylistScreen(
     ) {
         Text(
             text = "Playlist not found",
-            style = MaterialTheme.typography.h6,
+            style = MaterialTheme.typography.titleLarge,
             color = AuralArcStyle.TextPrimary
         )
 
@@ -1199,6 +1196,7 @@ private fun DeletePlaylistConfirmationDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = AuralArcStyle.Surface,
         title = {
             Text(
                 text = "Delete Playlist"
@@ -1245,6 +1243,7 @@ private fun RenamePlaylistDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = AuralArcStyle.Surface,
         title = {
             Text(
                 text = "Rename Playlist"
