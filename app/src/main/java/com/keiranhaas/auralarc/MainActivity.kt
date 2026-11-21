@@ -26,6 +26,9 @@ import com.keiranhaas.auralarc.storage.PowerSavingPreferences
 import com.keiranhaas.auralarc.ui.setup.FirstRunSetupScreen
 import com.keiranhaas.auralarc.utils.ArtworkBitmapLoader
 import androidx.compose.runtime.mutableStateOf
+import com.keiranhaas.auralarc.storage.ReleaseNotesPreferences
+import com.keiranhaas.auralarc.ui.WhatsNewDialogHost
+import com.keiranhaas.auralarc.ui.getAppVersionName
 
 class MainActivity : ComponentActivity() {
 
@@ -236,6 +239,13 @@ class MainActivity : ComponentActivity() {
                             this@MainActivity
                         )
 
+                        ReleaseNotesPreferences.markSeen(
+                            this@MainActivity,
+                            getAppVersionName(
+                                this@MainActivity
+                            )
+                        )
+
                         showApp()
 
                         handleIncomingAudioIntent(
@@ -276,6 +286,7 @@ class MainActivity : ComponentActivity() {
                         openDrivingModeRequest.value = false
                     }
                 )
+                WhatsNewDialogHost()
             }
         }
 

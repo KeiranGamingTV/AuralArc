@@ -612,9 +612,7 @@ fun AboutSettingsScreen(
     }
 
     val releaseNotes =
-        listOf(
-            "Added Power Saving Mode."
-        )
+        ReleaseNotes.entries
 
     SettingsMenuScaffold(
         title = "About AuralArc",
@@ -792,37 +790,33 @@ fun AboutSettingsScreen(
                                 )
                             )
 
-                            releaseNotes.forEach { note ->
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(
-                                            vertical = 3.dp
-                                        ),
-                                    verticalAlignment = Alignment.Top
+                            releaseNotes.forEachIndexed { index, entry ->
+                                if (
+                                    index > 0
                                 ) {
-                                    Text(
-                                        text = "•",
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        fontWeight = FontWeight.Bold,
-                                        color = AuralArcStyle.PurpleBright
-                                    )
-
                                     Spacer(
-                                        modifier = Modifier.width(
-                                            9.dp
-                                        )
-                                    )
-
-                                    Text(
-                                        text = note,
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = AuralArcStyle.TextSecondary,
-                                        modifier = Modifier.weight(
-                                            1f
+                                        modifier = Modifier.height(
+                                            18.dp
                                         )
                                     )
                                 }
+
+                                Text(
+                                    text = "Version ${entry.version}",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = AuralArcStyle.PurpleBright
+                                )
+
+                                Spacer(
+                                    modifier = Modifier.height(
+                                        8.dp
+                                    )
+                                )
+
+                                ReleaseNoteBullets(
+                                    notes = entry.notes
+                                )
                             }
                         }
                     }
@@ -1376,7 +1370,7 @@ fun SettingsIconRow(
     }
 }
 
-private fun getAppVersionName(
+internal fun getAppVersionName(
     context: Context
 ): String {
     return try {
