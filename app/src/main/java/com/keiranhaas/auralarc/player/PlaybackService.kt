@@ -36,6 +36,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import com.keiranhaas.auralarc.storage.LibraryCacheStore
+import com.keiranhaas.auralarc.storage.LibrarySourcePreferences
+import com.keiranhaas.auralarc.widget.AuralArcWidgetUpdater
+import kotlinx.coroutines.withContext
 
 @UnstableApi
 class PlaybackService :
@@ -54,19 +58,19 @@ class PlaybackService :
         private const val TAG =
             "AuralArcPlaybackService"
 
-        private const val ACTION_SHUFFLE =
+        const val ACTION_SHUFFLE =
             "com.keiranhaas.auralarc.notification.SHUFFLE"
 
-        private const val ACTION_PREVIOUS =
+        const val ACTION_PREVIOUS =
             "com.keiranhaas.auralarc.notification.PREVIOUS"
 
-        private const val ACTION_PLAY_PAUSE =
+        const val ACTION_PLAY_PAUSE =
             "com.keiranhaas.auralarc.notification.PLAY_PAUSE"
 
-        private const val ACTION_NEXT =
+        const val ACTION_NEXT =
             "com.keiranhaas.auralarc.notification.NEXT"
 
-        private const val ACTION_REPEAT =
+        const val ACTION_REPEAT =
             "com.keiranhaas.auralarc.notification.REPEAT"
 
         private const val ACTION_REFRESH_CONTROLS =
@@ -425,6 +429,10 @@ class PlaybackService :
         )
 
         postPlaybackNotification()
+
+        AuralArcWidgetUpdater.start(
+            this
+        )
     }
 
     override fun onStartCommand(
@@ -448,31 +456,37 @@ class PlaybackService :
             }
 
             ACTION_PREVIOUS -> {
-                PlayerManager.previous(
-                    this
-                )
+                runWithRestoredSession {
+                    PlayerManager.previous(
+                        this
+                    )
 
-                postPlaybackNotification()
+                    postPlaybackNotification()
+                }
             }
 
             ACTION_PLAY_PAUSE -> {
-                if (
-                    PlayerManager.isPlaying.value
-                ) {
-                    PlayerManager.pause()
-                } else {
-                    PlayerManager.resume()
-                }
+                runWithRestoredSession {
+                    if (
+                        PlayerManager.isPlaying.value
+                    ) {
+                        PlayerManager.pause()
+                    } else {
+                        PlayerManager.resume()
+                    }
 
-                postPlaybackNotification()
+                    postPlaybackNotification()
+                }
             }
 
             ACTION_NEXT -> {
-                PlayerManager.next(
-                    this
-                )
+                runWithRestoredSession {
+                    PlayerManager.next(
+                        this
+                    )
 
-                postPlaybackNotification()
+                    postPlaybackNotification()
+                }
             }
 
             ACTION_REPEAT -> {
@@ -493,6 +507,51 @@ class PlaybackService :
         }
 
         return START_STICKY
+    }
+
+    /**
+     * Widget buttons can start the service in a brand-new process where
+     * nothing is queued yet. In that case, restore the last session from
+     * the library cache first, then run [action].
+     */
+    private fun runWithRestoredSession(
+        action: () -> Unit
+    ) {
+        if (
+            !PlayerManager.canRestoreLastSession()
+        ) {
+            action()
+
+            return
+        }
+
+        artworkScope.launch {
+            val appContext =
+                applicationContext
+
+            val cachedTracks =
+                withContext(
+                    Dispatchers.IO
+                ) {
+                    LibraryCacheStore.loadTracks(
+                        appContext,
+                        LibrarySourcePreferences.getLibrarySource(
+                            appContext
+                        )
+                    )
+                }
+
+            if (
+                !cachedTracks.isNullOrEmpty()
+            ) {
+                PlayerManager.restoreLastSession(
+                    appContext,
+                    cachedTracks
+                )
+            }
+
+            action()
+        }
     }
 
     override fun onTaskRemoved(

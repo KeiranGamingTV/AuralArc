@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">AuralArc</string>
+
+    <string name="widget_small_label">AuralArc Player (Small)</string>
+    <string name="widget_small_description">Album art with a play/pause button.</string>
+    <string name="widget_medium_label">AuralArc Player (Medium)</string>
+    <string name="widget_medium_description">Album art, song info, and full playback controls.</string>
+    <string name="widget_large_label">AuralArc Player (Large)</string>
+    <string name="widget_large_description">Large album art, song info, and full playback controls.</string>
 </resources>

@@ -32,6 +32,15 @@ object ReleaseNotes {
     val entries: List<ReleaseNoteEntry> =
         listOf(
             ReleaseNoteEntry(
+                version = "1.3.1",
+                notes = listOf(
+                    "Added basic home screen widgets in three sizes: Small, Medium, and Large.",
+                    "Widgets show album art and the current song, with play/pause, previous, next, shuffle, and repeat controls.",
+                    "Widget buttons work even when AuralArc isn't open.",
+                    "These will be updated, revamped, and improved with future releases."
+                )
+            ),
+            ReleaseNoteEntry(
                 version = "1.3",
                 notes = listOf(
                     "Material 3 redesign: the whole app now uses Material 3 for a more consistent look.",

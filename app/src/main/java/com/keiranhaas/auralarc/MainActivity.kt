@@ -30,6 +30,8 @@ import com.keiranhaas.auralarc.storage.ReleaseNotesPreferences
 import com.keiranhaas.auralarc.ui.WhatsNewDialogHost
 import com.keiranhaas.auralarc.ui.getAppVersionName
 
+import com.keiranhaas.auralarc.widget.AuralArcWidgetUpdater
+
 class MainActivity : ComponentActivity() {
 
     companion object {
@@ -51,6 +53,10 @@ class MainActivity : ComponentActivity() {
     ) {
         super.onCreate(
             savedInstanceState
+        )
+
+        AuralArcWidgetUpdater.start(
+            applicationContext
         )
 
         configureForegroundWindow()
