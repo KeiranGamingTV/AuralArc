@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -392,63 +393,70 @@ private fun NowPlayingMainContent(
             )
         )
 
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
                     horizontal = 10.dp
                 ),
-            horizontalAlignment = Alignment.CenterHorizontally
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            if (
-                currentTrack != null
+            Column(
+                modifier = Modifier.weight(
+                    1f
+                ),
+                horizontalAlignment = Alignment.Start
             ) {
-                TrackTitleWithHdBadge(
-                    track = currentTrack,
-                    modifier = Modifier.fillMaxWidth(),
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = AuralArcStyle.TextPrimary,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    horizontalArrangement =
-                    Arrangement.Center,
-                    fillTitleWeight = true,
-                    marqueeWhenOverflow = true,
-                    textAlign = TextAlign.Center,
-                    centerTitleIndependently = true
+                if (
+                    currentTrack != null
+                ) {
+                    TrackTitleWithHdBadge(
+                        track = currentTrack,
+                        modifier = Modifier.fillMaxWidth(),
+                        style = MaterialTheme.typography.headlineLarge,
+                        color = AuralArcStyle.TextPrimary,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        horizontalArrangement =
+                            Arrangement.Start,
+                        fillTitleWeight = true,
+                        marqueeWhenOverflow = true,
+                        textAlign = TextAlign.Start
+                    )
+                } else {
+                    Text(
+                        text = PlayerManager.currentTitle.value,
+                        style = MaterialTheme.typography.headlineLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = AuralArcStyle.TextPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        textAlign = TextAlign.Start,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                Spacer(
+                    modifier = Modifier.height(
+                        7.dp
+                    )
                 )
-            } else {
+
                 Text(
-                    text = PlayerManager.currentTitle.value,
-                    style = MaterialTheme.typography.headlineLarge,
+                    text =
+                        PlayerManager.currentArtist.value.ifBlank {
+                            "Unknown Artist"
+                        },
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = AuralArcStyle.TextPrimary,
+                    color = AuralArcStyle.TextSecondary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    textAlign = TextAlign.Center,
+                    textAlign = TextAlign.Start,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
 
-            Spacer(
-                modifier = Modifier.height(
-                    7.dp
-                )
-            )
-
-            Text(
-                text =
-                PlayerManager.currentArtist.value.ifBlank {
-                    "Unknown Artist"
-                },
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = AuralArcStyle.TextSecondary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
             if (
                 currentTrack != null
             ) {
@@ -463,6 +471,12 @@ private fun NowPlayingMainContent(
                         )
                     }
 
+                Spacer(
+                    modifier = Modifier.width(
+                        8.dp
+                    )
+                )
+
                 AuralArcIconButton(
                     onClick = {
                         LikedSongsStore.toggle(
@@ -471,7 +485,7 @@ private fun NowPlayingMainContent(
                         )
                     },
                     modifier = Modifier.size(
-                        44.dp
+                        48.dp
                     )
                 ) {
                     Icon(
@@ -497,8 +511,11 @@ private fun NowPlayingMainContent(
                             ) {
                                 AuralArcStyle.PurpleBright
                             } else {
-                                AuralArcStyle.TextMuted
-                            }
+                                AuralArcStyle.TextSecondary
+                            },
+                        modifier = Modifier.size(
+                            30.dp
+                        )
                     )
                 }
             }
