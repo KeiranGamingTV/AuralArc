@@ -124,6 +124,22 @@ object LibraryCacheStore {
         }
     }
 
+    fun navidromeCacheSizeBytes(
+        context: Context
+    ): Long {
+        return try {
+            trackCacheFile(
+                context,
+                LibrarySource.NAVIDROME
+            ).length() +
+                    navidromePlaylistCacheFile(
+                        context
+                    ).length()
+        } catch (_: Exception) {
+            0L
+        }
+    }
+
     private fun trackCacheFile(
         context: Context,
         source: LibrarySource

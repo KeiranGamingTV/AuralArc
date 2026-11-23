@@ -27,6 +27,8 @@ import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.keiranhaas.auralarc.navidrome.DiagnosticsSection
+import com.keiranhaas.auralarc.navidrome.NavidromeDiagnostics
 
 @Composable
 fun NavidromeDiagnosticsScreen(
@@ -43,11 +45,22 @@ fun NavidromeDiagnosticsScreen(
             context
         )
 
-    var status by remember {
+    var running by remember {
+        mutableStateOf(
+            false
+        )
+    }
+
+    var progress by remember {
         mutableStateOf(
             ""
         )
     }
+
+    val sections =
+        remember {
+            mutableStateListOf<DiagnosticsSection>()
+        }
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -108,31 +121,30 @@ fun NavidromeDiagnosticsScreen(
 
             AuralArcButton(
                 onClick = {
-                    status =
-                        "Testing connection..."
+                    if (!running) {
+                        running = true
+                        progress = "Starting..."
+                        sections.clear()
 
-                    scope.launch {
-                        status =
+                        scope.launch {
                             withContext(
                                 Dispatchers.IO
                             ) {
-                                try {
-                                    val result =
-                                        NavidromeClient(
-                                            credentials
-                                        ).ping()
-
-                                    if (
-                                        result.success
-                                    ) {
-                                        "Connection test passed: ${result.message}"
-                                    } else {
-                                        "Connection test failed: ${result.message}"
+                                NavidromeDiagnostics.run(
+                                    context = context,
+                                    credentials = credentials,
+                                    onProgress = {
+                                        progress = it
+                                    },
+                                    onSection = {
+                                        sections.add(it)
                                     }
-                                } catch (e: Exception) {
-                                    "Connection test failed: ${e.message ?: "Unknown error"}"
-                                }
+                                )
                             }
+
+                            running = false
+                            progress = ""
+                        }
                     }
                 },
                 modifier = Modifier
@@ -143,16 +155,26 @@ fun NavidromeDiagnosticsScreen(
                     )
             ) {
                 Text(
-                    text = "Test Connection"
+                    text =
+                        if (running) {
+                            "Running..."
+                        } else {
+                            "Run Diagnostics"
+                        }
                 )
             }
 
-            if (
-                status.isNotBlank()
-            ) {
+            if (running) {
                 AuralArcMessageCard(
-                    title = "Status",
-                    message = status
+                    title = "Running Diagnostics",
+                    message = progress
+                )
+            }
+
+            sections.forEach { section ->
+                DiagnosticsCard(
+                    title = section.title,
+                    rows = section.rows
                 )
             }
         }

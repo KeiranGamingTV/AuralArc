@@ -41,6 +41,7 @@ object ReleaseNotes {
                     "Library scanning is faster while still picking up every change.",
                     "The library no longer reloads when you minimize Now Playing.",
                     "Fixed a black screen that could appear after pressing back several times quickly.",
+                    "Navidrome Diagnostics now has a Run Diagnostics button: ping speed, download speed, server version, phone connection strength, your server's library size, and how much space Navidrome data uses on your phone.",
                     "Added basic home screen widgets in three sizes: Small, Medium, and Large.",
                     "Widgets show album art and the current song, with play/pause, previous, next, shuffle, and repeat controls.",
                     "Widget buttons work even when AuralArc isn't open.",

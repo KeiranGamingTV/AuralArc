@@ -703,6 +703,204 @@ class NavidromeClient(
         return fallbackUnsynced
     }
 
+    fun getServerCounts(): NavidromeServerCounts {
+        val artistsResponse =
+            getJsonWithRetry(
+                endpoint = "getArtists.view"
+            )
+
+        var artistCount = 0
+        var albumCount = 0
+
+        val indexes =
+            jsonArrayOrSingleObject(
+                parent = artistsResponse.optJSONObject(
+                    "artists"
+                ),
+                key = "index"
+            )
+
+        for (i in 0 until indexes.length()) {
+            val artists =
+                jsonArrayOrSingleObject(
+                    parent = indexes.optJSONObject(i),
+                    key = "artist"
+                )
+
+            for (j in 0 until artists.length()) {
+                val artist =
+                    artists.optJSONObject(j) ?: continue
+
+                artistCount += 1
+                albumCount += artist.optInt("albumCount", 0)
+            }
+        }
+
+        val playlistsResponse =
+            getJsonWithRetry(
+                endpoint = "getPlaylists.view"
+            )
+
+        val playlistCount =
+            jsonArrayOrSingleObject(
+                parent = playlistsResponse.optJSONObject(
+                    "playlists"
+                ),
+                key = "playlist"
+            ).length()
+
+        return NavidromeServerCounts(
+            artists = artistCount,
+            albums = albumCount,
+            playlists = playlistCount
+        )
+    }
+
+    fun getLibraryTotals(
+        onProgress: (Int) -> Unit = {}
+    ): NavidromeLibraryTotals {
+        val seenSongIds = HashSet<String>()
+
+        var totalBytes = 0L
+        var offset = 0
+        val pageSize = 500
+
+        while (true) {
+            val songs =
+                getSongSearchPage(
+                    size = pageSize,
+                    offset = offset
+                )
+
+            val returnedCount = songs.length()
+
+            if (returnedCount == 0) {
+                break
+            }
+
+            var newSongsThisPage = 0
+
+            for (index in 0 until returnedCount) {
+                val song =
+                    songs.optJSONObject(index) ?: continue
+
+                val id =
+                    song.optString("id", "").trim()
+
+                if (id.isEmpty() || !seenSongIds.add(id)) {
+                    continue
+                }
+
+                newSongsThisPage += 1
+                totalBytes += song.optLong("size", 0L)
+            }
+
+            if (newSongsThisPage == 0) {
+                break
+            }
+
+            offset += returnedCount
+
+            onProgress(seenSongIds.size)
+
+            if (returnedCount < pageSize) {
+                break
+            }
+        }
+
+        return NavidromeLibraryTotals(
+            songCount = seenSongIds.size,
+            totalBytes = totalBytes
+        )
+    }
+
+    fun getLargestSampleSongId(): String? {
+        val songs =
+            getSongSearchPage(
+                size = 20,
+                offset = 0
+            )
+
+        var bestId: String? = null
+        var bestSize = -1L
+
+        for (index in 0 until songs.length()) {
+            val song =
+                songs.optJSONObject(index) ?: continue
+
+            val id =
+                song.optString("id", "").trim()
+
+            val size =
+                song.optLong("size", 0L)
+
+            if (id.isNotEmpty() && size > bestSize) {
+                bestId = id
+                bestSize = size
+            }
+        }
+
+        return bestId
+    }
+
+    fun measureDownload(
+        songId: String,
+        maxBytes: Int = 4 * 1024 * 1024
+    ): NavidromeDownloadSample {
+        val connection =
+            URL(
+                buildStreamUrl(
+                    songId
+                )
+            ).openConnection() as HttpURLConnection
+
+        try {
+            connection.requestMethod = "GET"
+            connection.connectTimeout = 20_000
+            connection.readTimeout = 30_000
+
+            connection.setRequestProperty(
+                "Range",
+                "bytes=0-${maxBytes - 1}"
+            )
+
+            val responseCode = connection.responseCode
+
+            if (responseCode !in 200..299) {
+                throw IllegalStateException(
+                    "HTTP $responseCode"
+                )
+            }
+
+            val buffer = ByteArray(64 * 1024)
+            var totalBytes = 0L
+            val start = System.nanoTime()
+
+            connection.inputStream.use { stream ->
+                while (totalBytes < maxBytes) {
+                    val read = stream.read(buffer)
+
+                    if (read < 0) {
+                        break
+                    }
+
+                    totalBytes += read
+                }
+            }
+
+            val millis =
+                ((System.nanoTime() - start) / 1_000_000L)
+                    .coerceAtLeast(1L)
+
+            return NavidromeDownloadSample(
+                bytes = totalBytes,
+                millis = millis
+            )
+        } finally {
+            connection.disconnect()
+        }
+    }
+
     private fun getSongSearchPage(
         size: Int,
         offset: Int

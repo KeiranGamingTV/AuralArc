@@ -714,6 +714,23 @@ object ArtworkBitmapLoader {
         }
     }
 
+    fun remoteArtworkCacheSizeBytes(
+        context: Context
+    ): Long {
+        return try {
+            File(
+                context.cacheDir,
+                REMOTE_CACHE_DIRECTORY
+            )
+                .listFiles()
+                ?.filter { it.isFile }
+                ?.sumOf { it.length() }
+                ?: 0L
+        } catch (_: Exception) {
+            0L
+        }
+    }
+
     private fun remoteArtworkCacheFile(
         context: Context,
         artworkUrl: String
