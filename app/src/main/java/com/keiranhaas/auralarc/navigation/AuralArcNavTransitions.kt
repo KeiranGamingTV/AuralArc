@@ -12,6 +12,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.ui.unit.IntOffset
 import androidx.navigation.NavBackStackEntry
 import com.keiranhaas.auralarc.ui.theme.AuralArcMotion
+import com.keiranhaas.auralarc.ui.theme.MiniPlayerMorphState
 
 private fun navOffsetSpring() =
     spring<IntOffset>(
@@ -57,10 +58,24 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.auralArcEnter(
     return if (
         targetIsNowPlaying()
     ) {
-        slideIntoContainer(
-            towards = SlideDirection.Up,
-            animationSpec = navOffsetSpring()
-        )
+        if (
+            MiniPlayerMorphState.armed
+        ) {
+            /*
+             * Opened from the mini player: just fade in. The album
+             * art does the moving (see flyFromMiniPlayerArt).
+             */
+            fadeIn(
+                animationSpec = tween(
+                    durationMillis = 200
+                )
+            )
+        } else {
+            slideIntoContainer(
+                towards = SlideDirection.Up,
+                animationSpec = navOffsetSpring()
+            )
+        }
     } else {
         slideIntoContainer(
             towards = SlideDirection.Left,

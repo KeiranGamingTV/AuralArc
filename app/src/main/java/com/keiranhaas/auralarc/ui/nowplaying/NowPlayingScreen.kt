@@ -80,6 +80,7 @@ import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import com.keiranhaas.auralarc.storage.LikedSongsStore
+import com.keiranhaas.auralarc.ui.theme.flyFromMiniPlayerArt
 
 private val DuetSingerOneColor =
     Color(
@@ -376,9 +377,11 @@ private fun NowPlayingMainContent(
             shape = AuralArcStyle.CardShape,
             backgroundColor = AuralArcStyle.SurfaceBright,
             elevation = 14.dp,
-            modifier = Modifier.padding(
-                top = 4.dp
-            )
+            modifier = Modifier
+                .padding(
+                    top = 4.dp
+                )
+                .flyFromMiniPlayerArt()
         ) {
             TrackArtwork(
                 albumArtPath =

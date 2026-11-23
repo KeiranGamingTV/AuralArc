@@ -95,6 +95,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.material.icons.automirrored.filled.ViewList
 import com.keiranhaas.auralarc.storage.LibraryViewModePreferences
+import com.keiranhaas.auralarc.ui.theme.MiniPlayerMorphState
+import com.keiranhaas.auralarc.ui.theme.captureMiniPlayerArt
 
 private suspend fun loadTracksSafely(
     context: Context
@@ -4765,6 +4767,9 @@ private fun ArtistDetailHeader(
 private fun MiniPlayerBar(
     navController: NavHostController
 ) {
+    val motionEnabled =
+        rememberAuralArcMotionEnabled()
+
     val duration =
         PlayerManager.duration.value
 
@@ -4790,6 +4795,10 @@ private fun MiniPlayerBar(
         modifier = Modifier
             .fillMaxWidth()
             .auralArcClickable {
+                MiniPlayerMorphState.armFromMiniPlayer(
+                    motionEnabled = motionEnabled
+                )
+
                 navController.navigate(
                     Screen.NowPlaying.route
                 )
@@ -4807,10 +4816,14 @@ private fun MiniPlayerBar(
                     ),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TrackArtwork(
-                    albumArtPath = PlayerManager.currentAlbumArtPath.value,
-                    size = 56.dp
-                )
+                Box(
+                    modifier = Modifier.captureMiniPlayerArt()
+                ) {
+                    TrackArtwork(
+                        albumArtPath = PlayerManager.currentAlbumArtPath.value,
+                        size = 56.dp
+                    )
+                }
 
                 Spacer(
                     modifier = Modifier.width(

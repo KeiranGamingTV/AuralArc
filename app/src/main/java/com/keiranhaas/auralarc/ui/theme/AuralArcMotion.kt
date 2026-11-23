@@ -76,7 +76,7 @@ object AuralArcMotion {
         0.9f
 
     const val NAV_STIFFNESS =
-        380f
+        520f
 
     const val NAV_PARALLAX_DIVISOR =
         4
@@ -85,10 +85,10 @@ object AuralArcMotion {
         0.45f
 
     const val NAV_FADE_IN_MS =
-        180
+        140
 
     const val NAV_FADE_OUT_MS =
-        220
+        170
 }
 
 @Composable
