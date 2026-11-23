@@ -15,15 +15,9 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.snapshots.Snapshot
+import android.util.Log
+import kotlinx.coroutines.CoroutineExceptionHandler
 
-/**
- * Keeps every placed widget in sync with playback.
- *
- * It watches the song, play/pause, shuffle and repeat state and refreshes
- * the widgets shortly after any of them change. Playback position is
- * intentionally NOT watched: updating a widget every second would waste
- * battery.
- */
 object AuralArcWidgetUpdater {
 
     private data class PlaybackKey(
@@ -37,7 +31,21 @@ object AuralArcWidgetUpdater {
 
     private val scope =
         CoroutineScope(
-            SupervisorJob() + Dispatchers.Main
+            SupervisorJob() +
+                    Dispatchers.Main +
+                    CoroutineExceptionHandler { _, error ->
+                        Log.e(
+                            "AuralArcWidget",
+                            "Widget updater stopped",
+                            error
+                        )
+
+                        /*
+                         * Allow the next start() call to try again.
+                         */
+                        watchJob =
+                            null
+                    }
         )
 
     private var watchJob: Job? =
