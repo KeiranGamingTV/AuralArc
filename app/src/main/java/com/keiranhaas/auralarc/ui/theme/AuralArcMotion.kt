@@ -15,6 +15,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntSize
 import com.keiranhaas.auralarc.storage.AppearancePreferences
+import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.unit.IntOffset
 
 object AuralArcMotion {
 
@@ -214,5 +223,202 @@ fun <T> AuralArcCrossfade(
         )
     ) { state ->
         content(state)
+    }
+}
+
+enum class AuralArcTransitionKind {
+    NONE,
+    SLIDE_FORWARD,
+    SLIDE_BACK,
+    GROW_IN,
+    GROW_OUT
+}
+
+@Composable
+fun <T> AuralArcStackedTransition(
+    targetState: T,
+    kindFor: (initial: T, target: T) -> AuralArcTransitionKind,
+    modifier: Modifier = Modifier.fillMaxSize(),
+    content: @Composable (T) -> Unit
+) {
+    val motionEnabled =
+        rememberAuralArcMotionEnabled()
+
+    if (!motionEnabled) {
+        Box(modifier = modifier) {
+            content(targetState)
+        }
+        return
+    }
+
+    val offsetSpec =
+        spring<IntOffset>(
+            dampingRatio =
+                AuralArcMotion.NAV_DAMPING_RATIO,
+            stiffness =
+                AuralArcMotion.NAV_STIFFNESS,
+            visibilityThreshold =
+                IntOffset.VisibilityThreshold
+        )
+
+    val floatSpec =
+        spring<Float>(
+            dampingRatio =
+                AuralArcMotion.NAV_DAMPING_RATIO,
+            stiffness =
+                AuralArcMotion.NAV_STIFFNESS
+        )
+
+    val fadeIn =
+        tween<Float>(
+            durationMillis =
+                AuralArcMotion.NAV_FADE_IN_MS
+        )
+
+    val fadeOut =
+        tween<Float>(
+            durationMillis =
+                AuralArcMotion.NAV_FADE_OUT_MS
+        )
+
+    AnimatedContent(
+        targetState = targetState,
+        modifier = modifier.clipToBounds(),
+        transitionSpec = {
+            val kind =
+                kindFor(
+                    this.initialState,
+                    this.targetState
+                )
+
+            val transform =
+                when (kind) {
+                    AuralArcTransitionKind.NONE ->
+                        fadeIn(
+                            animationSpec = tween(
+                                durationMillis =
+                                    AuralArcMotion.NORMAL
+                            )
+                        ) togetherWith fadeOut(
+                            animationSpec = tween(
+                                durationMillis =
+                                    AuralArcMotion.FAST
+                            )
+                        )
+
+                    AuralArcTransitionKind.SLIDE_FORWARD ->
+                        (
+                                slideInHorizontally(
+                                    animationSpec = offsetSpec
+                                ) { fullWidth -> fullWidth } +
+                                        fadeIn(
+                                            animationSpec = fadeIn
+                                        )
+                                ) togetherWith (
+                                slideOutHorizontally(
+                                    animationSpec = offsetSpec
+                                ) { fullWidth ->
+                                    -fullWidth /
+                                            AuralArcMotion.NAV_PARALLAX_DIVISOR
+                                } +
+                                        fadeOut(
+                                            animationSpec = fadeOut
+                                        )
+                                )
+
+                    AuralArcTransitionKind.SLIDE_BACK ->
+                        (
+                                slideInHorizontally(
+                                    animationSpec = offsetSpec
+                                ) { fullWidth ->
+                                    -fullWidth /
+                                            AuralArcMotion.NAV_PARALLAX_DIVISOR
+                                } +
+                                        fadeIn(
+                                            animationSpec = fadeIn
+                                        )
+                                ) togetherWith (
+                                slideOutHorizontally(
+                                    animationSpec = offsetSpec
+                                ) { fullWidth -> fullWidth } +
+                                        fadeOut(
+                                            animationSpec = fadeOut
+                                        )
+                                )
+
+                    AuralArcTransitionKind.GROW_IN ->
+                        (
+                                slideInHorizontally(
+                                    animationSpec = offsetSpec
+                                ) { fullWidth -> fullWidth / 5 } +
+                                        scaleIn(
+                                            animationSpec = floatSpec,
+                                            initialScale = 0.90f
+                                        ) +
+                                        fadeIn(
+                                            animationSpec = fadeIn
+                                        )
+                                ) togetherWith (
+                                slideOutHorizontally(
+                                    animationSpec = offsetSpec
+                                ) { fullWidth -> -fullWidth / 8 } +
+                                        scaleOut(
+                                            animationSpec = floatSpec,
+                                            targetScale = 0.95f
+                                        ) +
+                                        fadeOut(
+                                            animationSpec = fadeOut
+                                        )
+                                )
+
+                    AuralArcTransitionKind.GROW_OUT ->
+                        (
+                                slideInHorizontally(
+                                    animationSpec = offsetSpec
+                                ) { fullWidth -> -fullWidth / 8 } +
+                                        scaleIn(
+                                            animationSpec = floatSpec,
+                                            initialScale = 0.95f
+                                        ) +
+                                        fadeIn(
+                                            animationSpec = fadeIn
+                                        )
+                                ) togetherWith (
+                                slideOutHorizontally(
+                                    animationSpec = offsetSpec
+                                ) { fullWidth -> fullWidth / 5 } +
+                                        scaleOut(
+                                            animationSpec = floatSpec,
+                                            targetScale = 0.90f
+                                        ) +
+                                        fadeOut(
+                                            animationSpec = fadeOut
+                                        )
+                                )
+                }
+
+            transform.targetContentZIndex =
+                when (kind) {
+                    AuralArcTransitionKind.SLIDE_FORWARD,
+                    AuralArcTransitionKind.GROW_IN -> 1f
+
+                    AuralArcTransitionKind.SLIDE_BACK,
+                    AuralArcTransitionKind.GROW_OUT -> -1f
+
+                    AuralArcTransitionKind.NONE -> 0f
+                }
+
+            transform.using(
+                SizeTransform(
+                    clip = true
+                ) { _, _ ->
+                    snap()
+                }
+            )
+        }
+    ) { state ->
+        content(
+            state
+        )
     }
 }

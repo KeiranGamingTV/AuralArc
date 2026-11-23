@@ -98,6 +98,8 @@ import com.keiranhaas.auralarc.storage.LibraryViewModePreferences
 import com.keiranhaas.auralarc.ui.theme.MiniPlayerMorphState
 import com.keiranhaas.auralarc.ui.theme.MorphSlot
 import com.keiranhaas.auralarc.ui.theme.morphSlot
+import com.keiranhaas.auralarc.ui.theme.AuralArcStackedTransition
+import com.keiranhaas.auralarc.ui.theme.AuralArcTransitionKind
 
 private suspend fun loadTracksSafely(
     context: Context
@@ -1237,8 +1239,15 @@ fun MusicLibraryView(
                     innerPadding
                 )
         ) {
-            AuralArcContentTransition(
-                targetState = rootTab
+            AuralArcStackedTransition(
+                targetState = rootTab,
+                kindFor = { initial, target ->
+                    if (target.ordinal > initial.ordinal) {
+                        AuralArcTransitionKind.SLIDE_FORWARD
+                    } else {
+                        AuralArcTransitionKind.SLIDE_BACK
+                    }
+                }
             ) { activeRootTab ->
                 when (
                     activeRootTab
@@ -2375,8 +2384,24 @@ private fun LibraryTabContent(
                     1f
                 )
         ) {
-            when {
-                selectedAlbum != null -> {
+            AuralArcStackedTransition(
+                targetState = LibraryViewKey(
+                    mode = libraryMode,
+                    album = selectedAlbum,
+                    artist = selectedArtist,
+                    playlistId = selectedPlaylistId
+                ),
+                kindFor = { initial, target ->
+                    libraryTransitionKind(initial, target)
+                }
+            ) { viewKey ->
+                val libraryMode = viewKey.mode
+                val selectedAlbum = viewKey.album
+                val selectedArtist = viewKey.artist
+                val selectedPlaylistId = viewKey.playlistId
+
+                when {
+                    selectedAlbum != null -> {
                     val albumTracks =
                         sortAlbumSongs(
                             searchedTracks.filter { track ->
@@ -2627,6 +2652,7 @@ private fun LibraryTabContent(
                         )
                     }
                 }
+                }
             }
         }
     }
@@ -2703,6 +2729,47 @@ private fun LibraryTabContent(
                 }
             }
         )
+    }
+}
+
+private data class LibraryViewKey(
+    val mode: LibraryMode,
+    val album: String?,
+    val artist: String?,
+    val playlistId: String?
+) {
+    val depth: Int
+        get() = when {
+            album != null ->
+                if (artist != null) 2 else 1
+
+            artist != null -> 1
+            playlistId != null -> 1
+            else -> 0
+        }
+}
+
+private fun libraryTransitionKind(
+    initial: LibraryViewKey,
+    target: LibraryViewKey
+): AuralArcTransitionKind {
+    return when {
+        target.depth > initial.depth ->
+            AuralArcTransitionKind.GROW_IN
+
+        target.depth < initial.depth ->
+            AuralArcTransitionKind.GROW_OUT
+
+        target.depth == 0 &&
+                target.mode.ordinal > initial.mode.ordinal ->
+            AuralArcTransitionKind.SLIDE_FORWARD
+
+        target.depth == 0 &&
+                target.mode.ordinal < initial.mode.ordinal ->
+            AuralArcTransitionKind.SLIDE_BACK
+
+        else ->
+            AuralArcTransitionKind.NONE
     }
 }
 
