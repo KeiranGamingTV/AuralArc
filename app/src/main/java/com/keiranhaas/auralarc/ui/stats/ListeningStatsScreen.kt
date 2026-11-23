@@ -386,12 +386,6 @@ private fun StatsRangeSelector(
 
                 AuralArcCard(
                     modifier = Modifier
-                        .widthIn(
-                            min = 82.dp
-                        )
-                        .heightIn(
-                            min = 40.dp
-                        )
                         .auralArcClickable {
                             onRangeSelected(
                                 range
@@ -419,10 +413,17 @@ private fun StatsRangeSelector(
                         }
                 ) {
                     Box(
-                        modifier = Modifier.padding(
-                            horizontal = 13.dp,
-                            vertical = 10.dp
-                        ),
+                        modifier = Modifier
+                            .widthIn(
+                                min = 82.dp
+                            )
+                            .heightIn(
+                                min = 40.dp
+                            )
+                            .padding(
+                                horizontal = 13.dp,
+                                vertical = 10.dp
+                            ),
                         contentAlignment =
                             Alignment.Center
                     ) {

@@ -517,7 +517,7 @@ private fun SettingsCardRow(
                     color = AuralArcStyle.TextMuted,
                     fontSize = 14.sp,
                     modifier = Modifier.padding(
-                        top = 3.dp
+                        top = 4.dp
                     )
                 )
             }

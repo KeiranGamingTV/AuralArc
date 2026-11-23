@@ -34,6 +34,13 @@ object ReleaseNotes {
             ReleaseNoteEntry(
                 version = "1.3.1",
                 notes = listOf(
+                    "Fluid UI revamp: screens now slide with a parallax effect instead of just switching.",
+                    "The mini player's album art, title, and artist now morph into the Now Playing screen, and back again.",
+                    "Library tabs slide in the direction you move, and albums, artists, and playlists grow in when opened.",
+                    "The play/pause button morphs between its two shapes, the heart and shuffle/repeat buttons pop when toggled, and menus open item by item.",
+                    "Library scanning is faster while still picking up every change.",
+                    "The library no longer reloads when you minimize Now Playing.",
+                    "Fixed a black screen that could appear after pressing back several times quickly.",
                     "Added basic home screen widgets in three sizes: Small, Medium, and Large.",
                     "Widgets show album art and the current song, with play/pause, previous, next, shuffle, and repeat controls.",
                     "Widget buttons work even when AuralArc isn't open.",

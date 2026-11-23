@@ -177,7 +177,10 @@ fun LibraryCleanupSettingsScreen(
                     Text(
                         text = "Used when Hide Short Tracks is enabled.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = AuralArcStyle.TextMuted
+                        color = AuralArcStyle.TextMuted,
+                        modifier = Modifier.padding(
+                            top = 4.dp
+                        )
                     )
 
                     OutlinedTextField(
@@ -276,7 +279,7 @@ private fun CleanupToggleCard(
                     style = MaterialTheme.typography.bodyMedium,
                     color = AuralArcStyle.TextMuted,
                     modifier = Modifier.padding(
-                        top = 3.dp
+                        top = 4.dp
                     )
                 )
             }

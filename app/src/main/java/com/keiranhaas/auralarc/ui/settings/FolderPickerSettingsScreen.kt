@@ -248,7 +248,7 @@ private fun FolderUriCard(
                 style = MaterialTheme.typography.bodyMedium,
                 color = AuralArcStyle.TextMuted,
                 modifier = Modifier.padding(
-                    top = 6.dp
+                    top = 4.dp
                 )
             )
 

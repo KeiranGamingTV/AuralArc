@@ -315,7 +315,7 @@ fun LibraryFolderSettingsScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     color = AuralArcStyle.TextMuted,
                     modifier = Modifier.padding(
-                        top = 6.dp
+                        top = 4.dp
                     )
                 )
 
@@ -1027,7 +1027,7 @@ private fun SmartShuffleSliderCard(
                 style = MaterialTheme.typography.bodyMedium,
                 color = AuralArcStyle.TextMuted,
                 modifier = Modifier.padding(
-                    top = 3.dp,
+                    top = 4.dp,
                     bottom = 8.dp
                 )
             )
@@ -1141,7 +1141,7 @@ private fun SettingsToggleCard(
                     style = MaterialTheme.typography.bodyMedium,
                     color = AuralArcStyle.TextMuted,
                     modifier = Modifier.padding(
-                        top = 3.dp
+                        top = 4.dp
                     )
                 )
             }
@@ -1190,7 +1190,7 @@ private fun SettingsChoiceCard(
                 style = MaterialTheme.typography.bodyMedium,
                 color = AuralArcStyle.TextMuted,
                 modifier = Modifier.padding(
-                    top = 3.dp,
+                    top = 4.dp,
                     bottom = 8.dp
                 )
             )

@@ -401,7 +401,10 @@ private fun AudioMenuRow(
                     style = MaterialTheme.typography.bodyMedium,
                     color = AuralArcStyle.TextMuted,
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(
+                        top = 4.dp
+                    )
                 )
             }
         }
@@ -446,19 +449,10 @@ fun SwitchSetting(
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = AuralArcStyle.TextMuted
-                )
-
-                Spacer(
-                    modifier = Modifier.height(
-                        8.dp
+                    color = AuralArcStyle.TextMuted,
+                    modifier = Modifier.padding(
+                        top = 4.dp
                     )
-                )
-
-                Text(
-                    text = "Select an option",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = AuralArcStyle.TextMuted
                 )
             }
 
@@ -503,19 +497,11 @@ private fun SliderSetting(
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodyMedium,
-                color = AuralArcStyle.TextMuted
-            )
-
-            Spacer(
-                modifier = Modifier.height(
-                    8.dp
+                color = AuralArcStyle.TextMuted,
+                modifier = Modifier.padding(
+                    top = 4.dp,
+                    bottom = 8.dp
                 )
-            )
-
-            Text(
-                text = "Select an option",
-                style = MaterialTheme.typography.bodySmall,
-                color = AuralArcStyle.TextMuted
             )
 
             AuralArcSlider(
