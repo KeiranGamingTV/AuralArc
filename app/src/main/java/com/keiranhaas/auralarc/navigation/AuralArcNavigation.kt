@@ -67,119 +67,27 @@ fun AuralArcNavigation(
                 navController = navController,
                 startDestination = Screen.Library.route,
                 enterTransition = {
-                    if (
+                    auralArcEnter(
                         pageAnimationsEnabled
-                    ) {
-                        scaleIn(
-                            initialScale =
-                                AuralArcMotion.CONTENT_ENTER_SCALE,
-                            animationSpec = spring(
-                                dampingRatio =
-                                    AuralArcMotion.DAMPING_RATIO,
-                                stiffness =
-                                    AuralArcMotion.STIFFNESS
-                            )
-                        ) +
-                                fadeIn(
-                                    animationSpec = tween(
-                                        durationMillis = 90
-                                    )
-                                )
-                    } else {
-                        fadeIn(
-                            animationSpec = tween(
-                                durationMillis =
-                                    AuralArcMotion.NORMAL
-                            )
-                        )
-                    }
+                    )
                 },
 
                 exitTransition = {
-                    if (
+                    auralArcExit(
                         pageAnimationsEnabled
-                    ) {
-                        scaleOut(
-                            targetScale =
-                                AuralArcMotion.CONTENT_EXIT_SCALE,
-                            animationSpec = spring(
-                                dampingRatio =
-                                    AuralArcMotion.DAMPING_RATIO,
-                                stiffness =
-                                    AuralArcMotion.STIFFNESS
-                            )
-                        ) +
-                                fadeOut(
-                                    animationSpec = tween(
-                                        durationMillis = 110
-                                    )
-                                )
-                    } else {
-                        fadeOut(
-                            animationSpec = tween(
-                                durationMillis =
-                                    AuralArcMotion.NORMAL
-                            )
-                        )
-                    }
+                    )
                 },
 
                 popEnterTransition = {
-                    if (
+                    auralArcPopEnter(
                         pageAnimationsEnabled
-                    ) {
-                        scaleIn(
-                            initialScale =
-                                AuralArcMotion.CONTENT_EXIT_SCALE,
-                            animationSpec = spring(
-                                dampingRatio =
-                                    AuralArcMotion.DAMPING_RATIO,
-                                stiffness =
-                                    AuralArcMotion.STIFFNESS
-                            )
-                        ) +
-                                fadeIn(
-                                    animationSpec = tween(
-                                        durationMillis = 90
-                                    )
-                                )
-                    } else {
-                        fadeIn(
-                            animationSpec = tween(
-                                durationMillis =
-                                    AuralArcMotion.NORMAL
-                            )
-                        )
-                    }
+                    )
                 },
 
                 popExitTransition = {
-                    if (
+                    auralArcPopExit(
                         pageAnimationsEnabled
-                    ) {
-                        scaleOut(
-                            targetScale =
-                                AuralArcMotion.CONTENT_ENTER_SCALE,
-                            animationSpec = spring(
-                                dampingRatio =
-                                    AuralArcMotion.DAMPING_RATIO,
-                                stiffness =
-                                    AuralArcMotion.STIFFNESS
-                            )
-                        ) +
-                                fadeOut(
-                                    animationSpec = tween(
-                                        durationMillis = 110
-                                    )
-                                )
-                    } else {
-                        fadeOut(
-                            animationSpec = tween(
-                                durationMillis =
-                                    AuralArcMotion.NORMAL
-                            )
-                        )
-                    }
+                    )
                 }
             ) {
                 composable(

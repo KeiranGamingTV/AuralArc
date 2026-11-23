@@ -71,6 +71,24 @@ object AuralArcMotion {
 
     const val BUTTON_PRESS_SCALE =
         0.94f
+
+    const val NAV_DAMPING_RATIO =
+        0.9f
+
+    const val NAV_STIFFNESS =
+        380f
+
+    const val NAV_PARALLAX_DIVISOR =
+        4
+
+    const val NAV_DIM_ALPHA =
+        0.45f
+
+    const val NAV_FADE_IN_MS =
+        180
+
+    const val NAV_FADE_OUT_MS =
+        220
 }
 
 @Composable
