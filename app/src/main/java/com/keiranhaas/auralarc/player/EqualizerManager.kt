@@ -278,6 +278,8 @@ object EqualizerManager {
     }
 
     fun release() {
+        AudioEffectsManager.release()
+
         try {
             equalizer?.release()
         } catch (_: Exception) {

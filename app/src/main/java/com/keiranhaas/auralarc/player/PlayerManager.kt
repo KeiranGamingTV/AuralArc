@@ -2394,6 +2394,8 @@ object PlayerManager {
 
         player?.volume =
             finalVolume
+
+        AudioEffectsManager.refreshLoudness()
     }
 
     fun attachEqualizerToCurrentAudioSession(
@@ -2414,6 +2416,11 @@ object PlayerManager {
         }
 
         EqualizerManager.attachToAudioSession(
+            context = context.applicationContext,
+            audioSessionId = sessionId
+        )
+
+        AudioEffectsManager.attach(
             context = context.applicationContext,
             audioSessionId = sessionId
         )

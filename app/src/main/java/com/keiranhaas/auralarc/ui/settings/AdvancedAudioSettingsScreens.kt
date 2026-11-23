@@ -53,6 +53,17 @@ fun AdvancedAudioMenuScreen(
         )
 
         AudioMenuRow(
+            title = "Sound Effects",
+            subtitle = "Bass boost, virtualizer, and loudness boost.",
+            icon = Icons.Default.SurroundSound,
+            onClick = {
+                navController.navigate(
+                    Screen.SoundEffectsSettings.route
+                )
+            }
+        )
+
+        AudioMenuRow(
             title = "Audio Info",
             subtitle = "Detailed info about the current track and audio processing.",
             icon = Icons.Default.Info,
@@ -498,7 +509,7 @@ fun SwitchSetting(
 }
 
 @Composable
-private fun SliderSetting(
+fun SliderSetting(
     title: String,
     subtitle: String,
     value: Float,

@@ -98,4 +98,8 @@ sealed class Screen(
     object EqualizerSettings : Screen(
         "equalizer_settings"
     )
+
+    object SoundEffectsSettings : Screen(
+        "sound_effects_settings"
+    )
 }
