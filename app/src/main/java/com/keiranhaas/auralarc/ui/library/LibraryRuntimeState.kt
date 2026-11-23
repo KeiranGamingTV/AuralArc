@@ -41,6 +41,47 @@ object LibraryRuntimeState {
     private var localRefreshCompleted =
         false
 
+    var lyricsIndexInvalidated =
+        false
+
+    private var cachedSearchIndexSource: List<MusicTrack>? =
+        null
+
+    private var cachedSearchIndex: List<Pair<MusicTrack, String>> =
+        emptyList()
+
+    fun searchIndexFor(
+        tracks: List<MusicTrack>
+    ): List<Pair<MusicTrack, String>> {
+        if (
+            cachedSearchIndexSource === tracks
+        ) {
+            return cachedSearchIndex
+        }
+
+        val built =
+            tracks.map { track ->
+                Pair(
+                    track,
+                    buildString {
+                        append(track.title.lowercase())
+                        append('\n')
+                        append(track.artist.lowercase())
+                        append('\n')
+                        append(track.album.lowercase())
+                    }
+                )
+            }
+
+        cachedSearchIndexSource =
+            tracks
+
+        cachedSearchIndex =
+            built
+
+        return built
+    }
+
     private var navidromeRefreshCompleted =
         false
 

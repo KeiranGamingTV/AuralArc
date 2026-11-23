@@ -209,7 +209,7 @@ fun TrackInfoScreen(
                 navigationIcon = {
                     AuralArcBackButton(
                         onClick = {
-                            navController.safePopBackStack()()
+                            navController.safePopBackStack()
                         }
                     )
                 },

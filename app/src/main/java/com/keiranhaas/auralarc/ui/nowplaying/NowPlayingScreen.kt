@@ -462,7 +462,7 @@ private fun NowPlayingMainContent(
                             "Unknown Artist"
                         },
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.Normal,
                     color = AuralArcStyle.TextSecondary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,

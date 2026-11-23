@@ -969,42 +969,13 @@ fun MusicLibraryView(
             false
     }
 
-    /*
-     * Build lowercase search text only when the actual library changes.
-     *
-     * Previously title/artist/album strings were lowercased repeatedly
-     * for every search and potentially for unrelated recompositions.
-     */
     val searchIndex =
         remember(
             tracks
         ) {
-            tracks.map { track ->
-                Pair(
-                    track,
-                    buildString {
-                        append(
-                            track.title.lowercase()
-                        )
-
-                        append(
-                            '\n'
-                        )
-
-                        append(
-                            track.artist.lowercase()
-                        )
-
-                        append(
-                            '\n'
-                        )
-
-                        append(
-                            track.album.lowercase()
-                        )
-                    }
-                )
-            }
+            LibraryRuntimeState.searchIndexFor(
+                tracks
+            )
         }
 
     val searchedTracks =
@@ -1051,12 +1022,14 @@ fun MusicLibraryView(
     LaunchedEffect(
         librarySource
     ) {
-        /*
-         * The filesystem may have changed since the previous app session.
-         * Invalidate the lyric-file index before loading the library so
-         * newly-added .lrc/.dlrc files can be discovered.
-         */
-        LyricsState.invalidateLyricsFileIndex()
+        if (
+            !LibraryRuntimeState.lyricsIndexInvalidated
+        ) {
+            LyricsState.invalidateLyricsFileIndex()
+
+            LibraryRuntimeState.lyricsIndexInvalidated =
+                true
+        }
 
         restoreCachedLibrary(
             librarySource

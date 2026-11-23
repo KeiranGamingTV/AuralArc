@@ -39,6 +39,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.roundToInt
+import kotlinx.coroutines.cancelAndJoin
 
 /*
  * Mini player <-> Now Playing morph.
@@ -141,7 +142,6 @@ object MiniPlayerMorphState {
             snapshotFlow { read() }.first { it != null }
         }
 
-    /** Mini player -> Now Playing. */
     internal suspend fun runForward() {
         try {
             val mini =
@@ -190,7 +190,6 @@ object MiniPlayerMorphState {
         }
     }
 
-    /** Now Playing -> mini player. */
     internal suspend fun runReturn() {
         try {
             val nowPlaying =
@@ -208,13 +207,8 @@ object MiniPlayerMorphState {
             active =
                 true
 
-            /*
-             * The home screen's mini player is only just being
-             * composed, so wait for its position. Until then the copy
-             * simply sits exactly where the real elements were.
-             */
             val mini =
-                awaitValue(350L) { readMini() }
+                awaitValue(1500L) { readMini() }
                     ?: return
 
             miniRects =
@@ -429,7 +423,7 @@ fun MiniPlayerMorphOverlay(
                         "Unknown Artist"
                     },
                     style = typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    fontWeight = FontWeight.Normal,
                     color = AuralArcStyle.TextSecondary,
                     maxLines = 1,
                     softWrap = false,
@@ -440,11 +434,6 @@ fun MiniPlayerMorphOverlay(
     }
 }
 
-/**
- * Lays [content] out at its Now Playing size and position, then uses a
- * graphics layer to scale/move it toward the mini player layout as
- * MiniPlayerMorphState.progress goes from 1 down to 0.
- */
 @Composable
 private fun MorphElement(
     fromRect: Rect,
