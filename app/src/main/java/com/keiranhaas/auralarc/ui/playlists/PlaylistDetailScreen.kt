@@ -879,7 +879,7 @@ private fun PlaylistHeaderOptionsButton(
             }
         ) {
             DropdownMenuItem(
-                modifier = Modifier.menuReveal(N),
+                modifier = Modifier.menuReveal(0),
                 text = {
                     Text(
                         text =
@@ -904,7 +904,7 @@ private fun PlaylistHeaderOptionsButton(
                 hasCustomArtwork
             ) {
                 DropdownMenuItem(
-                    modifier = Modifier.menuReveal(N),
+                    modifier = Modifier.menuReveal(1),
                     text = { Text(text = "Remove Custom Artwork") },
                     onClick = {
                         menuExpanded =
@@ -919,7 +919,7 @@ private fun PlaylistHeaderOptionsButton(
                 canEdit
             ) {
                 DropdownMenuItem(
-                    modifier = Modifier.menuReveal(N),
+                    modifier = Modifier.menuReveal(2),
                     text = { Text(text = "Rename Playlist") },
                     onClick = {
                         menuExpanded =
@@ -930,7 +930,7 @@ private fun PlaylistHeaderOptionsButton(
                 )
 
                 DropdownMenuItem(
-                    modifier = Modifier.menuReveal(N),
+                    modifier = Modifier.menuReveal(3),
                     text = { Text(text = "Delete Playlist") },
 
                     onClick = {
@@ -1090,6 +1090,7 @@ private fun PlaylistTrackRow(
                         }
                     ) {
                         DropdownMenuItem(
+                            modifier = Modifier.menuReveal(4),
                             text = { Text(text = "Remove from Playlist") },
                             onClick = {
                                 menuExpanded =

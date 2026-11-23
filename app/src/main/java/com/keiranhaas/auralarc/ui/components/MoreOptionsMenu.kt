@@ -77,7 +77,7 @@ fun MoreOptionsButton(
             }
         ) {
             DropdownMenuItem(
-                modifier = Modifier.menuReveal(N),
+                modifier = Modifier.menuReveal(0),
                 text = { Text(text = "Add Song to Playlist") },
                 onClick = {
                     expanded =
@@ -97,7 +97,7 @@ fun MoreOptionsButton(
                 showAddAlbumToPlaylist
             ) {
                 DropdownMenuItem(
-                    modifier = Modifier.menuReveal(N),
+                    modifier = Modifier.menuReveal(1),
                     text = { Text(text = "Add Album to Playlist") },
                     onClick = {
                         expanded =
@@ -183,7 +183,7 @@ fun MoreOptionsButton(
                 showAddToQueue
             ) {
                 DropdownMenuItem(
-                    modifier = Modifier.menuReveal(N),
+                    modifier = Modifier.menuReveal(2),
                     text = { Text(text = "Add to Queue") },
                     onClick = {
                         expanded =
@@ -201,7 +201,7 @@ fun MoreOptionsButton(
                 showPlayNext
             ) {
                 DropdownMenuItem(
-                    modifier = Modifier.menuReveal(N),
+                    modifier = Modifier.menuReveal(3),
                     text = { Text(text = "Play Next") },
                     onClick = {
                         expanded =
@@ -216,7 +216,7 @@ fun MoreOptionsButton(
             }
 
             DropdownMenuItem(
-                modifier = Modifier.menuReveal(N),
+                modifier = Modifier.menuReveal(4),
                 text = { Text(text = "Track Info") },
                 onClick = {
                     expanded =

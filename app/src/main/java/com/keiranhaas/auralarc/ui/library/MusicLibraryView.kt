@@ -4630,7 +4630,7 @@ private fun AlbumArtworkMoreOptionsButton(
             }
         ) {
             DropdownMenuItem(
-                modifier = Modifier.menuReveal(N),
+                modifier = Modifier.menuReveal(0),
                 text = {
                     Text(
                         text = "Add Album Artwork"
