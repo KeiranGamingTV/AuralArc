@@ -9,19 +9,9 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideIntoContainer
-import androidx.compose.animation.slideOutOfContainer
 import androidx.compose.ui.unit.IntOffset
 import androidx.navigation.NavBackStackEntry
 import com.keiranhaas.auralarc.ui.theme.AuralArcMotion
-
-/*
- * Screen-to-screen transitions.
- *
- * Normal screens:    new screen slides in from the right, old screen
- *                    drifts left (parallax) and dims. Back reverses it.
- * Now Playing:       slides up from the bottom, slides back down.
- */
 
 private fun navOffsetSpring() =
     spring<IntOffset>(
