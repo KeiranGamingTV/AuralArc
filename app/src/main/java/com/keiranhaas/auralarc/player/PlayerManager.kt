@@ -475,6 +475,10 @@ object PlayerManager {
 
                                 DirectVolumeControl.sync()
 
+                                CrossfadeManager.sync(
+                                    context.applicationContext
+                                )
+
                                 saveCurrentSessionIfNeeded(
                                     force = false
                                 )
@@ -520,6 +524,10 @@ object PlayerManager {
                                 mediaItem: MediaItem?,
                                 reason: Int
                             ) {
+                                CrossfadeManager.onMediaItemTransition(
+                                    reason
+                                )
+
                                 pendingSeekPosition =
                                     null
 
@@ -2364,7 +2372,7 @@ object PlayerManager {
         refreshEffectivePlayerVolume()
     }
 
-    fun refreshEffectivePlayerVolume() {
+    fun currentBaseVolume(): Float {
         val replayGainVolume =
             AudioProcessingState.replayGainMultiplier.value
                 .coerceAtMost(
@@ -2380,24 +2388,31 @@ object PlayerManager {
                 1f
             }
 
-        val finalVolume =
+        return (
+                userVolume *
+                        replayGainVolume *
+                        duckMultiplier *
+                        DirectVolumeControl.softwareGain() *
+                        DirectVolumeControl.headroomMultiplier()
+                ).coerceIn(
+                0f,
+                1f
+            )
+    }
+
+    fun refreshEffectivePlayerVolume() {
+        player?.volume =
             (
-                    userVolume *
-                            replayGainVolume *
-                            duckMultiplier *
-                            DirectVolumeControl.softwareGain() *
-                            DirectVolumeControl.headroomMultiplier()
+                    currentBaseVolume() *
+                            CrossfadeManager.mainMultiplier
                     ).coerceIn(
                     0f,
                     1f
                 )
 
-        player?.volume =
-            finalVolume
-
         AudioEffectsManager.refreshLoudness()
     }
-
+    
     fun attachEqualizerToCurrentAudioSession(
         context: Context
     ) {
