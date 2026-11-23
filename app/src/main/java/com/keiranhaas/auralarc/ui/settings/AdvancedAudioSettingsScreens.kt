@@ -53,6 +53,17 @@ fun AdvancedAudioMenuScreen(
         )
 
         AudioMenuRow(
+            title = "Crossfade",
+            subtitle = "Fade or overlap songs as they change.",
+            icon = Icons.AutoMirrored.Filled.VolumeUp,
+            onClick = {
+                navController.navigate(
+                    Screen.CrossfadeSettings.route
+                )
+            }
+        )
+
+        AudioMenuRow(
             title = "Sound Effects",
             subtitle = "Bass boost, virtualizer, and loudness boost.",
             icon = Icons.Default.SurroundSound,
