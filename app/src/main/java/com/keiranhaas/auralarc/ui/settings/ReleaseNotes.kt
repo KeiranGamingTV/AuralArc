@@ -45,7 +45,6 @@ object ReleaseNotes {
                     "Navidrome Diagnostics now has a Run Diagnostics button: ping speed, download speed, server version, phone connection strength, your server's library size, and how much space Navidrome data uses on your phone.",
                     "Added basic home screen widgets in three sizes: Small, Medium, and Large.",
                     "Widgets show album art and the current song, with play/pause, previous, next, shuffle, and repeat controls.",
-                    "Widget buttons work even when AuralArc isn't open.",
                     "Widgets now resize properly: the album art, text, and controls scale to fit whatever size you make them.",
                     "These widgets will be updated, revamped, and improved with future releases."
                 )
