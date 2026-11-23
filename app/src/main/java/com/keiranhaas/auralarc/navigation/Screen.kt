@@ -102,4 +102,8 @@ sealed class Screen(
     object SoundEffectsSettings : Screen(
         "sound_effects_settings"
     )
+
+    object CrossfadeSettings : Screen(
+        "crossfade_settings"
+    )
 }
