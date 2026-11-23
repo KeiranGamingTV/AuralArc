@@ -103,6 +103,16 @@ fun PlaylistDetailScreen(
         )
     }
 
+    var editMessage by remember {
+        mutableStateOf<String?>(null)
+    }
+
+    var editBusy by remember {
+        mutableStateOf(
+            false
+        )
+    }
+
     var artworkRefreshKey by remember(
         playlistId,
         librarySource
@@ -249,9 +259,16 @@ fun PlaylistDetailScreen(
     val isLikedSongs =
         playlistId == LikedSongsStore.PLAYLIST_ID
 
-    val canEdit =
+    val isNavidrome =
+        librarySource == LibrarySource.NAVIDROME
+
+    val canReorder =
         librarySource == LibrarySource.LOCAL &&
                 !isLikedSongs
+
+    val canEdit =
+        canReorder ||
+                isNavidrome
 
     val playlistListState =
         rememberLazyListState()
@@ -296,7 +313,7 @@ fun PlaylistDetailScreen(
         Int
     ) -> Unit = { fromIndex, toIndex ->
         if (
-            canEdit &&
+            canReorder &&
             fromIndex in playlistTracks.indices &&
             toIndex in playlistTracks.indices
         ) {
@@ -403,11 +420,12 @@ fun PlaylistDetailScreen(
                     PlaylistTrackRow(
                         track = track,
                         canRemove = canEdit || isLikedSongs,
+                        showReorder = !isNavidrome,
                         canMoveUp =
-                            canEdit &&
+                            canReorder &&
                                     index > 0,
                         canMoveDown =
-                            canEdit &&
+                            canReorder &&
                                     index < playlistTracks.lastIndex,
                         onClick = {
                             QueueManager.setQueue(
@@ -456,6 +474,48 @@ fun PlaylistDetailScreen(
                                 playlistTracks =
                                     likedTracks
                             } else if (
+                                isNavidrome
+                            ) {
+                                if (
+                                    !editBusy
+                                ) {
+                                    editBusy =
+                                        true
+
+                                    coroutineScope.launch {
+                                        val result =
+                                            withContext(
+                                                Dispatchers.IO
+                                            ) {
+                                                NavidromePlaylistManager.removeTrackAt(
+                                                    context = context,
+                                                    playlistId = playlistId,
+                                                    index = index
+                                                )
+                                            }
+
+                                        if (
+                                            result.success
+                                        ) {
+                                            playlistTracks =
+                                                playlistTracks.filterIndexed { itemIndex, _ ->
+                                                    itemIndex != index
+                                                }
+
+                                            playlist =
+                                                currentPlaylist.copy(
+                                                    trackCount = playlistTracks.size
+                                                )
+                                        } else {
+                                            editMessage =
+                                                result.message
+                                        }
+
+                                        editBusy =
+                                            false
+                                    }
+                                }
+                            } else if (
                                 canEdit
                             ) {
                                 PlaylistStore.removeTrackFromPlaylist(
@@ -503,20 +563,49 @@ fun PlaylistDetailScreen(
                     false
             },
             onRename = { newName ->
-                PlaylistStore.renamePlaylist(
-                    context = context,
-                    playlistId = playlistId,
-                    newName = newName
-                )
-
-                playlist =
-                    PlaylistStore.getPlaylist(
-                        context = context,
-                        playlistId = playlistId
-                    )
-
                 showRenameDialog =
                     false
+
+                if (
+                    isNavidrome
+                ) {
+                    coroutineScope.launch {
+                        val result =
+                            withContext(
+                                Dispatchers.IO
+                            ) {
+                                NavidromePlaylistManager.renamePlaylist(
+                                    context = context,
+                                    playlistId = playlistId,
+                                    newName = newName
+                                )
+                            }
+
+                        if (
+                            result.success
+                        ) {
+                            playlist =
+                                currentPlaylist.copy(
+                                    name = newName.trim()
+                                )
+                        } else {
+                            editMessage =
+                                result.message
+                        }
+                    }
+                } else {
+                    PlaylistStore.renamePlaylist(
+                        context = context,
+                        playlistId = playlistId,
+                        newName = newName
+                    )
+
+                    playlist =
+                        PlaylistStore.getPlaylist(
+                            context = context,
+                            playlistId = playlistId
+                        )
+                }
             }
         )
     }
@@ -532,20 +621,81 @@ fun PlaylistDetailScreen(
                     false
             },
             onDelete = {
-                PlaylistArtworkStore.removeCustomArtwork(
-                    context = context,
-                    playlist = currentPlaylist
-                )
-
-                PlaylistStore.deletePlaylist(
-                    context = context,
-                    playlistId = playlistId
-                )
-
                 showDeleteDialog =
                     false
 
-                onBack()
+                if (
+                    isNavidrome
+                ) {
+                    coroutineScope.launch {
+                        val result =
+                            withContext(
+                                Dispatchers.IO
+                            ) {
+                                NavidromePlaylistManager.deletePlaylist(
+                                    context = context,
+                                    playlistId = playlistId
+                                )
+                            }
+
+                        if (
+                            result.success
+                        ) {
+                            PlaylistArtworkStore.removeCustomArtwork(
+                                context = context,
+                                playlist = currentPlaylist
+                            )
+
+                            onBack()
+                        } else {
+                            editMessage =
+                                result.message
+                        }
+                    }
+                } else {
+                    PlaylistArtworkStore.removeCustomArtwork(
+                        context = context,
+                        playlist = currentPlaylist
+                    )
+
+                    PlaylistStore.deletePlaylist(
+                        context = context,
+                        playlistId = playlistId
+                    )
+
+                    onBack()
+                }
+            }
+        )
+    }
+
+    editMessage?.let { message ->
+        AlertDialog(
+            onDismissRequest = {
+                editMessage =
+                    null
+            },
+            title = {
+                Text(
+                    text = "Navidrome Playlist"
+                )
+            },
+            text = {
+                Text(
+                    text = message
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        editMessage =
+                            null
+                    }
+                ) {
+                    Text(
+                        text = "OK"
+                    )
+                }
             }
         )
     }
@@ -949,6 +1099,7 @@ private fun PlaylistHeaderOptionsButton(
 private fun PlaylistTrackRow(
     track: MusicTrack,
     canRemove: Boolean,
+    showReorder: Boolean,
     canMoveUp: Boolean,
     canMoveDown: Boolean,
     onClick: () -> Unit,
@@ -1030,7 +1181,7 @@ private fun PlaylistTrackRow(
             if (
                 canRemove
             ) {
-                Column {
+                if (showReorder) Column {
                     AuralArcIconButton(
                         enabled = canMoveUp,
                         onClick = onMoveUp
@@ -1129,7 +1280,7 @@ private fun EmptyPlaylistDetail(
                 if (
                     librarySource == LibrarySource.NAVIDROME
                 ) {
-                    "Add songs to this playlist in Navidrome, then refresh."
+                    "Add songs from any song's menu using Add Song to Playlist."
                 } else {
                     "Go to your library and add songs to this playlist."
                 },

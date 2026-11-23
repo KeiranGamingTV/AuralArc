@@ -420,6 +420,113 @@ class NavidromeClient(
             )
     }
 
+    private fun getJsonWithRepeatedParams(
+        endpoint: String,
+        params: List<Pair<String, String>>
+    ): JSONObject {
+        val builder =
+            Uri.parse(
+                buildApiUrl(
+                    endpoint = endpoint
+                )
+            ).buildUpon()
+
+        params.forEach { param ->
+            builder.appendQueryParameter(
+                param.first,
+                param.second
+            )
+        }
+
+        return getJsonFromUrl(
+            requestUrl = builder.build().toString(),
+            endpoint = endpoint
+        )
+    }
+
+    fun createRemotePlaylist(
+        name: String,
+        songIds: List<String>
+    ) {
+        val params =
+            mutableListOf(
+                "name" to name
+            )
+
+        songIds.forEach { songId ->
+            params.add(
+                "songId" to songId
+            )
+        }
+
+        getJsonWithRepeatedParams(
+            endpoint = "createPlaylist.view",
+            params = params
+        )
+    }
+
+    fun renameRemotePlaylist(
+        playlistId: String,
+        newName: String
+    ) {
+        getJson(
+            endpoint = "updatePlaylist.view",
+            extraParams = mapOf(
+                "playlistId" to playlistId,
+                "name" to newName
+            )
+        )
+    }
+
+    fun deleteRemotePlaylist(
+        playlistId: String
+    ) {
+        getJson(
+            endpoint = "deletePlaylist.view",
+            extraParams = mapOf(
+                "id" to playlistId
+            )
+        )
+    }
+
+    fun addSongsToRemotePlaylist(
+        playlistId: String,
+        songIds: List<String>
+    ) {
+        check(songIds.isNotEmpty()) {
+            "These songs are not on your Navidrome server."
+        }
+
+        val params =
+            mutableListOf(
+                "playlistId" to playlistId
+            )
+
+        songIds.forEach { songId ->
+            params.add(
+                "songIdToAdd" to songId
+            )
+        }
+
+        getJsonWithRepeatedParams(
+            endpoint = "updatePlaylist.view",
+            params = params
+        )
+    }
+
+    fun removeSongFromRemotePlaylist(
+        playlistId: String,
+        songIndex: Int
+    ) {
+        getJson(
+            endpoint = "updatePlaylist.view",
+            extraParams = mapOf(
+                "playlistId" to playlistId,
+                "songIndexToRemove" to songIndex.toString()
+            )
+        )
+    }
+
     fun getRemotePlaylists(): List<Playlist> {
         val response =
             getJson(
@@ -1045,12 +1152,19 @@ class NavidromeClient(
         endpoint: String,
         extraParams: Map<String, String> = emptyMap()
     ): JSONObject {
-        val requestUrl =
-            buildApiUrl(
+        return getJsonFromUrl(
+            requestUrl = buildApiUrl(
                 endpoint = endpoint,
                 extraParams = extraParams
-            )
+            ),
+            endpoint = endpoint
+        )
+    }
 
+    private fun getJsonFromUrl(
+        requestUrl: String,
+        endpoint: String
+    ): JSONObject {
         Log.d(
             "AuralArc",
             "Navidrome GET endpoint: $endpoint"

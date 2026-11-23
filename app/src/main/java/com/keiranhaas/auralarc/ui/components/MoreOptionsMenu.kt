@@ -25,6 +25,13 @@ import com.keiranhaas.auralarc.player.PlayerManager
 import com.keiranhaas.auralarc.storage.PlaylistStore
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
 import com.keiranhaas.auralarc.ui.components.menuReveal
+import androidx.compose.material3.MaterialTheme
+import com.keiranhaas.auralarc.data.Playlist
+import com.keiranhaas.auralarc.data.TrackIdentity
+import com.keiranhaas.auralarc.navidrome.NavidromePlaylistManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun MoreOptionsButton(
@@ -251,6 +258,17 @@ private fun AddTracksToPlaylistDialog(
     val context =
         LocalContext.current
 
+    val coroutineScope =
+        rememberCoroutineScope()
+
+    val isNavidromeSelection =
+        remember(tracks) {
+            tracks.isNotEmpty() &&
+                    tracks.all { track ->
+                        TrackIdentity.navidromeSongId(track) != null
+                    }
+        }
+
     var playlists by remember {
         mutableStateOf(
             PlaylistStore.getPlaylists(
@@ -259,8 +277,62 @@ private fun AddTracksToPlaylistDialog(
         )
     }
 
+    var remotePlaylists by remember {
+        mutableStateOf<List<Playlist>>(
+            emptyList()
+        )
+    }
+
+    var remoteLoading by remember {
+        mutableStateOf(
+            isNavidromeSelection
+        )
+    }
+
+    var remoteLoadFailed by remember {
+        mutableStateOf(false)
+    }
+
+    var busy by remember {
+        mutableStateOf(false)
+    }
+
+    var errorMessage by remember {
+        mutableStateOf<String?>(null)
+    }
+
     var newPlaylistName by remember {
         mutableStateOf("")
+    }
+
+    LaunchedEffect(
+        isNavidromeSelection
+    ) {
+        if (
+            isNavidromeSelection
+        ) {
+            val loaded =
+                withContext(
+                    Dispatchers.IO
+                ) {
+                    NavidromePlaylistManager.loadPlaylistsOrNull(
+                        context
+                    )
+                }
+
+            if (
+                loaded == null
+            ) {
+                remoteLoadFailed =
+                    true
+            } else {
+                remotePlaylists =
+                    loaded
+            }
+
+            remoteLoading =
+                false
+        }
     }
 
     AlertDialog(
@@ -274,13 +346,13 @@ private fun AddTracksToPlaylistDialog(
             Column {
                 Text(
                     text =
-                    if (
-                        tracks.size == 1
-                    ) {
-                        "1 song selected"
-                    } else {
-                        "${tracks.size} songs selected"
-                    }
+                        if (
+                            tracks.size == 1
+                        ) {
+                            "1 song selected"
+                        } else {
+                            "${tracks.size} songs selected"
+                        }
                 )
 
                 OutlinedTextField(
@@ -325,13 +397,72 @@ private fun AddTracksToPlaylistDialog(
                     }
                 ) {
                     Text(
-                        text = "Create and Add"
+                        text =
+                            if (
+                                isNavidromeSelection
+                            ) {
+                                "Create Local Playlist"
+                            } else {
+                                "Create and Add"
+                            }
                     )
                 }
 
+                if (
+                    isNavidromeSelection
+                ) {
+                    TextButton(
+                        enabled =
+                            newPlaylistName.isNotBlank() &&
+                                    !busy,
+                        onClick = {
+                            busy =
+                                true
+
+                            errorMessage =
+                                null
+
+                            coroutineScope.launch {
+                                val result =
+                                    withContext(
+                                        Dispatchers.IO
+                                    ) {
+                                        NavidromePlaylistManager.createPlaylist(
+                                            context = context,
+                                            name = newPlaylistName,
+                                            tracks = tracks
+                                        )
+                                    }
+
+                                busy =
+                                    false
+
+                                if (
+                                    result.success
+                                ) {
+                                    onDismiss()
+                                } else {
+                                    errorMessage =
+                                        result.message
+                                }
+                            }
+                        }
+                    ) {
+                        Text(
+                            text = "Create on Navidrome"
+                        )
+                    }
+                }
+
+                Text(
+                    text = "Local playlists",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = AuralArcStyle.TextSecondary
+                )
+
                 LazyColumn(
                     modifier = Modifier.heightIn(
-                        max = 260.dp
+                        max = 160.dp
                     )
                 ) {
                     items(
@@ -356,6 +487,101 @@ private fun AddTracksToPlaylistDialog(
                             )
                         }
                     }
+                }
+
+                if (
+                    isNavidromeSelection
+                ) {
+                    Text(
+                        text = "Navidrome playlists",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = AuralArcStyle.TextSecondary
+                    )
+
+                    when {
+                        remoteLoading -> {
+                            Text(
+                                text = "Loading...",
+                                color = AuralArcStyle.TextMuted
+                            )
+                        }
+
+                        remoteLoadFailed -> {
+                            Text(
+                                text = "Could not load Navidrome playlists.",
+                                color = AuralArcStyle.TextMuted
+                            )
+                        }
+
+                        remotePlaylists.isEmpty() -> {
+                            Text(
+                                text = "No Navidrome playlists yet.",
+                                color = AuralArcStyle.TextMuted
+                            )
+                        }
+
+                        else -> {
+                            LazyColumn(
+                                modifier = Modifier.heightIn(
+                                    max = 160.dp
+                                )
+                            ) {
+                                items(
+                                    remotePlaylists
+                                ) { playlist ->
+                                    TextButton(
+                                        enabled = !busy,
+                                        onClick = {
+                                            busy =
+                                                true
+
+                                            errorMessage =
+                                                null
+
+                                            coroutineScope.launch {
+                                                val result =
+                                                    withContext(
+                                                        Dispatchers.IO
+                                                    ) {
+                                                        NavidromePlaylistManager.addTracks(
+                                                            context = context,
+                                                            playlistId = playlist.id,
+                                                            tracks = tracks
+                                                        )
+                                                    }
+
+                                                busy =
+                                                    false
+
+                                                if (
+                                                    result.success
+                                                ) {
+                                                    onDismiss()
+                                                } else {
+                                                    errorMessage =
+                                                        result.message
+                                                }
+                                            }
+                                        },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text(
+                                            text = playlist.name,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                errorMessage?.let { message ->
+                    Text(
+                        text = message,
+                        color = MaterialTheme.colorScheme.error
+                    )
                 }
             }
         },

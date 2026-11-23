@@ -40,6 +40,14 @@ object TrackIdentity {
                 )
     }
 
+    fun navidromeSongId(
+        track: MusicTrack
+    ): String? {
+        return extractNavidromeSongId(
+            track.uri
+        )
+    }
+
     private fun extractNavidromeSongId(
         trackUri: String
     ): String? {

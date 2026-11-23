@@ -36,6 +36,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items as gridItems
+import kotlinx.coroutines.launch
 
 @Composable
 fun PlaylistBrowserScreen(
@@ -69,6 +70,13 @@ fun PlaylistBrowserScreen(
 
     var playlistToDelete by remember {
         mutableStateOf<Playlist?>(null)
+    }
+
+    val coroutineScope =
+        rememberCoroutineScope()
+
+    var editMessage by remember {
+        mutableStateOf<String?>(null)
     }
 
     suspend fun reloadPlaylists() {
@@ -237,7 +245,7 @@ fun PlaylistBrowserScreen(
                                     if (
                                         librarySource == LibrarySource.NAVIDROME
                                     ) {
-                                        "Create playlists in Navidrome, then refresh this screen."
+                                        "Tap + above to create a playlist on your Navidrome server."
                                     } else {
                                         "Create a playlist, then add songs from your library."
                                     }
@@ -273,8 +281,7 @@ fun PlaylistBrowserScreen(
                             playlist = playlist,
                             tracks = playlistTracks,
                             trackCount = trackCount,
-                            canDelete =
-                                librarySource == LibrarySource.LOCAL,
+                            canDelete = true,
                             onClick = {
                                 onPlaylistSelected(
                                     playlist.id
@@ -292,8 +299,7 @@ fun PlaylistBrowserScreen(
     }
 
     if (
-        showCreateDialog &&
-        librarySource == LibrarySource.LOCAL
+        showCreateDialog
     ) {
         CreatePlaylistDialog(
             onDismiss = {
@@ -301,18 +307,43 @@ fun PlaylistBrowserScreen(
                     false
             },
             onCreate = { playlistName ->
-                PlaylistStore.createPlaylist(
-                    context = context,
-                    rawName = playlistName
-                )
-
-                playlists =
-                    PlaylistStore.getPlaylists(
-                        context
-                    )
-
                 showCreateDialog =
                     false
+
+                if (
+                    librarySource == LibrarySource.LOCAL
+                ) {
+                    PlaylistStore.createPlaylist(
+                        context = context,
+                        rawName = playlistName
+                    )
+
+                    playlists =
+                        PlaylistStore.getPlaylists(
+                            context
+                        )
+                } else {
+                    coroutineScope.launch {
+                        val result =
+                            withContext(
+                                Dispatchers.IO
+                            ) {
+                                NavidromePlaylistManager.createPlaylist(
+                                    context = context,
+                                    name = playlistName
+                                )
+                            }
+
+                        if (
+                            result.success
+                        ) {
+                            reloadPlaylists()
+                        } else {
+                            editMessage =
+                                result.message
+                        }
+                    }
+                }
             }
         )
     }
@@ -325,23 +356,85 @@ fun PlaylistBrowserScreen(
                     null
             },
             onDelete = {
-                PlaylistArtworkStore.removeCustomArtwork(
-                    context = context,
-                    playlist = playlist
-                )
-
-                PlaylistStore.deletePlaylist(
-                    context = context,
-                    playlistId = playlist.id
-                )
-
-                playlists =
-                    PlaylistStore.getPlaylists(
-                        context
-                    )
-
                 playlistToDelete =
                     null
+
+                if (
+                    librarySource == LibrarySource.LOCAL
+                ) {
+                    PlaylistArtworkStore.removeCustomArtwork(
+                        context = context,
+                        playlist = playlist
+                    )
+
+                    PlaylistStore.deletePlaylist(
+                        context = context,
+                        playlistId = playlist.id
+                    )
+
+                    playlists =
+                        PlaylistStore.getPlaylists(
+                            context
+                        )
+                } else {
+                    coroutineScope.launch {
+                        val result =
+                            withContext(
+                                Dispatchers.IO
+                            ) {
+                                NavidromePlaylistManager.deletePlaylist(
+                                    context = context,
+                                    playlistId = playlist.id
+                                )
+                            }
+
+                        if (
+                            result.success
+                        ) {
+                            PlaylistArtworkStore.removeCustomArtwork(
+                                context = context,
+                                playlist = playlist
+                            )
+
+                            reloadPlaylists()
+                        } else {
+                            editMessage =
+                                result.message
+                        }
+                    }
+                }
+            }
+        )
+    }
+
+    editMessage?.let { message ->
+        AlertDialog(
+            containerColor = AuralArcStyle.Surface,
+            onDismissRequest = {
+                editMessage =
+                    null
+            },
+            title = {
+                Text(
+                    text = "Navidrome Playlist"
+                )
+            },
+            text = {
+                Text(
+                    text = message
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        editMessage =
+                            null
+                    }
+                ) {
+                    Text(
+                        text = "OK"
+                    )
+                }
             }
         )
     }
@@ -427,7 +520,8 @@ private fun PlaylistBrowserHeader(
             }
 
             if (
-                librarySource == LibrarySource.LOCAL
+                librarySource == LibrarySource.LOCAL ||
+                librarySource == LibrarySource.NAVIDROME
             ) {
                 AuralArcCard(
                     modifier = Modifier.size(
@@ -781,7 +875,7 @@ private fun PlaylistGrid(
                         if (
                             librarySource == LibrarySource.NAVIDROME
                         ) {
-                            "Create playlists in Navidrome, then refresh this screen."
+                            "Tap + above to create a playlist on your Navidrome server."
                         } else {
                             "Create a playlist, then add songs from your library."
                         }
