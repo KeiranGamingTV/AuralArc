@@ -217,14 +217,17 @@ object AudioProcessingState {
             )
 
         dvcLabel.value =
-            if (
+            when {
+                DirectVolumeControl.active.value ->
+                    "DVC active, software volume ${DirectVolumeControl.level.intValue}%"
+
                 AdvancedAudioPreferences.getDvcEnabled(
                     context
-                )
-            ) {
-                "DVC preference enabled, preamp reduction ${AdvancedAudioPreferences.getDvcPreampReduction(context).toInt()} dB"
-            } else {
-                "DVC disabled"
+                ) ->
+                    "DVC enabled, idle or bypassed"
+
+                else ->
+                    "DVC disabled"
             }
 
         val selectedOutput =

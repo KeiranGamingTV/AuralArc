@@ -406,10 +406,16 @@ class PlaybackService :
         attachedPlayer =
             player
 
+        val sessionPlayer =
+            DirectVolumeControl.attach(
+                this,
+                player
+            )
+
         mediaSession =
             MediaSession.Builder(
                 this,
-                player
+                sessionPlayer
             )
                 .setCallback(
                     mediaSessionCallback
@@ -639,6 +645,8 @@ class PlaybackService :
             mediaSession?.release()
         } catch (_: Exception) {
         }
+
+        DirectVolumeControl.release()
 
         mediaSession =
             null

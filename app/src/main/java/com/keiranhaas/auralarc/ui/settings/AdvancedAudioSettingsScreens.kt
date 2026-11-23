@@ -30,6 +30,7 @@ import com.keiranhaas.auralarc.ui.components.AuralArcSwitch
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
 import kotlin.math.roundToInt
 import androidx.compose.foundation.background
+import com.keiranhaas.auralarc.player.DirectVolumeControl
 
 @Composable
 fun AdvancedAudioMenuScreen(
@@ -252,12 +253,12 @@ fun DirectVolumeControlSettingsScreen(
     ) {
         AudioInfoNotice(
             title = "Direct Volume Control",
-            message = "DVC-style behavior improves volume and EQ headroom in players with a custom audio engine. AuralArc will save these preferences now, then connect safe behavior later."
+            message = "While music plays, Android's system volume is held at maximum and the volume keys control AuralArc's own volume instead. Your system volume is restored when playback pauses or a Bluetooth output is connected."
         )
 
         SwitchSetting(
             title = "Enable Direct Volume Control",
-            subtitle = "Use DVC-style output handling when supported.",
+            subtitle = "Control volume inside AuralArc while music plays.",
             checked = dvcEnabled,
             onCheckedChange = {
                 dvcEnabled =
@@ -267,6 +268,8 @@ fun DirectVolumeControlSettingsScreen(
                     context,
                     it
                 )
+
+                DirectVolumeControl.sync()
             }
         )
 
@@ -282,12 +285,30 @@ fun DirectVolumeControlSettingsScreen(
                     context,
                     it
                 )
+
+                DirectVolumeControl.sync()
             }
         )
 
+        if (
+            DirectVolumeControl.active.value
+        ) {
+            SliderSetting(
+                title = "DVC Volume",
+                subtitle = "${DirectVolumeControl.level.intValue}%",
+                value = DirectVolumeControl.level.intValue.toFloat(),
+                valueRange = 0f..100f,
+                onValueChange = {
+                    DirectVolumeControl.setLevel(
+                        it.roundToInt()
+                    )
+                }
+            )
+        }
+
         SliderSetting(
             title = "No DVC - Preamp Reduction",
-            subtitle = "${preampReduction.roundToInt()} dB",
+            subtitle = "${preampReduction.roundToInt()} dB, applied when DVC is off and the equalizer is on",
             value = preampReduction,
             valueRange = -12f..0f,
             onValueChange = {

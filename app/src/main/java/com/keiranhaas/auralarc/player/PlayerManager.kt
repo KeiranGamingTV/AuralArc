@@ -473,6 +473,8 @@ object PlayerManager {
                                 isPlaying.value =
                                     isPlayingNow
 
+                                DirectVolumeControl.sync()
+
                                 saveCurrentSessionIfNeeded(
                                     force = false
                                 )
@@ -2362,21 +2364,12 @@ object PlayerManager {
         refreshEffectivePlayerVolume()
     }
 
-    private fun refreshEffectivePlayerVolume() {
-        val context =
-            appContext
-
-        if (
-            context != null
-        ) {
-            player?.volume =
-                1f
-
-            return
-        }
-
-        val replayGainMultiplier =
+    fun refreshEffectivePlayerVolume() {
+        val replayGainVolume =
             AudioProcessingState.replayGainMultiplier.value
+                .coerceAtMost(
+                    1f
+                )
 
         val duckMultiplier =
             if (
@@ -2390,8 +2383,10 @@ object PlayerManager {
         val finalVolume =
             (
                     userVolume *
-                            replayGainMultiplier *
-                            duckMultiplier
+                            replayGainVolume *
+                            duckMultiplier *
+                            DirectVolumeControl.softwareGain() *
+                            DirectVolumeControl.headroomMultiplier()
                     ).coerceIn(
                     0f,
                     1f
