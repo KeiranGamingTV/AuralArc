@@ -56,6 +56,14 @@ object AuralArcWidgetUpdater {
         val appContext =
             context.applicationContext
 
+        @Suppress("UNUSED_VARIABLE")
+        val warmUpPlayerState =
+            PlayerManager.currentTitle.value
+
+        @Suppress("UNUSED_VARIABLE")
+        val warmUpPlaybackState =
+            PlaybackState.shuffleEnabled.value
+
         watchJob =
             scope.launch {
                 snapshotFlow {
