@@ -295,6 +295,14 @@ fun AuralArcNavigation(
                         navController = navController
                     )
                 }
+
+                composable(
+                    Screen.CrossfadeSettings.route
+                ) {
+                    CrossfadeSettingsScreen(
+                        navController = navController
+                    )
+                }
             }
         } else {
             DrivingModeScreen(
