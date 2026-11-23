@@ -46,7 +46,8 @@ object ReleaseNotes {
                     "Added basic home screen widgets in three sizes: Small, Medium, and Large.",
                     "Widgets show album art and the current song, with play/pause, previous, next, shuffle, and repeat controls.",
                     "Widget buttons work even when AuralArc isn't open.",
-                    "These will be updated, revamped, and improved with future releases."
+                    "Widgets now resize properly: the album art, text, and controls scale to fit whatever size you make them.",
+                    "These widgets will be updated, revamped, and improved with future releases."
                 )
             ),
             ReleaseNoteEntry(

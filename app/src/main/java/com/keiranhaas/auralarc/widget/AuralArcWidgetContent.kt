@@ -10,6 +10,7 @@ import androidx.glance.ColorFilter
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
 import androidx.glance.ImageProvider
+import androidx.glance.LocalSize
 import androidx.glance.action.Action
 import androidx.glance.action.clickable
 import androidx.glance.background
@@ -36,24 +37,88 @@ import com.keiranhaas.auralarc.R
 import com.keiranhaas.auralarc.player.AuralArcRepeatMode
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
 
-/* ---------------------------- Small (2x1) ---------------------------- */
-
 @Composable
 fun SmallWidgetContent(
     context: Context,
     snapshot: WidgetSnapshot
 ) {
+    AdaptiveWidgetContent(
+        context = context,
+        snapshot = snapshot
+    )
+}
+
+@Composable
+fun MediumWidgetContent(
+    context: Context,
+    snapshot: WidgetSnapshot
+) {
+    AdaptiveWidgetContent(
+        context = context,
+        snapshot = snapshot
+    )
+}
+
+@Composable
+fun LargeWidgetContent(
+    context: Context,
+    snapshot: WidgetSnapshot
+) {
+    AdaptiveWidgetContent(
+        context = context,
+        snapshot = snapshot
+    )
+}
+
+/* ------------------------ Size-based layouts ------------------------- */
+
+private const val COLUMN_PADDING = 14f
+
+@Composable
+private fun AdaptiveWidgetContent(
+    context: Context,
+    snapshot: WidgetSnapshot
+) {
+    val size = LocalSize.current
+    val width = size.width.value
+    val height = size.height.value
+
+    when {
+        height < 90f && width < 200f ->
+            CompactLayout(context, snapshot, height)
+
+        height < 90f ->
+            BannerLayout(context, snapshot, height)
+
+        width < height * 1.45f &&
+                columnArtSize(width, height) >= 64f ->
+            ColumnLayout(context, snapshot, width, height)
+
+        else ->
+            RowLayout(context, snapshot, width, height)
+    }
+}
+
+@Composable
+private fun CompactLayout(
+    context: Context,
+    snapshot: WidgetSnapshot,
+    height: Float
+) {
+    val padding = 8f
+    val art = (height - padding * 2).coerceIn(32f, 72f)
+
     Row(
         modifier = GlanceModifier
             .fillMaxSize()
             .background(ImageProvider(R.drawable.widget_background))
-            .padding(8.dp)
+            .padding(padding.dp)
             .clickable(WidgetActions.openApp()),
         verticalAlignment = Alignment.CenterVertically
     ) {
         WidgetArtwork(
             snapshot = snapshot,
-            size = 52.dp
+            size = art.dp
         )
 
         Spacer(
@@ -63,34 +128,109 @@ fun SmallWidgetContent(
         PlayPauseButton(
             context = context,
             snapshot = snapshot,
-            circleSize = 44.dp,
-            iconSize = 26.dp
+            circleSize = (art * 0.85f).dp,
+            iconSize = (art * 0.5f).dp
         )
     }
 }
 
-/* ---------------------------- Medium (4x2) --------------------------- */
-
 @Composable
-fun MediumWidgetContent(
+private fun BannerLayout(
     context: Context,
-    snapshot: WidgetSnapshot
+    snapshot: WidgetSnapshot,
+    height: Float
 ) {
+    val padding = 8f
+    val art = (height - padding * 2).coerceIn(32f, 72f)
+
     Row(
         modifier = GlanceModifier
             .fillMaxSize()
             .background(ImageProvider(R.drawable.widget_background))
-            .padding(12.dp)
+            .padding(padding.dp)
             .clickable(WidgetActions.openApp()),
         verticalAlignment = Alignment.CenterVertically
     ) {
         WidgetArtwork(
             snapshot = snapshot,
-            size = 88.dp
+            size = art.dp
         )
 
         Spacer(
-            modifier = GlanceModifier.width(12.dp)
+            modifier = GlanceModifier.width(10.dp)
+        )
+
+        Column(
+            modifier = GlanceModifier.defaultWeight(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = snapshot.titleText(),
+                maxLines = 1,
+                style = TextStyle(
+                    color = ColorProvider(AuralArcStyle.TextPrimary),
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            )
+
+            Text(
+                text = snapshot.artistText(),
+                maxLines = 1,
+                style = TextStyle(
+                    color = ColorProvider(AuralArcStyle.TextSecondary),
+                    fontSize = 12.sp
+                )
+            )
+        }
+
+        Spacer(
+            modifier = GlanceModifier.width(10.dp)
+        )
+
+        PlayPauseButton(
+            context = context,
+            snapshot = snapshot,
+            circleSize = (art * 0.85f).dp,
+            iconSize = (art * 0.5f).dp
+        )
+    }
+}
+
+@Composable
+private fun RowLayout(
+    context: Context,
+    snapshot: WidgetSnapshot,
+    width: Float,
+    height: Float
+) {
+    val padding = 12f
+    val gap = 12f
+
+    val art =
+        minOf(height - padding * 2, width * 0.42f)
+            .coerceIn(48f, 240f)
+
+    val textWidth = width - padding * 2 - art - gap
+    val titleSp = (height * 0.13f).coerceIn(14f, 22f)
+    val artistSp = (titleSp - 3f).coerceAtLeast(11f)
+    val controlsGap = (height * 0.06f).coerceIn(6f, 16f)
+
+    Row(
+        modifier = GlanceModifier
+            .fillMaxSize()
+            .background(ImageProvider(R.drawable.widget_background))
+            .padding(padding.dp)
+            .clickable(WidgetActions.openApp()),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        WidgetArtwork(
+            snapshot = snapshot,
+            size = art.dp
+        )
+
+        Spacer(
+            modifier = GlanceModifier.width(gap.dp)
         )
 
         Column(
@@ -104,7 +244,7 @@ fun MediumWidgetContent(
                 maxLines = 1,
                 style = TextStyle(
                     color = ColorProvider(AuralArcStyle.TextPrimary),
-                    fontSize = 16.sp,
+                    fontSize = titleSp.sp,
                     fontWeight = FontWeight.Bold
                 )
             )
@@ -114,48 +254,50 @@ fun MediumWidgetContent(
                 maxLines = 1,
                 style = TextStyle(
                     color = ColorProvider(AuralArcStyle.TextSecondary),
-                    fontSize = 13.sp
+                    fontSize = artistSp.sp
                 )
             )
 
             Spacer(
-                modifier = GlanceModifier.height(8.dp)
+                modifier = GlanceModifier.height(controlsGap.dp)
             )
 
             ControlsRow(
                 context = context,
                 snapshot = snapshot,
-                sideIconSize = 20.dp,
-                skipIconSize = 22.dp,
-                playCircleSize = 34.dp,
-                playIconSize = 20.dp
+                rowWidth = textWidth
             )
         }
     }
 }
 
-/* ----------------------------- Large (4x4) --------------------------- */
-
 @Composable
-fun LargeWidgetContent(
+private fun ColumnLayout(
     context: Context,
-    snapshot: WidgetSnapshot
+    snapshot: WidgetSnapshot,
+    width: Float,
+    height: Float
 ) {
+    val innerWidth = width - COLUMN_PADDING * 2
+    val art = columnArtSize(width, height)
+    val titleSp = columnTitleSp(width)
+
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
             .background(ImageProvider(R.drawable.widget_background))
-            .padding(16.dp)
+            .padding(COLUMN_PADDING.dp)
             .clickable(WidgetActions.openApp()),
+        verticalAlignment = Alignment.CenterVertically,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         WidgetArtwork(
             snapshot = snapshot,
-            size = 190.dp
+            size = art.dp
         )
 
         Spacer(
-            modifier = GlanceModifier.height(14.dp)
+            modifier = GlanceModifier.height(12.dp)
         )
 
         Text(
@@ -164,7 +306,7 @@ fun LargeWidgetContent(
             modifier = GlanceModifier.fillMaxWidth(),
             style = TextStyle(
                 color = ColorProvider(AuralArcStyle.TextPrimary),
-                fontSize = 20.sp,
+                fontSize = titleSp.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
@@ -176,24 +318,59 @@ fun LargeWidgetContent(
             modifier = GlanceModifier.fillMaxWidth(),
             style = TextStyle(
                 color = ColorProvider(AuralArcStyle.TextSecondary),
-                fontSize = 15.sp,
+                fontSize = (titleSp * 0.75f).sp,
                 textAlign = TextAlign.Center
             )
         )
 
         Spacer(
-            modifier = GlanceModifier.defaultWeight()
+            modifier = GlanceModifier.height(16.dp)
         )
 
         ControlsRow(
             context = context,
             snapshot = snapshot,
-            sideIconSize = 26.dp,
-            skipIconSize = 34.dp,
-            playCircleSize = 56.dp,
-            playIconSize = 32.dp
+            rowWidth = innerWidth
         )
     }
+}
+
+private fun columnTitleSp(
+    width: Float
+): Float {
+    return ((width - COLUMN_PADDING * 2) * 0.08f)
+        .coerceIn(15f, 24f)
+}
+
+private fun columnArtSize(
+    width: Float,
+    height: Float
+): Float {
+    val innerWidth = width - COLUMN_PADDING * 2
+    val innerHeight = height - COLUMN_PADDING * 2
+    val titleSp = columnTitleSp(width)
+    val textHeight = (titleSp + titleSp * 0.75f) * 1.3f
+    val reserved = textHeight + 28f + controlCircle(innerWidth)
+
+    return minOf(innerWidth, innerHeight - reserved)
+        .coerceAtMost(320f)
+}
+
+private fun controlSlotCount(
+    rowWidth: Float
+): Int {
+    return when {
+        rowWidth >= 150f -> 5
+        rowWidth >= 100f -> 3
+        else -> 1
+    }
+}
+
+private fun controlCircle(
+    rowWidth: Float
+): Float {
+    return (rowWidth / controlSlotCount(rowWidth) * 0.85f)
+        .coerceIn(34f, 64f)
 }
 
 /* ---------------------------- Shared pieces -------------------------- */
@@ -278,91 +455,98 @@ private fun PlayPauseButton(
 private fun ControlsRow(
     context: Context,
     snapshot: WidgetSnapshot,
-    sideIconSize: Dp,
-    skipIconSize: Dp,
-    playCircleSize: Dp,
-    playIconSize: Dp
+    rowWidth: Float
 ) {
+    val slots = controlSlotCount(rowWidth)
+    val slotWidth = rowWidth / slots
+    val circle = controlCircle(rowWidth)
+    val sideIconSize = (slotWidth * 0.38f).coerceIn(20f, 28f).dp
+    val skipIconSize = (slotWidth * 0.5f).coerceIn(22f, 36f).dp
+
     Row(
         modifier = GlanceModifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        ControlSlot {
-            ControlIcon(
-                iconRes = R.drawable.ic_notification_shuffle,
-                description =
-                    if (snapshot.shuffleEnabled) "Shuffle on" else "Shuffle off",
-                tint =
-                    if (snapshot.shuffleEnabled) {
-                        AuralArcStyle.PurpleBright
-                    } else {
-                        AuralArcStyle.TextMuted
-                    },
-                iconSize = sideIconSize,
-                action = WidgetActions.shuffle(context)
-            )
+        if (slots == 5) {
+            ControlSlot {
+                ControlIcon(
+                    iconRes = R.drawable.ic_notification_shuffle,
+                    description =
+                        if (snapshot.shuffleEnabled) "Shuffle on" else "Shuffle off",
+                    tint =
+                        if (snapshot.shuffleEnabled) {
+                            AuralArcStyle.PurpleBright
+                        } else {
+                            AuralArcStyle.TextMuted
+                        },
+                    iconSize = sideIconSize,
+                    action = WidgetActions.shuffle(context)
+                )
+            }
         }
 
-        ControlSlot {
-            ControlIcon(
-                iconRes = R.drawable.ic_widget_skip_previous,
-                description = "Previous",
-                tint = AuralArcStyle.TextPrimary,
-                iconSize = skipIconSize,
-                action = WidgetActions.previous(context)
-            )
+        if (slots >= 3) {
+            ControlSlot {
+                ControlIcon(
+                    iconRes = R.drawable.ic_widget_skip_previous,
+                    description = "Previous",
+                    tint = AuralArcStyle.TextPrimary,
+                    iconSize = skipIconSize,
+                    action = WidgetActions.previous(context)
+                )
+            }
         }
 
         ControlSlot {
             PlayPauseButton(
                 context = context,
                 snapshot = snapshot,
-                circleSize = playCircleSize,
-                iconSize = playIconSize
+                circleSize = circle.dp,
+                iconSize = (circle * 0.58f).dp
             )
         }
 
-        ControlSlot {
-            ControlIcon(
-                iconRes = R.drawable.ic_widget_skip_next,
-                description = "Next",
-                tint = AuralArcStyle.TextPrimary,
-                iconSize = skipIconSize,
-                action = WidgetActions.next(context)
-            )
+        if (slots >= 3) {
+            ControlSlot {
+                ControlIcon(
+                    iconRes = R.drawable.ic_widget_skip_next,
+                    description = "Next",
+                    tint = AuralArcStyle.TextPrimary,
+                    iconSize = skipIconSize,
+                    action = WidgetActions.next(context)
+                )
+            }
         }
 
-        ControlSlot {
-            ControlIcon(
-                iconRes =
-                    if (snapshot.repeatMode == AuralArcRepeatMode.ONE) {
-                        R.drawable.ic_notification_repeat_one
-                    } else {
-                        R.drawable.ic_notification_repeat
-                    },
-                description =
-                    when (snapshot.repeatMode) {
-                        AuralArcRepeatMode.OFF -> "Repeat off"
-                        AuralArcRepeatMode.ALL -> "Repeat all"
-                        AuralArcRepeatMode.ONE -> "Repeat one"
-                    },
-                tint =
-                    if (snapshot.repeatMode == AuralArcRepeatMode.OFF) {
-                        AuralArcStyle.TextMuted
-                    } else {
-                        AuralArcStyle.PurpleBright
-                    },
-                iconSize = sideIconSize,
-                action = WidgetActions.repeat(context)
-            )
+        if (slots == 5) {
+            ControlSlot {
+                ControlIcon(
+                    iconRes =
+                        if (snapshot.repeatMode == AuralArcRepeatMode.ONE) {
+                            R.drawable.ic_notification_repeat_one
+                        } else {
+                            R.drawable.ic_notification_repeat
+                        },
+                    description =
+                        when (snapshot.repeatMode) {
+                            AuralArcRepeatMode.OFF -> "Repeat off"
+                            AuralArcRepeatMode.ALL -> "Repeat all"
+                            AuralArcRepeatMode.ONE -> "Repeat one"
+                        },
+                    tint =
+                        if (snapshot.repeatMode == AuralArcRepeatMode.OFF) {
+                            AuralArcStyle.TextMuted
+                        } else {
+                            AuralArcStyle.PurpleBright
+                        },
+                    iconSize = sideIconSize,
+                    action = WidgetActions.repeat(context)
+                )
+            }
         }
     }
 }
 
-/**
- * Gives each control an equal share of the row so the buttons stay
- * evenly spaced at any widget width.
- */
 @Composable
 private fun RowScope.ControlSlot(
     content: @Composable () -> Unit

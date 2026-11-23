@@ -15,7 +15,7 @@ import androidx.glance.appwidget.provideContent
 class AuralArcSmallWidget : GlanceAppWidget() {
 
     override val sizeMode: SizeMode =
-        SizeMode.Single
+        SizeMode.Exact
 
     override suspend fun provideGlance(
         context: Context,
@@ -26,7 +26,7 @@ class AuralArcSmallWidget : GlanceAppWidget() {
         val snapshot =
             WidgetSnapshot.load(
                 context = context,
-                artworkDp = 52
+                artworkDp = 200
             )
 
         provideContent {
@@ -41,7 +41,7 @@ class AuralArcSmallWidget : GlanceAppWidget() {
 class AuralArcMediumWidget : GlanceAppWidget() {
 
     override val sizeMode: SizeMode =
-        SizeMode.Single
+        SizeMode.Exact
 
     override suspend fun provideGlance(
         context: Context,
@@ -52,7 +52,7 @@ class AuralArcMediumWidget : GlanceAppWidget() {
         val snapshot =
             WidgetSnapshot.load(
                 context = context,
-                artworkDp = 88
+                artworkDp = 200
             )
 
         provideContent {
@@ -67,7 +67,7 @@ class AuralArcMediumWidget : GlanceAppWidget() {
 class AuralArcLargeWidget : GlanceAppWidget() {
 
     override val sizeMode: SizeMode =
-        SizeMode.Single
+        SizeMode.Exact
 
     override suspend fun provideGlance(
         context: Context,
@@ -78,7 +78,7 @@ class AuralArcLargeWidget : GlanceAppWidget() {
         val snapshot =
             WidgetSnapshot.load(
                 context = context,
-                artworkDp = 190
+                artworkDp = 200
             )
 
         provideContent {
