@@ -3,17 +3,30 @@ package com.keiranhaas.auralarc.scanner
 import android.content.Context
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import android.provider.DocumentsContract
 import android.util.Log
-import androidx.documentfile.provider.DocumentFile
 import com.keiranhaas.auralarc.data.MusicTrack
 import com.keiranhaas.auralarc.storage.PickedFolderStore
-import java.io.File
 import com.keiranhaas.auralarc.utils.AudioMetadataReader
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
+import java.io.File
 
 object SafAudioScanner {
 
     private const val TAG =
         "AuralArcSAF"
+
+    /*
+     * Files that are new or changed need their metadata read, which is
+     * slow. Read several at once.
+     */
+    private const val PARALLEL_METADATA_READS =
+        4
 
     private val supportedExtensions =
         setOf(
@@ -33,70 +46,120 @@ object SafAudioScanner {
             "amr"
         )
 
-    fun scan(
+    /** One audio file found in a picked folder. */
+    private class SafEntry(
+        val uri: Uri,
+        val name: String,
+        val size: Long,
+        val modifiedMillis: Long
+    )
+
+    suspend fun scan(
         context: Context,
         cachedTracksByUri: Map<String, MusicTrack> =
             emptyMap()
-    ): List<MusicTrack> {
+    ): List<MusicTrack> =
+        coroutineScope {
+            val entries =
+                mutableListOf<SafEntry>()
 
-        val tracks =
-            mutableListOf<MusicTrack>()
+            PickedFolderStore.getFolderUris(
+                context
+            ).forEach { uriString ->
+                try {
+                    val treeUri =
+                        Uri.parse(
+                            uriString
+                        )
 
-        PickedFolderStore.getFolderUris(
-            context
-        ).forEach { uriString ->
-            try {
-                val rootUri =
-                    Uri.parse(
-                        uriString
+                    collectAudioFiles(
+                        context = context,
+                        treeUri = treeUri,
+                        parentDocumentId =
+                            DocumentsContract.getTreeDocumentId(
+                                treeUri
+                            ),
+                        out = entries,
+                        depth = 0,
+                        isRoot = true
                     )
-
-                val root =
-                    DocumentFile.fromTreeUri(
-                        context,
-                        rootUri
-                    )
-
-                if (
-                    root == null ||
-                    !root.exists() ||
-                    !root.isDirectory
-                ) {
+                } catch (e: Exception) {
                     Log.d(
                         TAG,
-                        "Picked folder unavailable: $uriString"
+                        "Could not scan picked folder: $uriString",
+                        e
                     )
-
-                    return@forEach
                 }
-
-                scanFolder(
-                    context = context,
-                    folder = root,
-                    tracks = tracks,
-                    cachedTracksByUri =
-                        cachedTracksByUri,
-                    depth = 0
-                )
-
-            } catch (e: Exception) {
-                Log.d(
-                    TAG,
-                    "Could not scan picked folder: $uriString",
-                    e
-                )
             }
+
+            val tracks =
+                mutableListOf<MusicTrack>()
+
+            val pending =
+                mutableListOf<Deferred<MusicTrack?>>()
+
+            val gate =
+                Semaphore(
+                    PARALLEL_METADATA_READS
+                )
+
+            entries.forEach { entry ->
+                val cachedTrack =
+                    cachedTracksByUri[
+                        entry.uri.toString()
+                    ]
+
+                if (
+                    cachedTrack != null &&
+                    entry.size > 0L &&
+                    entry.modifiedMillis > 0L &&
+                    cachedTrack.fileSizeBytes ==
+                    entry.size &&
+                    cachedTrack.dateModifiedMillis ==
+                    entry.modifiedMillis
+                ) {
+                    tracks.add(
+                        cachedTrack
+                    )
+                } else {
+                    pending.add(
+                        async(
+                            Dispatchers.IO
+                        ) {
+                            gate.withPermit {
+                                buildTrack(
+                                    context = context,
+                                    entry = entry
+                                )
+                            }
+                        }
+                    )
+                }
+            }
+
+            pending.forEach { job ->
+                job.await()?.let { track ->
+                    tracks.add(
+                        track
+                    )
+                }
+            }
+
+            tracks
         }
 
-        return tracks
-    }
-
-    private fun scanFolder(
+    /**
+     * Lists a folder with ONE query per folder (name, type, size and
+     * date together) instead of several separate queries per file, then
+     * walks into its subfolders.
+     */
+    private fun collectAudioFiles(
         context: Context,
-        folder: DocumentFile,
-        tracks: MutableList<MusicTrack>,
-        cachedTracksByUri: Map<String, MusicTrack>,
-        depth: Int
+        treeUri: Uri,
+        parentDocumentId: String,
+        out: MutableList<SafEntry>,
+        depth: Int,
+        isRoot: Boolean = false
     ) {
         if (
             depth > 25
@@ -104,100 +167,141 @@ object SafAudioScanner {
             return
         }
 
-        val children =
-            try {
-                folder.listFiles()
-            } catch (e: Exception) {
-                Log.d(
-                    TAG,
-                    "Could not list SAF folder: ${folder.uri}",
-                    e
+        val childrenUri =
+            DocumentsContract.buildChildDocumentsUriUsingTree(
+                treeUri,
+                parentDocumentId
+            )
+
+        val projection =
+            arrayOf(
+                DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+                DocumentsContract.Document.COLUMN_MIME_TYPE,
+                DocumentsContract.Document.COLUMN_SIZE,
+                DocumentsContract.Document.COLUMN_LAST_MODIFIED
+            )
+
+        val subfolderIds =
+            mutableListOf<String>()
+
+        try {
+            val cursor =
+                context.contentResolver.query(
+                    childrenUri,
+                    projection,
+                    null,
+                    null,
+                    null
                 )
+
+            if (
+                cursor == null
+            ) {
+                if (
+                    isRoot
+                ) {
+                    Log.d(
+                        TAG,
+                        "Picked folder unavailable: $treeUri"
+                    )
+                }
 
                 return
             }
 
-        children.forEach { file ->
-            try {
-                when {
-                    file.isDirectory -> {
-                        scanFolder(
-                            context = context,
-                            folder = file,
-                            tracks = tracks,
-                            cachedTracksByUri =
-                                cachedTracksByUri,
-                            depth = depth + 1
+            cursor.use { c ->
+                while (
+                    c.moveToNext()
+                ) {
+                    val documentId =
+                        c.getString(0)
+                            ?: continue
+
+                    val name =
+                        c.getString(1).orEmpty()
+
+                    val mimeType =
+                        c.getString(2).orEmpty()
+
+                    if (
+                        mimeType ==
+                        DocumentsContract.Document.MIME_TYPE_DIR
+                    ) {
+                        subfolderIds.add(
+                            documentId
+                        )
+                    } else if (
+                        isSupportedAudioFile(
+                            name
+                        )
+                    ) {
+                        out.add(
+                            SafEntry(
+                                uri =
+                                    DocumentsContract.buildDocumentUriUsingTree(
+                                        treeUri,
+                                        documentId
+                                    ),
+                                name = name,
+                                size =
+                                    if (
+                                        c.isNull(3)
+                                    ) {
+                                        0L
+                                    } else {
+                                        c.getLong(3)
+                                    },
+                                modifiedMillis =
+                                    if (
+                                        c.isNull(4)
+                                    ) {
+                                        0L
+                                    } else {
+                                        c.getLong(4)
+                                    }
+                            )
                         )
                     }
-
-                    file.isFile &&
-                            isSupportedAudioFile(
-                                file.name ?: ""
-                            ) -> {
-                        buildTrack(
-                            context = context,
-                            file = file,
-                            cachedTracksByUri =
-                                cachedTracksByUri
-                        )?.let { track ->
-                            tracks.add(
-                                track
-                            )
-                        }
-                    }
                 }
-            } catch (e: Exception) {
-                Log.d(
-                    TAG,
-                    "Could not scan SAF item: ${file.uri}",
-                    e
-                )
             }
+        } catch (e: Exception) {
+            Log.d(
+                TAG,
+                "Could not list SAF folder: $childrenUri",
+                e
+            )
+
+            return
+        }
+
+        /*
+         * The folder's cursor is closed before descending so only one
+         * is open at a time.
+         */
+        subfolderIds.forEach { subfolderId ->
+            collectAudioFiles(
+                context = context,
+                treeUri = treeUri,
+                parentDocumentId = subfolderId,
+                out = out,
+                depth = depth + 1
+            )
         }
     }
 
     private fun buildTrack(
         context: Context,
-        file: DocumentFile,
-        cachedTracksByUri: Map<String, MusicTrack>
+        entry: SafEntry
     ): MusicTrack? {
         val uri =
-            file.uri
-
-        val uriString =
-            uri.toString()
+            entry.uri
 
         val fileSize =
-            try {
-                file.length()
-            } catch (_: Exception) {
-                0L
-            }
+            entry.size
 
         val modifiedTime =
-            try {
-                file.lastModified()
-            } catch (_: Exception) {
-                0L
-            }
-
-        val cachedTrack =
-            cachedTracksByUri[
-                uriString
-            ]
-
-        if (
-            cachedTrack != null &&
-            fileSize > 0L &&
-            modifiedTime > 0L &&
-            cachedTrack.fileSizeBytes ==
-            fileSize &&
-            cachedTrack.dateModifiedMillis ==
-            modifiedTime
-        ) {
-            return cachedTrack
-        }
+            entry.modifiedMillis
 
         val retriever =
             MediaMetadataRetriever()
@@ -216,8 +320,8 @@ object SafAudioScanner {
                 )
 
                 null
-            } ?: return fallbackTrackFromFile(
-                file
+            } ?: return fallbackTrackFromEntry(
+                entry
             )
 
         return try {
@@ -232,7 +336,9 @@ object SafAudioScanner {
                     )?.takeIf {
                         it.isNotBlank()
                     } ?: cleanTitleFromFileName(
-                        file.name ?: "Unknown Title"
+                        entry.name.ifBlank {
+                            "Unknown Title"
+                        }
                     )
 
                 val artist =
@@ -287,11 +393,11 @@ object SafAudioScanner {
                     AudioMetadataReader.read(
                         context = context,
                         uri = uri,
-                        fallbackName = file.name ?: "",
+                        fallbackName = entry.name,
                         fileSizeBytes = fileSize,
                         dateModifiedMillis = modifiedTime,
                         sourceType = "Picked Folder / SAF",
-                        sourcePath = file.uri.toString()
+                        sourcePath = uri.toString()
                     )
 
                 val id =
@@ -353,8 +459,8 @@ object SafAudioScanner {
                 e
             )
 
-            fallbackTrackFromFile(
-                file
+            fallbackTrackFromEntry(
+                entry
             )
         } finally {
             try {
@@ -364,13 +470,14 @@ object SafAudioScanner {
         }
     }
 
-    private fun fallbackTrackFromFile(
-        file: DocumentFile
+    private fun fallbackTrackFromEntry(
+        entry: SafEntry
     ): MusicTrack? {
         val name =
-            file.name ?: return null
+            entry.name
 
         if (
+            name.isBlank() ||
             !isSupportedAudioFile(
                 name
             )
@@ -379,7 +486,7 @@ object SafAudioScanner {
         }
 
         val uri =
-            file.uri
+            entry.uri
 
         val title =
             cleanTitleFromFileName(

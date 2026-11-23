@@ -913,39 +913,54 @@ fun MusicLibraryView(
 
             return
         }
+        val libraryUnchanged =
+            LibraryRuntimeState.hasCache(
+                source
+            ) &&
+                    withContext(
+                        Dispatchers.Default
+                    ) {
+                        LibraryRuntimeState.getTracks(
+                            source
+                        ) == loadedTracks
+                    }
 
-        LibraryRuntimeState.setTracks(
-            source = source,
-            tracks = loadedTracks
-        )
-
-        withContext(
-            Dispatchers.IO
+        if (
+            !libraryUnchanged
         ) {
-            LibraryCacheStore.saveTracks(
-                context = context.applicationContext,
+            LibraryRuntimeState.setTracks(
                 source = source,
                 tracks = loadedTracks
             )
 
-            AppCacheMaintenance.prune(
-                context =
-                    context.applicationContext,
-                referencedArtworkPaths =
-                    loadedTracks
-                        .mapNotNull { track ->
-                            track.albumArtPath
-                        }
-                        .filter { path ->
-                            !path.startsWith(
-                                "http://"
-                            ) &&
-                                    !path.startsWith(
-                                        "https://"
-                                    )
-                        }
-                        .toSet()
-            )
+            withContext(
+                Dispatchers.IO
+            ) {
+                LibraryCacheStore.saveTracks(
+                    context = context.applicationContext,
+                    source = source,
+                    tracks = loadedTracks
+                )
+
+                AppCacheMaintenance.prune(
+                    context =
+                        context.applicationContext,
+                    referencedArtworkPaths =
+                        loadedTracks
+                            .mapNotNull { track ->
+                                track.albumArtPath
+                            }
+                            .filter { path ->
+                                !path.startsWith(
+                                    "http://"
+                                ) &&
+                                        !path.startsWith(
+                                            "https://"
+                                        )
+                            }
+                            .toSet()
+                )
+            }
         }
 
         LibraryRuntimeState.markRefreshCompleted(

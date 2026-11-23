@@ -6,8 +6,46 @@ import android.net.Uri
 import android.util.Log
 import java.io.File
 import java.io.FileOutputStream
+import java.util.concurrent.ConcurrentHashMap
+
+private val albumArtLocks =
+    ConcurrentHashMap<String, Any>()
 
 fun extractEmbeddedAlbumArt(
+    context: Context,
+    audioUriString: String,
+    trackId: Long,
+    albumId: Long = 0L
+): String? {
+    val key =
+        if (
+            albumId > 0L
+        ) {
+            "album_$albumId"
+        } else {
+            "track_$trackId"
+        }
+
+    val lock =
+        albumArtLocks.getOrPut(
+            key
+        ) {
+            Any()
+        }
+
+    return synchronized(
+        lock
+    ) {
+        extractEmbeddedAlbumArtUnlocked(
+            context = context,
+            audioUriString = audioUriString,
+            trackId = trackId,
+            albumId = albumId
+        )
+    }
+}
+
+fun extractEmbeddedAlbumArtUnlocked(
     context: Context,
     audioUriString: String,
     trackId: Long,

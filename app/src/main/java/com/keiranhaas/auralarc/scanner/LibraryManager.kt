@@ -9,6 +9,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
+import android.os.SystemClock
+import android.util.Log
 
 object LibraryManager {
 
@@ -16,6 +18,9 @@ object LibraryManager {
         context: Context
     ): List<MusicTrack> =
         coroutineScope {
+            val startedAt =
+                SystemClock.elapsedRealtime()
+
             val appContext =
                 context.applicationContext
 
@@ -70,35 +75,28 @@ object LibraryManager {
                 mediaStoreScan.await() +
                         safScan.await()
 
-            applyCleanupFilters(
-                context = appContext,
-                tracks = combined
-            )
-                .sortedWith(
-                    compareBy<MusicTrack> {
-                        it.artist.lowercase()
-                    }.thenBy {
-                        it.album.lowercase()
-                    }.thenBy {
-                        if (
-                            it.discNumber > 0
-                        ) {
-                            it.discNumber
-                        } else {
-                            Int.MAX_VALUE
-                        }
-                    }.thenBy {
-                        if (
-                            it.trackNumber > 0
-                        ) {
-                            it.trackNumber
-                        } else {
-                            Int.MAX_VALUE
-                        }
-                    }.thenBy {
-                        it.title.lowercase()
-                    }
+            val result =
+                applyCleanupFilters(
+                    context = appContext,
+                    tracks = combined
                 )
+                    .map { track ->
+                        TrackSortKey(
+                            track
+                        )
+                    }
+                    .sorted()
+                    .map { key ->
+                        key.track
+                    }
+
+            Log.d(
+                "AuralArc",
+                "Library scan finished: ${result.size} tracks in " +
+                        "${SystemClock.elapsedRealtime() - startedAt} ms"
+            )
+
+            result
         }
 
     private fun applyCleanupFilters(
@@ -196,5 +194,70 @@ object LibraryManager {
                 track.uri
             }
         }
+    }
+}
+
+private class TrackSortKey(
+    val track: MusicTrack
+) : Comparable<TrackSortKey> {
+
+    private val artist =
+        track.artist.lowercase()
+
+    private val album =
+        track.album.lowercase()
+
+    private val disc =
+        if (
+            track.discNumber > 0
+        ) {
+            track.discNumber
+        } else {
+            Int.MAX_VALUE
+        }
+
+    private val number =
+        if (
+            track.trackNumber > 0
+        ) {
+            track.trackNumber
+        } else {
+            Int.MAX_VALUE
+        }
+
+    private val title =
+        track.title.lowercase()
+
+    override fun compareTo(
+        other: TrackSortKey
+    ): Int {
+        var result =
+            artist.compareTo(other.artist)
+
+        if (result != 0) return result
+
+        result =
+            album.compareTo(other.album)
+
+        if (result != 0) return result
+
+        result =
+            disc.compareTo(other.disc)
+
+        if (result != 0) return result
+
+        result =
+            number.compareTo(other.number)
+
+        if (result != 0) return result
+
+        result =
+            title.compareTo(other.title)
+
+        if (result != 0) return result
+
+        return track.uri.compareTo(
+            other.track.uri
+        )
     }
 }
