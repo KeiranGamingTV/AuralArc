@@ -60,7 +60,7 @@ fun NavidromeDiagnosticsScreen(
                 navigationIcon = {
                     AuralArcBackButton(
                         onClick = {
-                            navController.popBackStack()
+                            navController.safePopBackStack()
                         }
                     )
                 }

@@ -192,7 +192,7 @@ fun DrivingModeSettingsScreen(
                     navigationIcon = {
                         AuralArcBackButton(
                             onClick = {
-                                navController.popBackStack()
+                                navController.safePopBackStack()
                             }
                         )
                     }

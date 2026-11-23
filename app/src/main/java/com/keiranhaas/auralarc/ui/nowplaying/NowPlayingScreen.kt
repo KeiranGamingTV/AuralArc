@@ -80,7 +80,8 @@ import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import com.keiranhaas.auralarc.storage.LikedSongsStore
-import com.keiranhaas.auralarc.ui.theme.flyFromMiniPlayerArt
+import com.keiranhaas.auralarc.ui.theme.MorphSlot
+import com.keiranhaas.auralarc.ui.theme.morphSlot
 
 private val DuetSingerOneColor =
     Color(
@@ -187,7 +188,7 @@ fun NowPlayingScreen(
             showLyricsCard =
                 false
         } else {
-            navController.popBackStack()
+            navController.safePopBackStack()
         }
     }
 
@@ -381,7 +382,9 @@ private fun NowPlayingMainContent(
                 .padding(
                     top = 4.dp
                 )
-                .flyFromMiniPlayerArt()
+                .morphSlot(
+                    MorphSlot.NowPlayingArt
+                )
         ) {
             TrackArtwork(
                 albumArtPath =
@@ -415,7 +418,11 @@ private fun NowPlayingMainContent(
                 ) {
                     TrackTitleWithHdBadge(
                         track = currentTrack,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .morphSlot(
+                                MorphSlot.NowPlayingTitle
+                            ),
                         style = MaterialTheme.typography.headlineLarge,
                         color = AuralArcStyle.TextPrimary,
                         fontWeight = FontWeight.Bold,
@@ -435,7 +442,11 @@ private fun NowPlayingMainContent(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         textAlign = TextAlign.Start,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .morphSlot(
+                                MorphSlot.NowPlayingTitle
+                            ),
                     )
                 }
 
@@ -456,7 +467,11 @@ private fun NowPlayingMainContent(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     textAlign = TextAlign.Start,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .morphSlot(
+                            MorphSlot.NowPlayingArtist
+                        )
                 )
             }
 

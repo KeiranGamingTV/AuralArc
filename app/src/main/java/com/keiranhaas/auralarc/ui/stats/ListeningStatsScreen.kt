@@ -152,7 +152,7 @@ fun ListeningStatsScreen(
                 navigationIcon = {
                     AuralArcBackButton(
                         onClick = {
-                            navController.popBackStack()
+                            navController.safePopBackStack()
                         }
                     )
                 }

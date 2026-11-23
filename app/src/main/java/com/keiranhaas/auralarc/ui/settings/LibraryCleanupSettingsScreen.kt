@@ -81,7 +81,7 @@ fun LibraryCleanupSettingsScreen(
                 navigationIcon = {
                     AuralArcBackButton(
                         onClick = {
-                            navController.popBackStack()
+                            navController.safePopBackStack()
                         }
                     )
                 }

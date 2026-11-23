@@ -320,7 +320,7 @@ fun AdvancedAudioScaffold(
                 navigationIcon = {
                     AuralArcBackButton(
                         onClick = {
-                            navController.popBackStack()
+                            navController.safePopBackStack()
                         }
                     )
                 }

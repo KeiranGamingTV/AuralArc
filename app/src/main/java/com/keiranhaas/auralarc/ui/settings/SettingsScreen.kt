@@ -1252,7 +1252,7 @@ private fun BasicSettingsSubScreen(
                 navigationIcon = {
                     AuralArcBackButton(
                         onClick = {
-                            navController.popBackStack()
+                            navController.safePopBackStack()
                         }
                     )
                 }
@@ -1294,7 +1294,7 @@ private fun SettingsMenuScaffold(
                 navigationIcon = {
                     AuralArcBackButton(
                         onClick = {
-                            navController.popBackStack()
+                            navController.safePopBackStack()
                         }
                     )
                 }

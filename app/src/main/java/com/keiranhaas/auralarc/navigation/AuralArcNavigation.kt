@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import com.keiranhaas.auralarc.storage.DrivingModePreferences
 import com.keiranhaas.auralarc.ui.driving.DrivingModeScreen
+import com.keiranhaas.auralarc.ui.theme.MiniPlayerMorphOverlay
 
 @Composable
 fun AuralArcNavigation(
@@ -186,7 +187,7 @@ fun AuralArcNavigation(
                         LaunchedEffect(
                             Unit
                         ) {
-                            navController.popBackStack()
+                            navController.safePopBackStack()
                         }
                     }
                 }
@@ -289,5 +290,8 @@ fun AuralArcNavigation(
                 }
             )
         }
+        MiniPlayerMorphOverlay(
+            navController = navController
+        )
     }
 }

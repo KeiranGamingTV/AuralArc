@@ -108,7 +108,7 @@ fun QueueScreen(
                 navigationIcon = {
                     com.keiranhaas.auralarc.ui.components.AuralArcBackButton(
                         onClick = {
-                            navController.popBackStack()
+                            navController.safePopBackStack()
                         }
                     )
                 },

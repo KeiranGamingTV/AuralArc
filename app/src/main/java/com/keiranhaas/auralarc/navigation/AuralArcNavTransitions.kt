@@ -178,10 +178,21 @@ fun AnimatedContentTransitionScope<NavBackStackEntry>.auralArcPopExit(
     return if (
         initialIsNowPlaying()
     ) {
-        slideOutOfContainer(
-            towards = SlideDirection.Down,
-            animationSpec = navOffsetSpring()
-        )
+        if (
+            targetState.destination.route ==
+            Screen.Library.route
+        ) {
+            fadeOut(
+                animationSpec = tween(
+                    durationMillis = 200
+                )
+            )
+        } else {
+            slideOutOfContainer(
+                towards = SlideDirection.Down,
+                animationSpec = navOffsetSpring()
+            )
+        }
     } else {
         slideOutOfContainer(
             towards = SlideDirection.Right,

@@ -96,7 +96,8 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.material.icons.automirrored.filled.ViewList
 import com.keiranhaas.auralarc.storage.LibraryViewModePreferences
 import com.keiranhaas.auralarc.ui.theme.MiniPlayerMorphState
-import com.keiranhaas.auralarc.ui.theme.captureMiniPlayerArt
+import com.keiranhaas.auralarc.ui.theme.MorphSlot
+import com.keiranhaas.auralarc.ui.theme.morphSlot
 
 private suspend fun loadTracksSafely(
     context: Context
@@ -4817,7 +4818,9 @@ private fun MiniPlayerBar(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
-                    modifier = Modifier.captureMiniPlayerArt()
+                    modifier = Modifier.morphSlot(
+                        MorphSlot.MiniArt
+                    )
                 ) {
                     TrackArtwork(
                         albumArtPath = PlayerManager.currentAlbumArtPath.value,
@@ -4838,10 +4841,14 @@ private fun MiniPlayerBar(
                 ) {
                     Text(
                         text = PlayerManager.currentTitle.value,
+                        style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold,
                         color = AuralArcStyle.TextPrimary,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.morphSlot(
+                            MorphSlot.MiniTitle
+                        )
                     )
 
                     Text(
@@ -4849,7 +4856,10 @@ private fun MiniPlayerBar(
                         style = MaterialTheme.typography.bodyMedium,
                         color = AuralArcStyle.TextSecondary,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.morphSlot(
+                            MorphSlot.MiniArtist
+                        )
                     )
                 }
 

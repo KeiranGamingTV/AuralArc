@@ -86,7 +86,7 @@ fun FolderPickerSettingsScreen(
                 navigationIcon = {
                     AuralArcBackButton(
                         onClick = {
-                            navController.popBackStack()
+                            navController.safePopBackStack()
                         }
                     )
                 }
