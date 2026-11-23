@@ -20,6 +20,7 @@ import com.keiranhaas.auralarc.navigation.Screen
 import com.keiranhaas.auralarc.player.PlayerManager
 import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
+import com.keiranhaas.auralarc.ui.components.PlayPauseIcon
 
 @Composable
 fun PersistentMiniPlayerCard(
@@ -121,24 +122,11 @@ fun PersistentMiniPlayerCard(
                     }
                 }
             ) {
-                Icon(
-                    imageVector =
-                    if (
-                        PlayerManager.isPlaying.value
-                    ) {
-                        Icons.Default.Pause
-                    } else {
-                        Icons.Default.PlayArrow
-                    },
+                PlayPauseIcon(
+                    isPlaying = PlayerManager.isPlaying.value,
+                    tint = AuralArcStyle.TextPrimary,
                     contentDescription =
-                    if (
-                        PlayerManager.isPlaying.value
-                    ) {
-                        "Pause"
-                    } else {
-                        "Play"
-                    },
-                    tint = AuralArcStyle.TextPrimary
+                        if (PlayerManager.isPlaying.value) "Pause" else "Play"
                 )
             }
         }

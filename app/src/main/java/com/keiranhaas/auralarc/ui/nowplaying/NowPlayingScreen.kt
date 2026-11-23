@@ -82,6 +82,8 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import com.keiranhaas.auralarc.storage.LikedSongsStore
 import com.keiranhaas.auralarc.ui.theme.MorphSlot
 import com.keiranhaas.auralarc.ui.theme.morphSlot
+import com.keiranhaas.auralarc.ui.components.PlayPauseIcon
+import com.keiranhaas.auralarc.ui.components.PopIcon
 
 private val DuetSingerOneColor =
     Color(
@@ -506,34 +508,16 @@ private fun NowPlayingMainContent(
                         48.dp
                     )
                 ) {
-                    Icon(
+                    PopIcon(
                         imageVector =
-                            if (
-                                isLiked
-                            ) {
-                                Icons.Default.Favorite
-                            } else {
-                                Icons.Default.FavoriteBorder
-                            },
+                            if (isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                         contentDescription =
-                            if (
-                                isLiked
-                            ) {
-                                "Remove from Liked Songs"
-                            } else {
-                                "Add to Liked Songs"
-                            },
+                            if (isLiked) "Remove from Liked Songs" else "Add to Liked Songs",
                         tint =
-                            if (
-                                isLiked
-                            ) {
-                                AuralArcStyle.PurpleBright
-                            } else {
-                                AuralArcStyle.TextSecondary
-                            },
-                        modifier = Modifier.size(
-                            30.dp
-                        )
+                            if (isLiked) AuralArcStyle.PurpleBright else AuralArcStyle.TextSecondary,
+                        popKey = isLiked,
+                        popEnabled = isLiked,
+                        modifier = Modifier.size(30.dp)
                     )
                 }
             }
@@ -681,17 +665,16 @@ private fun NowPlayingMainContent(
                     )
                 }
             ) {
-                Icon(
+                PopIcon(
                     imageVector = Icons.Default.Shuffle,
                     contentDescription = "Shuffle",
                     tint =
-                    if (
-                        PlaybackState.shuffleEnabled.value
-                    ) {
-                        AuralArcStyle.PurpleBright
-                    } else {
-                        AuralArcStyle.TextMuted
-                    }
+                        if (PlaybackState.shuffleEnabled.value) {
+                            AuralArcStyle.PurpleBright
+                        } else {
+                            AuralArcStyle.TextMuted
+                        },
+                    popKey = PlaybackState.shuffleEnabled.value
                 )
             }
 
@@ -732,27 +715,12 @@ private fun NowPlayingMainContent(
                         72.dp
                     )
                 ) {
-                    Icon(
-                        imageVector =
-                        if (
-                            PlayerManager.isPlaying.value
-                        ) {
-                            Icons.Default.Pause
-                        } else {
-                            Icons.Default.PlayArrow
-                        },
-                        contentDescription =
-                        if (
-                            PlayerManager.isPlaying.value
-                        ) {
-                            "Pause"
-                        } else {
-                            "Play"
-                        },
+                    PlayPauseIcon(
+                        isPlaying = PlayerManager.isPlaying.value,
                         tint = AuralArcStyle.TextPrimary,
-                        modifier = Modifier.size(
-                            42.dp
-                        )
+                        iconSize = 42.dp,
+                        contentDescription =
+                            if (PlayerManager.isPlaying.value) "Pause" else "Play"
                     )
                 }
             }
@@ -785,26 +753,21 @@ private fun NowPlayingMainContent(
                     )
                 }
             ) {
-                Icon(
+                PopIcon(
                     imageVector =
-                    if (
-                        PlaybackState.repeatMode.value ==
-                        AuralArcRepeatMode.ONE
-                    ) {
-                        Icons.Default.RepeatOne
-                    } else {
-                        Icons.Default.Repeat
-                    },
+                        if (PlaybackState.repeatMode.value == AuralArcRepeatMode.ONE) {
+                            Icons.Default.RepeatOne
+                        } else {
+                            Icons.Default.Repeat
+                        },
                     contentDescription = "Repeat",
                     tint =
-                    if (
-                        PlaybackState.repeatMode.value ==
-                        AuralArcRepeatMode.OFF
-                    ) {
-                        AuralArcStyle.TextMuted
-                    } else {
-                        AuralArcStyle.PurpleBright
-                    }
+                        if (PlaybackState.repeatMode.value == AuralArcRepeatMode.OFF) {
+                            AuralArcStyle.TextMuted
+                        } else {
+                            AuralArcStyle.PurpleBright
+                        },
+                    popKey = PlaybackState.repeatMode.value
                 )
             }
         }
@@ -1579,27 +1542,12 @@ private fun LyricsPlaybackBar(
                     }
                 }
             ) {
-                Icon(
-                    imageVector =
-                    if (
-                        PlayerManager.isPlaying.value
-                    ) {
-                        Icons.Default.Pause
-                    } else {
-                        Icons.Default.PlayArrow
-                    },
-                    contentDescription =
-                    if (
-                        PlayerManager.isPlaying.value
-                    ) {
-                        "Pause"
-                    } else {
-                        "Play"
-                    },
+                PlayPauseIcon(
+                    isPlaying = PlayerManager.isPlaying.value,
                     tint = AuralArcStyle.PurpleBright,
-                    modifier = Modifier.size(
-                        28.dp
-                    )
+                    iconSize = 28.dp,
+                    contentDescription =
+                        if (PlayerManager.isPlaying.value) "Pause" else "Play"
                 )
             }
 

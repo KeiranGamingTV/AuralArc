@@ -24,6 +24,7 @@ import com.keiranhaas.auralarc.data.MusicTrack
 import com.keiranhaas.auralarc.player.PlayerManager
 import com.keiranhaas.auralarc.storage.PlaylistStore
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
+import com.keiranhaas.auralarc.ui.components.menuReveal
 
 @Composable
 fun MoreOptionsButton(
@@ -76,6 +77,7 @@ fun MoreOptionsButton(
             }
         ) {
             DropdownMenuItem(
+                modifier = Modifier.menuReveal(N),
                 text = { Text(text = "Add Song to Playlist") },
                 onClick = {
                     expanded =
@@ -95,6 +97,7 @@ fun MoreOptionsButton(
                 showAddAlbumToPlaylist
             ) {
                 DropdownMenuItem(
+                    modifier = Modifier.menuReveal(N),
                     text = { Text(text = "Add Album to Playlist") },
                     onClick = {
                         expanded =
@@ -180,6 +183,7 @@ fun MoreOptionsButton(
                 showAddToQueue
             ) {
                 DropdownMenuItem(
+                    modifier = Modifier.menuReveal(N),
                     text = { Text(text = "Add to Queue") },
                     onClick = {
                         expanded =
@@ -197,6 +201,7 @@ fun MoreOptionsButton(
                 showPlayNext
             ) {
                 DropdownMenuItem(
+                    modifier = Modifier.menuReveal(N),
                     text = { Text(text = "Play Next") },
                     onClick = {
                         expanded =
@@ -211,6 +216,7 @@ fun MoreOptionsButton(
             }
 
             DropdownMenuItem(
+                modifier = Modifier.menuReveal(N),
                 text = { Text(text = "Track Info") },
                 onClick = {
                     expanded =

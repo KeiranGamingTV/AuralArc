@@ -100,6 +100,8 @@ import com.keiranhaas.auralarc.ui.theme.MorphSlot
 import com.keiranhaas.auralarc.ui.theme.morphSlot
 import com.keiranhaas.auralarc.ui.theme.AuralArcStackedTransition
 import com.keiranhaas.auralarc.ui.theme.AuralArcTransitionKind
+import com.keiranhaas.auralarc.ui.components.PlayPauseIcon
+import com.keiranhaas.auralarc.ui.components.menuReveal
 
 private suspend fun loadTracksSafely(
     context: Context
@@ -4628,6 +4630,7 @@ private fun AlbumArtworkMoreOptionsButton(
             }
         ) {
             DropdownMenuItem(
+                modifier = Modifier.menuReveal(N),
                 text = {
                     Text(
                         text = "Add Album Artwork"
@@ -4950,24 +4953,11 @@ private fun MiniPlayerBar(
                             }
                         }
                     ) {
-                        Icon(
-                            imageVector =
-                            if (
-                                PlayerManager.isPlaying.value
-                            ) {
-                                Icons.Default.Pause
-                            } else {
-                                Icons.Default.PlayArrow
-                            },
+                        PlayPauseIcon(
+                            isPlaying = PlayerManager.isPlaying.value,
+                            tint = AuralArcStyle.TextPrimary,
                             contentDescription =
-                            if (
-                                PlayerManager.isPlaying.value
-                            ) {
-                                "Pause"
-                            } else {
-                                "Play"
-                            },
-                            tint = AuralArcStyle.TextPrimary
+                                if (PlayerManager.isPlaying.value) "Pause" else "Play"
                         )
                     }
                 }

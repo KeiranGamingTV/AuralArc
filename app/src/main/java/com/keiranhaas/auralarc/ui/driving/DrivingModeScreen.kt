@@ -68,6 +68,8 @@ import com.keiranhaas.auralarc.storage.LikedSongsStore
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
 import com.keiranhaas.auralarc.utils.ArtworkBitmapLoader
 import com.keiranhaas.auralarc.utils.formatTime
+import com.keiranhaas.auralarc.ui.components.PlayPauseIcon
+import com.keiranhaas.auralarc.ui.components.PopIcon
 
 private val DrivingControlColor =
     Color(0xFF292929)
@@ -435,15 +437,11 @@ private fun DrivingTransportRow(
             modifier = Modifier.size(centerSize),
             background = AuralArcStyle.TextPrimary
         ) {
-            Icon(
-                imageVector = if (isPlaying) {
-                    Icons.Filled.Pause
-                } else {
-                    Icons.Filled.PlayArrow
-                },
-                contentDescription = if (isPlaying) "Pause" else "Play",
+            PlayPauseIcon(
+                isPlaying = isPlaying,
                 tint = Color.Black,
-                modifier = Modifier.size(centerSize * 0.5f)
+                iconSize = centerSize * 0.5f,
+                contentDescription = if (isPlaying) "Pause" else "Play"
             )
         }
 
@@ -505,14 +503,11 @@ private fun DrivingExtrasRow(
             modifier = Modifier.size(buttonSize),
             background = DrivingControlColor
         ) {
-            Icon(
+            PopIcon(
                 imageVector = Icons.Filled.Shuffle,
                 contentDescription = "Shuffle",
-                tint = if (shuffleOn) {
-                    AuralArcStyle.PurpleBright
-                } else {
-                    AuralArcStyle.TextMuted
-                },
+                tint = if (shuffleOn) AuralArcStyle.PurpleBright else AuralArcStyle.TextMuted,
+                popKey = shuffleOn,
                 modifier = Modifier.size(buttonSize * 0.5f)
             )
         }
@@ -529,22 +524,15 @@ private fun DrivingExtrasRow(
             modifier = Modifier.size(buttonSize),
             background = DrivingControlColor
         ) {
-            Icon(
-                imageVector = if (isLiked) {
-                    Icons.Filled.Favorite
-                } else {
-                    Icons.Filled.FavoriteBorder
-                },
-                contentDescription = if (isLiked) {
-                    "Remove from Liked Songs"
-                } else {
-                    "Add to Liked Songs"
-                },
-                tint = if (isLiked) {
-                    AuralArcStyle.PurpleBright
-                } else {
-                    AuralArcStyle.TextMuted
-                },
+            PopIcon(
+                imageVector =
+                    if (isLiked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                contentDescription =
+                    if (isLiked) "Remove from Liked Songs" else "Add to Liked Songs",
+                tint =
+                    if (isLiked) AuralArcStyle.PurpleBright else AuralArcStyle.TextMuted,
+                popKey = isLiked,
+                popEnabled = isLiked,
                 modifier = Modifier.size(buttonSize * 0.5f)
             )
         }
@@ -562,18 +550,21 @@ private fun DrivingExtrasRow(
             modifier = Modifier.size(buttonSize),
             background = DrivingControlColor
         ) {
-            Icon(
-                imageVector = if (repeatMode == AuralArcRepeatMode.ONE) {
-                    Icons.Filled.RepeatOne
-                } else {
-                    Icons.Filled.Repeat
-                },
+            PopIcon(
+                imageVector =
+                    if (repeatMode == AuralArcRepeatMode.ONE) {
+                        Icons.Filled.RepeatOne
+                    } else {
+                        Icons.Filled.Repeat
+                    },
                 contentDescription = "Repeat",
-                tint = if (repeatMode == AuralArcRepeatMode.OFF) {
-                    AuralArcStyle.TextMuted
-                } else {
-                    AuralArcStyle.PurpleBright
-                },
+                tint =
+                    if (repeatMode == AuralArcRepeatMode.OFF) {
+                        AuralArcStyle.TextMuted
+                    } else {
+                        AuralArcStyle.PurpleBright
+                    },
+                popKey = repeatMode,
                 modifier = Modifier.size(buttonSize * 0.5f)
             )
         }

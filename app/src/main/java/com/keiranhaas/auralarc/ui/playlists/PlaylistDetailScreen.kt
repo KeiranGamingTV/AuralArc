@@ -49,6 +49,7 @@ import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import kotlinx.coroutines.launch
 import androidx.compose.animation.animateContentSize
 import com.keiranhaas.auralarc.storage.LikedSongsStore
+import com.keiranhaas.auralarc.ui.components.menuReveal
 
 @Composable
 fun PlaylistDetailScreen(
@@ -878,6 +879,7 @@ private fun PlaylistHeaderOptionsButton(
             }
         ) {
             DropdownMenuItem(
+                modifier = Modifier.menuReveal(N),
                 text = {
                     Text(
                         text =
@@ -902,6 +904,7 @@ private fun PlaylistHeaderOptionsButton(
                 hasCustomArtwork
             ) {
                 DropdownMenuItem(
+                    modifier = Modifier.menuReveal(N),
                     text = { Text(text = "Remove Custom Artwork") },
                     onClick = {
                         menuExpanded =
@@ -916,6 +919,7 @@ private fun PlaylistHeaderOptionsButton(
                 canEdit
             ) {
                 DropdownMenuItem(
+                    modifier = Modifier.menuReveal(N),
                     text = { Text(text = "Rename Playlist") },
                     onClick = {
                         menuExpanded =
@@ -926,6 +930,7 @@ private fun PlaylistHeaderOptionsButton(
                 )
 
                 DropdownMenuItem(
+                    modifier = Modifier.menuReveal(N),
                     text = { Text(text = "Delete Playlist") },
 
                     onClick = {
