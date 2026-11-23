@@ -14,6 +14,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.snapshots.Snapshot
 
 /**
  * Keeps every placed widget in sync with playback.
@@ -36,7 +37,7 @@ object AuralArcWidgetUpdater {
 
     private val scope =
         CoroutineScope(
-            SupervisorJob() + Dispatchers.Default
+            SupervisorJob() + Dispatchers.Main
         )
 
     private var watchJob: Job? =
@@ -63,6 +64,8 @@ object AuralArcWidgetUpdater {
         @Suppress("UNUSED_VARIABLE")
         val warmUpPlaybackState =
             PlaybackState.shuffleEnabled.value
+
+        Snapshot.notifyObjectsInitialized()
 
         watchJob =
             scope.launch {
