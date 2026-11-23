@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import com.keiranhaas.auralarc.storage.EqualizerPreferences
 import kotlin.math.roundToInt
+import kotlin.math.abs
 
 object EqualizerManager {
 
@@ -160,6 +161,53 @@ object EqualizerManager {
                 value
         } catch (_: Exception) {
         }
+
+        PlayerManager.refreshEffectivePlayerVolume()
+    }
+
+    fun applyPreset(
+        context: Context,
+        preset: EqualizerPreset
+    ) {
+        availableBandsHz.forEachIndexed { index, hz ->
+            setBandGainInternal(
+                index = index,
+                gainDb = preset.gainAt(
+                    hz
+                )
+            )
+        }
+
+        EqualizerPreferences.setBandGains(
+            context.applicationContext,
+            bandGainsDb.toList()
+        )
+    }
+
+    fun matchingPresetName(): String {
+        if (
+            bandGainsDb.isEmpty() ||
+            bandGainsDb.size != availableBandsHz.size
+        ) {
+            return "Custom"
+        }
+
+        val match =
+            EqualizerPresets.all.firstOrNull { preset ->
+                availableBandsHz.indices.all { index ->
+                    abs(
+                        bandGainsDb[index] -
+                                preset.gainAt(
+                                    availableBandsHz[index]
+                                ).coerceIn(
+                                    -12f,
+                                    12f
+                                )
+                    ) < 0.3f
+                }
+            }
+
+        return match?.name ?: "Custom"
     }
 
     fun setBandGain(

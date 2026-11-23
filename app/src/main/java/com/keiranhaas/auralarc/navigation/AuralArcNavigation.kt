@@ -279,6 +279,14 @@ fun AuralArcNavigation(
                         navController = navController
                     )
                 }
+
+                composable(
+                    Screen.EqualizerSettings.route
+                ) {
+                    EqualizerSettingsScreen(
+                        navController = navController
+                    )
+                }
             }
         } else {
             DrivingModeScreen(

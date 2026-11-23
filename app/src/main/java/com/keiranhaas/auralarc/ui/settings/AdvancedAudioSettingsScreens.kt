@@ -31,6 +31,7 @@ import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
 import kotlin.math.roundToInt
 import androidx.compose.foundation.background
 import com.keiranhaas.auralarc.player.DirectVolumeControl
+import androidx.compose.material.icons.filled.Equalizer
 
 @Composable
 fun AdvancedAudioMenuScreen(
@@ -40,6 +41,17 @@ fun AdvancedAudioMenuScreen(
         title = "Audio",
         navController = navController
     ) {
+        AudioMenuRow(
+            title = "Equalizer",
+            subtitle = "Presets and per-band tone control.",
+            icon = Icons.Default.Equalizer,
+            onClick = {
+                navController.navigate(
+                    Screen.EqualizerSettings.route
+                )
+            }
+        )
+
         AudioMenuRow(
             title = "Audio Info",
             subtitle = "Detailed info about the current track and audio processing.",

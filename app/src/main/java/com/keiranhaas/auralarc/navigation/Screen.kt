@@ -94,4 +94,8 @@ sealed class Screen(
     object DirectVolumeControlSettings : Screen(
         "direct_volume_control_settings"
     )
+
+    object EqualizerSettings : Screen(
+        "equalizer_settings"
+    )
 }

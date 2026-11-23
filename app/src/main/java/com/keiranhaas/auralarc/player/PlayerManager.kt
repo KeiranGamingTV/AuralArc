@@ -2396,7 +2396,7 @@ object PlayerManager {
             finalVolume
     }
 
-    private fun attachEqualizerToCurrentAudioSession(
+    fun attachEqualizerToCurrentAudioSession(
         context: Context
     ) {
 
