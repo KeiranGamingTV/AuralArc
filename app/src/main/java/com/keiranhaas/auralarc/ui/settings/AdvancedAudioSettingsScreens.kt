@@ -32,6 +32,13 @@ import kotlin.math.roundToInt
 import androidx.compose.foundation.background
 import com.keiranhaas.auralarc.player.DirectVolumeControl
 import androidx.compose.material.icons.filled.Equalizer
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.text.style.TextAlign
+import com.keiranhaas.auralarc.player.AudioSignalPath
+import kotlinx.coroutines.delay
 
 @Composable
 fun AdvancedAudioMenuScreen(
@@ -124,23 +131,74 @@ fun AdvancedAudioMenuScreen(
 fun AudioInfoSettingsScreen(
     navController: NavHostController
 ) {
+    val context =
+        androidx.compose.ui.platform.LocalContext.current
+
+    var tick by remember {
+        mutableIntStateOf(
+            0
+        )
+    }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(
+                1000L
+            )
+
+            tick++
+        }
+    }
+
+    val sourceRows =
+        remember(
+            tick
+        ) {
+            AudioSignalPath.sourceRows(
+                context
+            )
+        }
+
+    val processingRows =
+        remember(
+            tick
+        ) {
+            AudioSignalPath.processingRows(
+                context
+            )
+        }
+
+    val outputRows =
+        remember(
+            tick
+        ) {
+            AudioSignalPath.outputRows(
+                context
+            )
+        }
+
     AdvancedAudioScaffold(
         title = "Audio Info",
         navController = navController
     ) {
-        AudioInfoNotice(
-            title = "Audio Info",
-            message = "The detailed per-track Audio Info screen is opened from More Options on a song. This settings page is for explaining what the info means."
+        SignalPathCard(
+            title = "Source",
+            rows = sourceRows
+        )
+
+        SignalPathCard(
+            title = "Processing",
+            rows = processingRows
+        )
+
+        SignalPathCard(
+            title = "Output",
+            rows = outputRows
         )
 
         AudioInfoNotice(
-            title = "What AuralArc Can Show",
-            message = "AuralArc can show codec, MIME type, bitrate, sample rate, bit depth, channels, file size, source, ReplayGain metadata, and extractor details when Android exposes them."
-        )
-
-        AudioInfoNotice(
-            title = "What Android May Hide",
-            message = "Bluetooth codec, true DAC output, final Android mixer sample rate, and bit-perfect status are not always exposed to normal apps."
+            title = "Per-Song Details",
+            message = "The detailed per-track Audio Info screen is opened from More Options on a song. This page shows what is playing right now."
         )
     }
 }
@@ -564,6 +622,65 @@ fun SliderSetting(
                 onValueChange = onValueChange,
                 valueRange = valueRange
             )
+        }
+    }
+}
+
+@Composable
+private fun SignalPathCard(
+    title: String,
+    rows: List<Pair<String, String>>
+) {
+    AuralArcCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                horizontal = 12.dp,
+                vertical = 7.dp
+            ),
+        backgroundColor =
+            AuralArcStyle.Surface
+    ) {
+        Column(
+            modifier = Modifier.padding(
+                14.dp
+            )
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = AuralArcStyle.TextPrimary
+            )
+
+            rows.forEach { (label, value) ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            top = 6.dp
+                        )
+                ) {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = AuralArcStyle.TextMuted,
+                        modifier = Modifier.width(
+                            130.dp
+                        )
+                    )
+
+                    Text(
+                        text = value,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = AuralArcStyle.TextPrimary,
+                        textAlign = TextAlign.End,
+                        modifier = Modifier.weight(
+                            1f
+                        )
+                    )
+                }
+            }
         }
     }
 }
