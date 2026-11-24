@@ -102,6 +102,8 @@ import com.keiranhaas.auralarc.ui.theme.AuralArcStackedTransition
 import com.keiranhaas.auralarc.ui.theme.AuralArcTransitionKind
 import com.keiranhaas.auralarc.ui.components.PlayPauseIcon
 import com.keiranhaas.auralarc.ui.components.menuReveal
+import com.keiranhaas.auralarc.ui.components.DetailPinnedBar
+import com.keiranhaas.auralarc.ui.components.rememberDetailPinnedAlpha
 
 private suspend fun loadTracksSafely(
     context: Context
@@ -1500,7 +1502,8 @@ fun MusicLibraryView(
 private fun ArtistAlbumsForArtistScreen(
     artistTracks: List<MusicTrack>,
     onAlbumSelected: (String) -> Unit,
-    listState: LazyListState
+    listState: LazyListState,
+    header: @Composable () -> Unit
 ) {
     val albums =
         artistAlbumGroups(
@@ -1511,10 +1514,15 @@ private fun ArtistAlbumsForArtistScreen(
         state = listState,
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
-            top = 6.dp,
             bottom = 12.dp
         )
     ) {
+        item(
+            key = "detail_header"
+        ) {
+            header()
+        }
+
         items(
             items = albums,
             key = { album ->
@@ -1874,38 +1882,6 @@ private fun LibraryTabContent(
 
     val albumDetailListState = rememberLazyListState()
     val artistDetailListState = rememberLazyListState()
-
-    val albumCollapseProgress by remember(
-        albumDetailListState,
-        headerCollapseThresholdPx
-    ) {
-        derivedStateOf {
-            if (albumDetailListState.firstVisibleItemIndex > 0) {
-                1f
-            } else {
-                (
-                        albumDetailListState.firstVisibleItemScrollOffset.toFloat() /
-                                headerCollapseThresholdPx.coerceAtLeast(1)
-                        ).coerceIn(0f, 1f)
-            }
-        }
-    }
-
-    val artistCollapseProgress by remember(
-        artistDetailListState,
-        headerCollapseThresholdPx
-    ) {
-        derivedStateOf {
-            if (artistDetailListState.firstVisibleItemIndex > 0) {
-                1f
-            } else {
-                (
-                        artistDetailListState.firstVisibleItemScrollOffset.toFloat() /
-                                headerCollapseThresholdPx.coerceAtLeast(1)
-                        ).coerceIn(0f, 1f)
-            }
-        }
-    }
 
     val scope =
         rememberCoroutineScope()
@@ -2427,7 +2403,11 @@ private fun LibraryTabContent(
                             }
                             ?.albumArtPath
 
-                    Column {
+                    val albumPinnedAlpha by rememberDetailPinnedAlpha(
+                        albumDetailListState
+                    )
+
+                    val albumHeader: @Composable (Float) -> Unit = { progress ->
                         AlbumDetailHeader(
                             albumName = selectedAlbum,
                             artistName = albumArtistText(
@@ -2442,7 +2422,7 @@ private fun LibraryTabContent(
                                 ?.releaseYear
                                 ?.toString()
                                 ?: "Unknown release date",
-                            collapseProgress = albumCollapseProgress,
+                            collapseProgress = progress,
                             albumArtPath = albumArtPath,
                             showAddArtwork =
                                 librarySource ==
@@ -2475,7 +2455,11 @@ private fun LibraryTabContent(
                                 )
                             }
                         )
+                    }
 
+                    Box(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
                         MusicLibraryScreen(
                             tracks = albumTracks,
                             showAddAlbumToPlaylist = true,
@@ -2497,7 +2481,20 @@ private fun LibraryTabContent(
                                 )
                             },
                             listState = albumDetailListState,
+                            header = {
+                                albumHeader(
+                                    0f
+                                )
+                            }
                         )
+
+                        DetailPinnedBar(
+                            alpha = albumPinnedAlpha
+                        ) {
+                            albumHeader(
+                                1f
+                            )
+                        }
                     }
                 }
 
@@ -2532,7 +2529,11 @@ private fun LibraryTabContent(
                             }
                             ?.albumArtPath
 
-                    Column {
+                    val artistPinnedAlpha by rememberDetailPinnedAlpha(
+                        artistDetailListState
+                    )
+
+                    val artistHeader: @Composable (Float) -> Unit = { progress ->
                         ArtistDetailHeader(
                             artistName = selectedArtist,
                             albumCount = artistAlbumCount,
@@ -2540,7 +2541,7 @@ private fun LibraryTabContent(
                             totalDuration = totalDurationText(
                                 artistTracks
                             ),
-                            collapseProgress = artistCollapseProgress,
+                            collapseProgress = progress,
                             artistArtPath = artistArtPath,
                             onBack = {
                                 onSelectedArtistChange(
@@ -2560,7 +2561,11 @@ private fun LibraryTabContent(
                                 )
                             }
                         )
+                    }
 
+                    Box(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
                         ArtistAlbumsForArtistScreen(
                             artistTracks = artistTracks,
                             onAlbumSelected = { albumName ->
@@ -2569,7 +2574,20 @@ private fun LibraryTabContent(
                                 )
                             },
                             listState = artistDetailListState,
+                            header = {
+                                artistHeader(
+                                    0f
+                                )
+                            }
                         )
+
+                        DetailPinnedBar(
+                            alpha = artistPinnedAlpha
+                        ) {
+                            artistHeader(
+                                1f
+                            )
+                        }
                     }
                 }
 

@@ -84,6 +84,10 @@ import com.keiranhaas.auralarc.ui.theme.MorphSlot
 import com.keiranhaas.auralarc.ui.theme.morphSlot
 import com.keiranhaas.auralarc.ui.components.PlayPauseIcon
 import com.keiranhaas.auralarc.ui.components.PopIcon
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.text.TextStyle
 
 private val DuetSingerOneColor =
     Color(
@@ -94,6 +98,58 @@ private val DuetSingerTwoColor =
     Color(
         0xFFFF5252
     )
+
+@Composable
+private fun DuetLyricText(
+    text: String,
+    style: TextStyle,
+    color: Color,
+    modifier: Modifier = Modifier,
+    fontWeight: FontWeight? = null,
+    textAlign: TextAlign? = null,
+    maxLines: Int = Int.MAX_VALUE,
+    overflow: TextOverflow = TextOverflow.Clip
+) {
+    val needsOutline =
+        color.luminance() < 0.18f
+
+    Box(
+        modifier = modifier
+    ) {
+        if (
+            needsOutline
+        ) {
+            Text(
+                text = text,
+                style = style.copy(
+                    drawStyle = Stroke(
+                        width = 3f,
+                        join = StrokeJoin.Round
+                    )
+                ),
+                color = Color.White.copy(
+                    alpha = color.alpha
+                ),
+                fontWeight = fontWeight,
+                textAlign = textAlign,
+                maxLines = maxLines,
+                overflow = overflow,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        Text(
+            text = text,
+            style = style,
+            color = color,
+            fontWeight = fontWeight,
+            textAlign = textAlign,
+            maxLines = maxLines,
+            overflow = overflow,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
 
 private fun duetColorFromHex(
     hex: String?,
@@ -1172,7 +1228,7 @@ private fun DuetLyricsPreviewRow(
         if (
             row.sharedText.isNotBlank()
         ) {
-            Text(
+            DuetLyricText(
                 text = row.sharedText,
                 style = previewTextStyle,
                 fontWeight = fontWeight,
@@ -1220,7 +1276,7 @@ private fun DuetLyricsPreviewRow(
                     4.dp
                 )
             ) {
-                Text(
+                DuetLyricText(
                     text = row.singerOneText,
                     style = previewTextStyle,
                     fontWeight = fontWeight,
@@ -1253,7 +1309,7 @@ private fun DuetLyricsPreviewRow(
                         )
                 )
 
-                Text(
+                DuetLyricText(
                     text = row.singerTwoText,
                     style = previewTextStyle,
                     fontWeight = fontWeight,
@@ -1852,7 +1908,7 @@ private fun DuetFullLyricsRow(
         if (
             row.sharedText.isNotBlank()
         ) {
-            Text(
+            DuetLyricText(
                 text = row.sharedText,
                 style = sharedTextStyle,
                 fontWeight = activeFontWeight,
@@ -1904,7 +1960,7 @@ private fun DuetFullLyricsRow(
                 ),
                 verticalAlignment = Alignment.Top
             ) {
-                Text(
+                DuetLyricText(
                     text = row.singerOneText,
                     style = singerTextStyle,
                     fontWeight = activeFontWeight,
@@ -1935,7 +1991,7 @@ private fun DuetFullLyricsRow(
                         )
                 )
 
-                Text(
+                DuetLyricText(
                     text = row.singerTwoText,
                     style = singerTextStyle,
                     fontWeight = activeFontWeight,

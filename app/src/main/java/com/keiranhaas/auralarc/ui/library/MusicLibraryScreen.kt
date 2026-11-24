@@ -28,7 +28,8 @@ fun MusicLibraryScreen(
     showAddAlbumToPlaylist: Boolean = false,
     onOpenLyrics: (MusicTrack) -> Unit = {},
     onOpenTrackInfo: (MusicTrack) -> Unit = {},
-    listState: LazyListState? = null
+    listState: LazyListState? = null,
+    header: (@Composable () -> Unit)? = null
 ) {
     val context =
         LocalContext.current
@@ -67,6 +68,17 @@ fun MusicLibraryScreen(
             bottom = 10.dp
         )
     ) {
+        if (
+            header != null
+        ) {
+            item(
+                key = "detail_header",
+                contentType = "detail_header"
+            ) {
+                header()
+            }
+        }
+
         items(
             items = tracks,
             key = { track ->

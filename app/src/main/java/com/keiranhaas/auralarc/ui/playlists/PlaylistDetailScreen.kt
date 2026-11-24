@@ -50,6 +50,8 @@ import kotlinx.coroutines.launch
 import androidx.compose.animation.animateContentSize
 import com.keiranhaas.auralarc.storage.LikedSongsStore
 import com.keiranhaas.auralarc.ui.components.menuReveal
+import com.keiranhaas.auralarc.ui.components.DetailPinnedBar
+import com.keiranhaas.auralarc.ui.components.rememberDetailPinnedAlpha
 
 @Composable
 fun PlaylistDetailScreen(
@@ -273,28 +275,9 @@ fun PlaylistDetailScreen(
     val playlistListState =
         rememberLazyListState()
 
-    val headerCollapseThresholdPx =
-        with(
-            androidx.compose.ui.platform.LocalDensity.current
-        ) {
-            56.dp.roundToPx()
-        }
-
-    val headerCollapseProgress by remember(
-        playlistListState,
-        headerCollapseThresholdPx
-    ) {
-        derivedStateOf {
-            if (playlistListState.firstVisibleItemIndex > 0) {
-                1f
-            } else {
-                (
-                        playlistListState.firstVisibleItemScrollOffset.toFloat() /
-                                headerCollapseThresholdPx.coerceAtLeast(1)
-                        ).coerceIn(0f, 1f)
-            }
-        }
-    }
+    val pinnedAlpha by rememberDetailPinnedAlpha(
+        playlistListState
+    )
 
     val hasCustomArtwork =
         remember(
@@ -348,10 +331,7 @@ fun PlaylistDetailScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
+    val playlistHeader: @Composable (Float) -> Unit = { progress ->
         PlaylistDetailHeader(
             playlist = currentPlaylist,
             tracks = playlistTracks,
@@ -360,7 +340,7 @@ fun PlaylistDetailScreen(
                 playlistTracks
             ),
             canEdit = canEdit,
-            collapseProgress = headerCollapseProgress,
+            collapseProgress = progress,
             artworkRefreshKey = artworkRefreshKey,
             hasCustomArtwork = hasCustomArtwork,
             onBack = onBack,
@@ -401,19 +381,39 @@ fun PlaylistDetailScreen(
                 )
             }
         )
+    }
 
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
         if (
             playlistTracks.isEmpty()
         ) {
-            EmptyPlaylistDetail(
-                librarySource = librarySource
-            )
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                playlistHeader(
+                    0f
+                )
+
+                EmptyPlaylistDetail(
+                    librarySource = librarySource
+                )
+            }
         } else {
             LazyColumn(
                 state = playlistListState,
                 modifier = Modifier
                     .fillMaxSize()
             ) {
+                item(
+                    key = "detail_header"
+                ) {
+                    playlistHeader(
+                        0f
+                    )
+                }
+
                 itemsIndexed(
                     items = playlistTracks
                 ) { index, track ->
@@ -548,6 +548,14 @@ fun PlaylistDetailScreen(
                         }
                     )
                 }
+            }
+
+            DetailPinnedBar(
+                alpha = pinnedAlpha
+            ) {
+                playlistHeader(
+                    1f
+                )
             }
         }
     }
