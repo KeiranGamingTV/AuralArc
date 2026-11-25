@@ -1,5 +1,6 @@
 package com.keiranhaas.auralarc
 
+import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Color
