@@ -86,6 +86,7 @@ fun TrackTitleWithHdBadge(
                 modifier = titleModifier,
                 style = style,
                 color = color,
+                fontWeight = FontWeight.Bold,
                 textAlign = textAlign
             )
         } else {
@@ -94,6 +95,7 @@ fun TrackTitleWithHdBadge(
                 modifier = titleModifier,
                 style = style,
                 color = color,
+                fontWeight = FontWeight.Bold,
                 maxLines = maxLines,
                 overflow = TextOverflow.Ellipsis,
                 textAlign = textAlign
