@@ -20,17 +20,24 @@ data class ReleaseNoteEntry(
     val notes: List<String>
 )
 
-/**
- * The single source of truth for the changelog. Newest version first.
- *
- * To ship a new release: add a new entry at the TOP of this list whose
- * version matches versionName in app/build.gradle. The About screen and
- * the one-time "What's New" pop-up both read from here.
- */
 object ReleaseNotes {
 
     val entries: List<ReleaseNoteEntry> =
         listOf(
+            ReleaseNoteEntry(
+                version = "1.4",
+                notes = listOf(
+                    "Added an Equalizer screen with presets.",
+                    "Added Sound Effects: Bass Boost, Virtualizer, and Loudness Boost.",
+                    "Added Crossfade between songs, with a Fade mode and an Overlap mode. You can set the length from 1 to 12 seconds.",
+                    "Added Direct Volume Control.",
+                    "Added audio output info (Signal Path) so you can see how your audio is being processed and where it's going.",
+                    "Fixed ReplayGain not being applied correctly.",
+                    "Duet LRC lyrics now have an outline so dark-colored lyrics stay readable.",
+                    "Fixed scrolling on album, artist, and playlist screens, and the top bar now stays pinned while you scroll.",
+                    "Cleaned up the app's code: removed unused code and files, and fixed a large number of warnings for better stability and a smaller app."
+                )
+            ),
             ReleaseNoteEntry(
                 version = "1.3.1",
                 notes = listOf(
