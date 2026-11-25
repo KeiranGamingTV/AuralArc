@@ -9,14 +9,6 @@ import com.keiranhaas.auralarc.storage.LibraryCacheStore
 
 object NavidromePlaylistManager {
 
-    fun loadPlaylists(
-        context: Context
-    ): List<Playlist> {
-        return loadPlaylistsOrNull(
-            context
-        ) ?: emptyList()
-    }
-
     fun loadPlaylistsOrNull(
         context: Context
     ): List<Playlist>? {

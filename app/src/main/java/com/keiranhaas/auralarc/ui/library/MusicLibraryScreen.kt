@@ -1,8 +1,17 @@
 package com.keiranhaas.auralarc.ui
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -10,7 +19,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.keiranhaas.auralarc.data.MusicTrack
@@ -19,14 +27,11 @@ import com.keiranhaas.auralarc.player.QueueManager
 import com.keiranhaas.auralarc.storage.AppearancePreferences
 import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.rememberLazyListState
 
 @Composable
 fun MusicLibraryScreen(
     tracks: List<MusicTrack>,
     showAddAlbumToPlaylist: Boolean = false,
-    onOpenLyrics: (MusicTrack) -> Unit = {},
     onOpenTrackInfo: (MusicTrack) -> Unit = {},
     listState: LazyListState? = null,
     header: (@Composable () -> Unit)? = null
@@ -106,11 +111,6 @@ fun MusicLibraryScreen(
                         queueTracks = QueueManager.getQueue()
                     )
                 },
-                onOpenLyrics = {
-                    onOpenLyrics(
-                        track
-                    )
-                },
                 onOpenTrackInfo = {
                     onOpenTrackInfo(
                         track
@@ -129,7 +129,6 @@ private fun MusicTrackRow(
     compactRows: Boolean,
     showArtwork: Boolean,
     onClick: () -> Unit,
-    onOpenLyrics: () -> Unit,
     onOpenTrackInfo: () -> Unit
 ) {
     val rowPadding =
@@ -205,9 +204,7 @@ private fun MusicTrackRow(
                     MaterialTheme.typography.bodyLarge,
                     color =
                     AuralArcStyle.TextPrimary,
-                    fontWeight = FontWeight.Bold,
                     maxLines = 1,
-                    fillTitleWeight = true
                 )
 
                 Text(
@@ -229,9 +226,6 @@ private fun MusicTrackRow(
                 track = track,
                 queueTracks = queueTracks,
                 showAddAlbumToPlaylist = showAddAlbumToPlaylist,
-                onOpenLyrics = {
-                    onOpenLyrics()
-                },
                 onOpenTrackInfo = {
                     onOpenTrackInfo()
                 }

@@ -10,29 +10,6 @@ object FolderPreferences {
     private const val KEY_FOLDERS =
         "folders"
 
-    fun saveFolders(
-        context: Context,
-        folders: List<String>
-    ) {
-
-        val cleanedFolders =
-            folders.filter { folder ->
-                folder in FolderManager.allowedFolders
-            }
-                .toSet()
-
-        context.getSharedPreferences(
-            PREFS_NAME,
-            Context.MODE_PRIVATE
-        )
-            .edit()
-            .putStringSet(
-                KEY_FOLDERS,
-                cleanedFolders
-            )
-            .apply()
-    }
-
     fun loadFolders(
         context: Context
     ): MutableList<String> {

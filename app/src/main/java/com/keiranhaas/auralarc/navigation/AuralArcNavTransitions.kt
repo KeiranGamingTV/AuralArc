@@ -15,7 +15,7 @@ import com.keiranhaas.auralarc.ui.theme.AuralArcMotion
 import com.keiranhaas.auralarc.ui.theme.MiniPlayerMorphState
 
 private fun navOffsetSpring() =
-    spring<IntOffset>(
+    spring(
         dampingRatio =
             AuralArcMotion.NAV_DAMPING_RATIO,
         stiffness =

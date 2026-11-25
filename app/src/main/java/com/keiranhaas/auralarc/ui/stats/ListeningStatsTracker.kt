@@ -3,6 +3,7 @@ package com.keiranhaas.auralarc.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -80,19 +81,19 @@ fun ListeningStatsTracker() {
     }
 
     var lastPosition by remember {
-        mutableStateOf(
+        mutableLongStateOf(
             0L
         )
     }
 
     var lastDuration by remember {
-        mutableStateOf(
+        mutableLongStateOf(
             0L
         )
     }
 
     var pendingListeningMillis by remember {
-        mutableStateOf(
+        mutableLongStateOf(
             0L
         )
     }
@@ -145,12 +146,9 @@ fun ListeningStatsTracker() {
                             ) /
                     10L
 
-        val newTrack =
-            currentTrack
-
         if (
             oldTrack != null &&
-            oldUri != newTrack?.uri &&
+            oldUri != currentTrack?.uri &&
             (
                     pendingOldListening >
                             0L ||
@@ -176,10 +174,10 @@ fun ListeningStatsTracker() {
         }
 
         trackedTrack =
-            newTrack
+            currentTrack
 
         trackedUri =
-            newTrack?.uri
+            currentTrack?.uri
 
         lastPosition =
             position
@@ -200,12 +198,12 @@ fun ListeningStatsTracker() {
             isPlaying
 
         if (
-            newTrack != null
+            currentTrack != null
         ) {
             enqueueStatsWrite {
                 ListeningStatsStore.recordTrackSeen(
                     context,
-                    newTrack
+                    currentTrack
                 )
             }
         }

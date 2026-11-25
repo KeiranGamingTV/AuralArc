@@ -1,7 +1,7 @@
 package com.keiranhaas.auralarc.navidrome
 
 import java.security.MessageDigest
-import java.util.*
+import java.util.UUID
 
 object NavidromeAuth {
 

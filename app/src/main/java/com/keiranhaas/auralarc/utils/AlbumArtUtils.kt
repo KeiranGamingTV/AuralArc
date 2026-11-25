@@ -171,9 +171,3 @@ fun clearCachedEmbeddedAlbumArt(
     } catch (_: Exception) {
     }
 }
-
-fun albumArtUri(
-    albumId: Long
-): Uri? {
-    return null
-}

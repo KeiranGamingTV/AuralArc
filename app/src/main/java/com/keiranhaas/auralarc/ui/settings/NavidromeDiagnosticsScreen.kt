@@ -11,24 +11,29 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.ui.graphics.Color
-import com.keiranhaas.auralarc.ui.components.AuralArcBackButton
-import com.keiranhaas.auralarc.ui.components.AuralArcTopBar
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.keiranhaas.auralarc.navidrome.NavidromeClient
+import com.keiranhaas.auralarc.navidrome.DiagnosticsSection
+import com.keiranhaas.auralarc.navidrome.NavidromeDiagnostics
 import com.keiranhaas.auralarc.navidrome.NavidromePreferences
+import com.keiranhaas.auralarc.ui.components.AuralArcBackButton
 import com.keiranhaas.auralarc.ui.components.AuralArcCard
+import com.keiranhaas.auralarc.ui.components.AuralArcTopBar
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.keiranhaas.auralarc.navidrome.DiagnosticsSection
-import com.keiranhaas.auralarc.navidrome.NavidromeDiagnostics
 
 @Composable
 fun NavidromeDiagnosticsScreen(

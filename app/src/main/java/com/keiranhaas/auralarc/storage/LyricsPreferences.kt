@@ -59,23 +59,6 @@ object LyricsPreferences {
             )
     }
 
-    fun setLyricsFolderUri(
-        context: Context,
-        uri: String
-    ) {
-        context.applicationContext
-            .getSharedPreferences(
-                PREFERENCES_NAME,
-                Context.MODE_PRIVATE
-            )
-            .edit()
-            .putString(
-                KEY_LYRICS_FOLDER_URI,
-                uri
-            )
-            .apply()
-    }
-
     fun clearLyricsFolderUri(
         context: Context
     ) {

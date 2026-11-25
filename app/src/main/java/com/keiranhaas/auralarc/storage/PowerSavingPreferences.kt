@@ -1,7 +1,6 @@
 package com.keiranhaas.auralarc.storage
 
 import android.content.Context
-import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 
 object PowerSavingPreferences {
@@ -10,9 +9,6 @@ object PowerSavingPreferences {
     private const val KEY_ENABLED = "enabled"
 
     private val _enabledState = mutableStateOf(false)
-
-    val enabledState: State<Boolean>
-        get() = _enabledState
 
     @Volatile
     private var initialized = false

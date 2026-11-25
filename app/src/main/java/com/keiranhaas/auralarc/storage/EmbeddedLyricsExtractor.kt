@@ -34,8 +34,7 @@ object EmbeddedLyricsExtractor {
                 trackUri
             )?.use { inputStream ->
                 readMaxBytes(
-                    inputStream,
-                    MAX_READ_BYTES
+                    inputStream
                 )
             } ?: return null
 
@@ -91,8 +90,7 @@ object EmbeddedLyricsExtractor {
     }
 
     private fun readMaxBytes(
-        inputStream: InputStream,
-        maxBytes: Int
+        inputStream: InputStream
     ): ByteArray {
         val output =
             ByteArrayOutputStream()
@@ -106,12 +104,12 @@ object EmbeddedLyricsExtractor {
             0
 
         while (
-            totalRead < maxBytes
+            totalRead < MAX_READ_BYTES
         ) {
             val allowedRead =
                 minOf(
                     buffer.size,
-                    maxBytes - totalRead
+                    MAX_READ_BYTES - totalRead
                 )
 
             val read =
@@ -688,8 +686,7 @@ object EmbeddedLyricsExtractor {
                         data.copyOfRange(
                             blockStart,
                             blockEnd
-                        ),
-                        "FLAC Vorbis Comment"
+                        )
                     )
 
                 if (
@@ -713,14 +710,10 @@ object EmbeddedLyricsExtractor {
     }
 
     private fun parseVorbisCommentBlock(
-        block: ByteArray,
-        source: String
+        block: ByteArray
     ): EmbeddedLyricsResult? {
-        var position =
-            0
-
         if (
-            position + 4 > block.size
+            block.size < 4
         ) {
             return null
         }
@@ -728,10 +721,10 @@ object EmbeddedLyricsExtractor {
         val vendorLength =
             readInt32LittleEndian(
                 block,
-                position
+                0
             )
 
-        position +=
+        var position =
             4 + vendorLength
 
         if (
@@ -837,7 +830,7 @@ object EmbeddedLyricsExtractor {
                 EmbeddedLyricsResult(
                     text = value,
                     type = type,
-                    source = source
+                    source = "FLAC Vorbis Comment"
                 )
 
             if (
@@ -973,8 +966,7 @@ object EmbeddedLyricsExtractor {
                 }
 
             if (
-                childStart >= 0 &&
-                childStart < boxEnd
+                childStart in 0 until boxEnd
             ) {
                 val childResult =
                     parseMp4Boxes(

@@ -10,9 +10,6 @@ object AdvancedAudioPreferences {
     const val REPLAY_GAIN_OFF =
         "off"
 
-    const val REPLAY_GAIN_APPLY =
-        "apply"
-
     const val REPLAY_GAIN_PREVENT_CLIPPING =
         "prevent_clipping"
 
@@ -65,15 +62,6 @@ object AdvancedAudioPreferences {
             OUTPUT_CHROMECAST to "Chromecast Output"
         )
 
-    val outputDeviceTypes =
-        listOf(
-            "Wired Headset/AUX",
-            "Speaker",
-            "Bluetooth",
-            "USB DAC",
-            "Other Output Devices"
-        )
-
     private fun prefs(
         context: Context
     ) =
@@ -92,20 +80,6 @@ object AdvancedAudioPreferences {
             REPLAY_GAIN_OFF
         ) ?: REPLAY_GAIN_OFF
 
-    fun setReplayGainMode(
-        context: Context,
-        mode: String
-    ) {
-        prefs(
-            context
-        ).edit()
-            .putString(
-                "replay_gain_mode",
-                mode
-            )
-            .apply()
-    }
-
     fun getReplayGainSource(
         context: Context
     ): String =
@@ -115,20 +89,6 @@ object AdvancedAudioPreferences {
             "replay_gain_source",
             REPLAY_GAIN_SOURCE_ALBUM
         ) ?: REPLAY_GAIN_SOURCE_ALBUM
-
-    fun setReplayGainSource(
-        context: Context,
-        source: String
-    ) {
-        prefs(
-            context
-        ).edit()
-            .putString(
-                "replay_gain_source",
-                source
-            )
-            .apply()
-    }
 
     fun getReplayGainPreamp(
         context: Context
@@ -140,23 +100,6 @@ object AdvancedAudioPreferences {
             0f
         )
 
-    fun setReplayGainPreamp(
-        context: Context,
-        value: Float
-    ) {
-        prefs(
-            context
-        ).edit()
-            .putFloat(
-                "replay_gain_preamp",
-                value.coerceIn(
-                    -12f,
-                    12f
-                )
-            )
-            .apply()
-    }
-
     fun getNoReplayGainPreamp(
         context: Context
     ): Float =
@@ -166,23 +109,6 @@ object AdvancedAudioPreferences {
             "no_replay_gain_preamp",
             0f
         )
-
-    fun setNoReplayGainPreamp(
-        context: Context,
-        value: Float
-    ) {
-        prefs(
-            context
-        ).edit()
-            .putFloat(
-                "no_replay_gain_preamp",
-                value.coerceIn(
-                    -12f,
-                    12f
-                )
-            )
-            .apply()
-    }
 
     fun getResumeAfterCall(
         context: Context
@@ -290,20 +216,6 @@ object AdvancedAudioPreferences {
             RESAMPLER_SW_HIGH_QUALITY
         ) ?: RESAMPLER_SW_HIGH_QUALITY
 
-    fun setResamplerType(
-        context: Context,
-        value: String
-    ) {
-        prefs(
-            context
-        ).edit()
-            .putString(
-                "resampler_type",
-                value
-            )
-            .apply()
-    }
-
     fun getResamplerCutoff(
         context: Context
     ): Float =
@@ -314,23 +226,6 @@ object AdvancedAudioPreferences {
             97f
         )
 
-    fun setResamplerCutoff(
-        context: Context,
-        value: Float
-    ) {
-        prefs(
-            context
-        ).edit()
-            .putFloat(
-                "resampler_cutoff",
-                value.coerceIn(
-                    80f,
-                    100f
-                )
-            )
-            .apply()
-    }
-
     fun getDither(
         context: Context
     ): String =
@@ -340,20 +235,6 @@ object AdvancedAudioPreferences {
             "dither",
             ditherOptions.first()
         ) ?: ditherOptions.first()
-
-    fun setDither(
-        context: Context,
-        value: String
-    ) {
-        prefs(
-            context
-        ).edit()
-            .putString(
-                "dither",
-                value
-            )
-            .apply()
-    }
 
     fun getDvcEnabled(
         context: Context
@@ -439,61 +320,4 @@ object AdvancedAudioPreferences {
             "selected_output_plugin",
             OUTPUT_AUDIOTRACK
         ) ?: OUTPUT_AUDIOTRACK
-
-    fun setSelectedOutputPlugin(
-        context: Context,
-        plugin: String
-    ) {
-        prefs(
-            context
-        ).edit()
-            .putString(
-                "selected_output_plugin",
-                plugin
-            )
-            .apply()
-    }
-
-    fun getOutputDeviceEnabled(
-        context: Context,
-        plugin: String,
-        device: String
-    ): Boolean {
-        val defaultEnabled =
-            when (
-                device
-            ) {
-                "Speaker",
-                "Wired Headset/AUX",
-                "Other Output Devices" ->
-                    true
-
-                else ->
-                    false
-            }
-
-        return prefs(
-            context
-        ).getBoolean(
-            "output_${plugin}_${device}",
-            defaultEnabled
-        )
-    }
-
-    fun setOutputDeviceEnabled(
-        context: Context,
-        plugin: String,
-        device: String,
-        enabled: Boolean
-    ) {
-        prefs(
-            context
-        ).edit()
-            .putBoolean(
-                "output_${plugin}_${device}",
-                enabled
-            )
-            .apply()
-    }
-
 }

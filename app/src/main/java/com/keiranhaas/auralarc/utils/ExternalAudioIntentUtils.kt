@@ -26,7 +26,7 @@ fun getAudioUriFromIntent(
 
         Intent.ACTION_SEND -> {
             @Suppress("DEPRECATION")
-            intent.getParcelableExtra<Uri>(
+            intent.getParcelableExtra(
                 Intent.EXTRA_STREAM
             )
         }

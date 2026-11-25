@@ -1,9 +1,9 @@
 package com.keiranhaas.auralarc.ui
 
-import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -15,22 +15,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.keiranhaas.auralarc.ui.components.AuralArcCard
+import com.keiranhaas.auralarc.ui.theme.AuralArcCrossfade
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
 import com.keiranhaas.auralarc.utils.ArtworkBitmapLoader
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.layout.fillMaxSize
-import com.keiranhaas.auralarc.ui.components.AuralArcCard
-import com.keiranhaas.auralarc.ui.theme.AuralArcMotion
-import com.keiranhaas.auralarc.ui.theme.AuralArcCrossfade
-import androidx.compose.ui.graphics.Shape
 
 @Composable
 fun TrackArtwork(
@@ -62,7 +57,7 @@ fun TrackArtwork(
         artworkKey,
         targetSizePx
     ) {
-        mutableStateOf<Bitmap?>(
+        mutableStateOf(
             ArtworkBitmapLoader.peek(
                 artworkPath =
                     artworkKey,

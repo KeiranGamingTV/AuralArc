@@ -140,23 +140,8 @@ object AuralArcStyle {
      * ------------------------------------------------------------------------
      */
 
-    val ScreenHorizontalPadding =
-        16.dp
-
     val CardPadding =
         16.dp
-
-    val CompactCardPadding =
-        12.dp
-
-    val ListItemVerticalPadding =
-        8.dp
-
-    val IconButtonSize =
-        48.dp
-
-    val SmallArtworkSize =
-        54.dp
 
     /*
      * ------------------------------------------------------------------------
@@ -178,25 +163,6 @@ object AuralArcStyle {
             colors = listOf(
                 BackgroundTop,
                 BackgroundBottom
-            )
-        )
-    }
-
-    fun artworkBrush(): Brush {
-        if (PowerSavingPreferences.isEnabled()) {
-            return Brush.linearGradient(
-                colors = listOf(
-                    Color.Black,
-                    Color.Black
-                )
-            )
-        }
-
-        return Brush.linearGradient(
-            colors = listOf(
-                PurpleBright,
-                Purple,
-                PurpleDark
             )
         )
     }

@@ -15,9 +15,6 @@ object AppearancePreferences {
     private const val KEY_SHOW_ARTWORK =
         "show_artwork"
 
-    private const val KEY_SHOW_DURATION =
-        "show_duration"
-
     private const val KEY_DEFAULT_TAB =
         "default_tab"
 
@@ -90,33 +87,6 @@ object AppearancePreferences {
             .apply()
     }
 
-    fun getShowDuration(
-        context: Context
-    ): Boolean {
-        return context.getSharedPreferences(
-            PREFS_NAME,
-            Context.MODE_PRIVATE
-        ).getBoolean(
-            KEY_SHOW_DURATION,
-            true
-        )
-    }
-
-    fun setShowDuration(
-        context: Context,
-        enabled: Boolean
-    ) {
-        context.getSharedPreferences(
-            PREFS_NAME,
-            Context.MODE_PRIVATE
-        ).edit()
-            .putBoolean(
-                KEY_SHOW_DURATION,
-                enabled
-            )
-            .apply()
-    }
-
     fun getDefaultTab(
         context: Context
     ): String {
@@ -127,21 +97,6 @@ object AppearancePreferences {
             KEY_DEFAULT_TAB,
             "ALBUMS"
         ) ?: "ALBUMS"
-    }
-
-    fun setDefaultTab(
-        context: Context,
-        tabName: String
-    ) {
-        context.getSharedPreferences(
-            PREFS_NAME,
-            Context.MODE_PRIVATE
-        ).edit()
-            .putString(
-                KEY_DEFAULT_TAB,
-                tabName
-            )
-            .apply()
     }
 
     fun initializePageAnimations(
@@ -166,16 +121,6 @@ object AppearancePreferences {
 
         pageAnimationsInitialized =
             true
-    }
-
-    fun getPageAnimationsEnabled(
-        context: Context
-    ): Boolean {
-        initializePageAnimations(
-            context
-        )
-
-        return pageAnimationsEnabledState.value
     }
 
     fun setPageAnimationsEnabled(

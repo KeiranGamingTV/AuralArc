@@ -2,12 +2,11 @@ package com.keiranhaas.auralarc.storage
 
 import android.content.Context
 import android.net.Uri
+import android.provider.DocumentsContract
 import android.provider.MediaStore
 import androidx.documentfile.provider.DocumentFile
 import com.keiranhaas.auralarc.data.MusicTrack
 import java.io.File
-import android.provider.DocumentsContract
-import java.util.concurrent.ConcurrentHashMap
 
 object LrcLyricsFinder {
 
@@ -36,11 +35,6 @@ object LrcLyricsFinder {
     private val indexLock =
         Any()
 
-    private val whitespaceRegex =
-        Regex(
-            """\s+"""
-        )
-
     fun invalidateIndex() {
         synchronized(
             indexLock
@@ -48,32 +42,6 @@ object LrcLyricsFinder {
             cachedIndex =
                 null
         }
-    }
-
-    fun findLyricsForTrack(
-        context: Context,
-        track: MusicTrack
-    ): EmbeddedLyricsResult? {
-        return findLyricsForTrackQuick(
-            context = context,
-            track = track
-        ) ?: findLyricsForTrackIndexed(
-            context = context,
-            track = track
-        )
-    }
-
-    fun findDuetLyricsForTrack(
-        context: Context,
-        track: MusicTrack
-    ): EmbeddedLyricsResult? {
-        return findDuetLyricsForTrackQuick(
-            context = context,
-            track = track
-        ) ?: findDuetLyricsForTrackIndexed(
-            context = context,
-            track = track
-        )
     }
 
     /*

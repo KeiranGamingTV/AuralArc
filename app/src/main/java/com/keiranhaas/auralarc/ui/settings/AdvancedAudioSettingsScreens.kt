@@ -1,44 +1,55 @@
 package com.keiranhaas.auralarc.ui
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.filled.Equalizer
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SurroundSound
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.ui.graphics.Color
-import com.keiranhaas.auralarc.ui.components.AuralArcBackButton
-import com.keiranhaas.auralarc.ui.components.AuralArcTopBar
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.SurroundSound
-import androidx.compose.material.icons.automirrored.filled.VolumeUp
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.keiranhaas.auralarc.navigation.Screen
+import com.keiranhaas.auralarc.player.AudioSignalPath
+import com.keiranhaas.auralarc.player.DirectVolumeControl
 import com.keiranhaas.auralarc.storage.AdvancedAudioPreferences
+import com.keiranhaas.auralarc.ui.components.AuralArcBackButton
 import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import com.keiranhaas.auralarc.ui.components.AuralArcSlider
 import com.keiranhaas.auralarc.ui.components.AuralArcSwitch
+import com.keiranhaas.auralarc.ui.components.AuralArcTopBar
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
-import kotlin.math.roundToInt
-import androidx.compose.foundation.background
-import com.keiranhaas.auralarc.player.DirectVolumeControl
-import androidx.compose.material.icons.filled.Equalizer
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.width
-import androidx.compose.ui.text.style.TextAlign
-import com.keiranhaas.auralarc.player.AudioSignalPath
 import kotlinx.coroutines.delay
+import kotlin.math.roundToInt
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun AdvancedAudioMenuScreen(
@@ -143,7 +154,7 @@ fun AudioInfoSettingsScreen(
     LaunchedEffect(Unit) {
         while (true) {
             delay(
-                1000L
+                1000.milliseconds
             )
 
             tick++
@@ -332,7 +343,7 @@ fun DirectVolumeControlSettingsScreen(
     }
 
     var preampReduction by remember {
-        mutableStateOf(
+        mutableFloatStateOf(
             AdvancedAudioPreferences.getDvcPreampReduction(
                 context
             )

@@ -60,9 +60,7 @@ object PlaylistTransferManager {
                 rawLine.trim()
 
             when {
-                line.isBlank() -> {
-                    Unit
-                }
+                line.isBlank() -> Unit
 
                 line.startsWith(
                     "#EXTINF:",
@@ -76,9 +74,7 @@ object PlaylistTransferManager {
 
                 line.startsWith(
                     "#"
-                ) -> {
-                    Unit
-                }
+                ) -> Unit
 
                 else -> {
                     val resolvedTrack =

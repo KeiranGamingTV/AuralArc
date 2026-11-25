@@ -42,9 +42,7 @@ object LibraryCacheStore {
             cachedObject as? List<*>
                 ?: return null
 
-        return cachedList.mapNotNull { item ->
-            item as? MusicTrack
-        }
+        return cachedList.filterIsInstance<MusicTrack>()
     }
 
     fun saveTracks(
@@ -65,19 +63,6 @@ object LibraryCacheStore {
         )
     }
 
-    fun clearTracks(
-        context: Context,
-        source: LibrarySource
-    ) {
-        try {
-            trackCacheFile(
-                context = context,
-                source = source
-            ).delete()
-        } catch (_: Exception) {
-        }
-    }
-
     fun loadNavidromePlaylists(
         context: Context
     ): List<Playlist>? {
@@ -92,9 +77,7 @@ object LibraryCacheStore {
             cachedObject as? List<*>
                 ?: return null
 
-        return cachedList.mapNotNull { item ->
-            item as? Playlist
-        }
+        return cachedList.filterIsInstance<Playlist>()
     }
 
     fun saveNavidromePlaylists(

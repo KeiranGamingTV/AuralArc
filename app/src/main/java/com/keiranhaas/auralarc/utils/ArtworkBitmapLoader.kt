@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.SystemClock
 import android.util.LruCache
+import com.keiranhaas.auralarc.storage.PowerSavingPreferences
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
@@ -19,7 +20,6 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
 import java.util.concurrent.ConcurrentHashMap
-import com.keiranhaas.auralarc.storage.PowerSavingPreferences
 
 object ArtworkBitmapLoader {
 

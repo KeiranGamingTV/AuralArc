@@ -6,29 +6,35 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.keiranhaas.auralarc.data.MusicTrack
-import com.keiranhaas.auralarc.player.PlayerManager
-import com.keiranhaas.auralarc.storage.PlaylistStore
-import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
-import com.keiranhaas.auralarc.ui.components.menuReveal
-import androidx.compose.material3.MaterialTheme
 import com.keiranhaas.auralarc.data.Playlist
 import com.keiranhaas.auralarc.data.TrackIdentity
 import com.keiranhaas.auralarc.navidrome.NavidromePlaylistManager
+import com.keiranhaas.auralarc.player.PlayerManager
+import com.keiranhaas.auralarc.storage.PlaylistStore
+import com.keiranhaas.auralarc.ui.components.menuReveal
+import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -41,7 +47,6 @@ fun MoreOptionsButton(
     showAddAlbumToPlaylist: Boolean = true,
     showAddToQueue: Boolean = true,
     showPlayNext: Boolean = true,
-    onOpenLyrics: ((MusicTrack) -> Unit)? = null,
     onOpenTrackInfo: ((MusicTrack) -> Unit)? = null
 ) {
 
@@ -173,11 +178,7 @@ fun MoreOptionsButton(
                             "Add Album to Playlist"
 
                         tracksToAdd =
-                            if (
-                                albumTracks.isNotEmpty()
-                            ) {
-                                albumTracks
-                            } else {
+                            albumTracks.ifEmpty {
                                 listOf(
                                     track
                                 )

@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import com.keiranhaas.auralarc.ui.theme.AuralArcMotion
 import com.keiranhaas.auralarc.ui.theme.rememberAuralArcMotionEnabled
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 private val PlayLeft =
     floatArrayOf(8f, 5f, 13.5f, 8.5f, 13.5f, 15.5f, 8f, 19f)
@@ -59,11 +60,11 @@ fun PlayPauseIcon(
         targetValue = if (isPlaying) 1f else 0f,
         animationSpec =
             if (motionEnabled) {
-                tween<Float>(
+                tween(
                     durationMillis = AuralArcMotion.NORMAL
                 )
             } else {
-                snap<Float>()
+                snap()
             },
         label = "playPauseMorph"
     )
@@ -135,11 +136,11 @@ fun PopIcon(
         targetValue = tint,
         animationSpec =
             if (motionEnabled) {
-                tween<Color>(
+                tween(
                     durationMillis = AuralArcMotion.NORMAL
                 )
             } else {
-                snap<Color>()
+                snap()
             },
         label = "popIconTint"
     )
@@ -192,7 +193,7 @@ fun Modifier.menuReveal(
 
     LaunchedEffect(Unit) {
         if (motionEnabled) {
-            delay(index * 28L)
+            delay((index * 28).milliseconds)
 
             progress.animateTo(
                 targetValue = 1f,

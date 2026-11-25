@@ -85,11 +85,6 @@ class DrivingModeReceiver : BroadcastReceiver() {
             )
         }
 
-        /*
-         * Android may block an activity launch from a background
-         * receiver. Post a notification so the user has a reliable
-         * way to open AuralArc Driving Mode.
-         */
         showActivationNotification(
             context,
             launchIntent
@@ -98,7 +93,6 @@ class DrivingModeReceiver : BroadcastReceiver() {
         try {
             context.startActivity(launchIntent)
         } catch (_: Exception) {
-            // The notification remains available as a fallback.
         }
     }
 
@@ -121,15 +115,13 @@ class DrivingModeReceiver : BroadcastReceiver() {
                 Context.NOTIFICATION_SERVICE
             ) as NotificationManager
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            manager.createNotificationChannel(
-                NotificationChannel(
-                    CHANNEL,
-                    "Driving Mode",
-                    NotificationManager.IMPORTANCE_DEFAULT
-                )
+        manager.createNotificationChannel(
+            NotificationChannel(
+                CHANNEL,
+                "Driving Mode",
+                NotificationManager.IMPORTANCE_DEFAULT
             )
-        }
+        )
 
         val pendingIntent = PendingIntent.getActivity(
             context,

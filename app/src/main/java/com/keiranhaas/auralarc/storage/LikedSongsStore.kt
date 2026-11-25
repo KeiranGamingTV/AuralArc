@@ -1,7 +1,7 @@
 package com.keiranhaas.auralarc.storage
 
 import android.content.Context
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import com.keiranhaas.auralarc.data.MusicTrack
 import com.keiranhaas.auralarc.data.Playlist
 import com.keiranhaas.auralarc.data.TrackIdentity
@@ -28,7 +28,7 @@ object LikedSongsStore {
      * so the UI refreshes whenever the liked list changes.
      */
     val revision =
-        mutableStateOf(
+        mutableLongStateOf(
             0L
         )
 

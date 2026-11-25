@@ -4,10 +4,11 @@ import android.content.Context
 import android.content.Intent
 import android.media.AudioManager
 import android.net.Uri
-import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.util.Log
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
 import androidx.media3.common.AudioAttributes
@@ -20,26 +21,20 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
 import com.keiranhaas.auralarc.data.MusicTrack
+import com.keiranhaas.auralarc.data.TrackIdentity
 import com.keiranhaas.auralarc.storage.AdvancedAudioPreferences
 import com.keiranhaas.auralarc.storage.AudioBehaviorPreferences
-import org.json.JSONArray
-import com.keiranhaas.auralarc.data.TrackIdentity
-import android.media.AudioDeviceInfo
-import android.media.AudioFormat
-import android.media.AudioMixerAttributes
-import android.media.AudioAttributes as AndroidAudioAttributes
-import android.os.SystemClock
-import kotlin.math.abs
+import com.keiranhaas.auralarc.ui.LyricsState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
-import com.keiranhaas.auralarc.ui.LyricsState
+import org.json.JSONArray
+import kotlin.math.abs
 
 @UnstableApi
 object PlayerManager {
@@ -170,10 +165,10 @@ object PlayerManager {
         mutableStateOf(false)
 
     val currentPosition =
-        mutableStateOf(0L)
+        mutableLongStateOf(0L)
 
     val duration =
-        mutableStateOf(0L)
+        mutableLongStateOf(0L)
 
     private val audioFocusChangeListener =
         AudioManager.OnAudioFocusChangeListener { focusChange: Int ->
@@ -336,8 +331,7 @@ object PlayerManager {
                         activePlayer.duration
 
                     if (
-                        playerDuration > 0L &&
-                        playerDuration != C.TIME_UNSET
+                        playerDuration > 0L
                     ) {
                         duration.value =
                             playerDuration
@@ -375,17 +369,13 @@ object PlayerManager {
                         IDLE_PROGRESS_UPDATE_INTERVAL_MS
                     }
 
-                /*
-                 * Keep the UI responsive while also periodically persisting
-                 * the playback position.
-                 */
                 val now =
-                    android.os.SystemClock.elapsedRealtime()
+                    SystemClock.elapsedRealtime()
 
                 if (
                     activePlayer != null &&
                     now - lastSessionSaveTime >= 5_000L &&
-                    kotlin.math.abs(
+                    abs(
                         activePlayer.currentPosition -
                                 lastSessionSavePosition
                     ) >= 1_000L
@@ -498,13 +488,6 @@ object PlayerManager {
                                     if (
                                         requestedPosition != null
                                     ) {
-                                        /*
-                                         * Do not clear pendingSeekPosition here.
-                                         *
-                                         * Media3's discontinuity callback can arrive before
-                                         * currentPosition consistently reports the new
-                                         * position, especially for network audio.
-                                         */
                                         currentPosition.value =
                                             requestedPosition
                                     } else {
@@ -585,8 +568,7 @@ object PlayerManager {
                                         exoPlayer.duration
 
                                     if (
-                                        playerDuration > 0L &&
-                                        playerDuration != C.TIME_UNSET
+                                        playerDuration > 0L
                                     ) {
                                         duration.value =
                                             playerDuration
@@ -911,29 +893,6 @@ object PlayerManager {
         )
     }
 
-    fun playSong(
-        context: Context,
-        track: MusicTrack
-    ) {
-        PlaybackState.shuffleEnabled.value =
-            false
-
-        QueueManager.setQueuePreservingOrder(
-            listOf(
-                track
-            ),
-            track
-        )
-
-        playTrack(
-            context = context,
-            track = track,
-            queueTracks = listOf(
-                track
-            )
-        )
-    }
-
     fun next(
         context: Context
     ) {
@@ -1204,18 +1163,6 @@ object PlayerManager {
         saveCurrentSessionIfNeeded(
             force = true
         )
-    }
-
-    fun setUserVolume(
-        volume: Float
-    ) {
-        userVolume =
-            volume.coerceIn(
-                0f,
-                1f
-            )
-
-        refreshEffectivePlayerVolume()
     }
 
     fun applyRepeatOnly() {
@@ -2247,8 +2194,7 @@ object PlayerManager {
             player
                 ?.duration
                 ?.takeIf { playerDuration ->
-                    playerDuration > 0L &&
-                            playerDuration != C.TIME_UNSET
+                    playerDuration > 0L
                 }
                 ?: duration.value.takeIf {
                     it > 0L
@@ -2786,18 +2732,10 @@ object PlayerManager {
                 "Starting playback service"
             )
 
-            if (
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
-            ) {
-                ContextCompat.startForegroundService(
-                    context,
-                    intent
-                )
-            } else {
-                context.startService(
-                    intent
-                )
-            }
+            ContextCompat.startForegroundService(
+                context,
+                intent
+            )
         } catch (e: Exception) {
             Log.e(
                 TAG,
@@ -2835,42 +2773,6 @@ object PlayerManager {
         return TrackIdentity.getStableId(
             track
         )
-    }
-
-    private fun extractNavidromeSongId(
-        trackUri: String
-    ): String? {
-        return try {
-            val uri =
-                Uri.parse(
-                    trackUri
-                )
-
-            val path =
-                uri.path ?: ""
-
-            val looksLikeNavidrome =
-                path.contains(
-                    "stream.view"
-                ) ||
-                        path.contains(
-                            "download.view"
-                        )
-
-            if (
-                !looksLikeNavidrome
-            ) {
-                return null
-            }
-
-            uri.getQueryParameter(
-                "id"
-            )?.takeIf {
-                it.isNotBlank()
-            }
-        } catch (_: Exception) {
-            null
-        }
     }
 
     private fun readStringArray(

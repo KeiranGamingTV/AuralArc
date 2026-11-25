@@ -2,12 +2,7 @@ package com.keiranhaas.auralarc.ui.theme
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.MaterialTheme as Material3Theme
-import androidx.compose.material3.Typography as Material3Typography
-import androidx.compose.material3.Shapes as Material3Shapes
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.Surface as Material3Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
@@ -15,6 +10,10 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material3.MaterialTheme as Material3Theme
+import androidx.compose.material3.Shapes as Material3Shapes
+import androidx.compose.material3.Surface as Material3Surface
+import androidx.compose.material3.Typography as Material3Typography
 
 /*
  * ---------------------------------------------------------------------------

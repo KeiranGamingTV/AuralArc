@@ -1,19 +1,11 @@
 package com.keiranhaas.auralarc.navidrome
 
 import android.content.Context
+import android.os.SystemClock
 import android.util.Log
 import com.keiranhaas.auralarc.data.MusicTrack
-import android.os.SystemClock
 
 object NavidromeLibraryManager {
-
-    fun loadLibrary(
-        context: Context
-    ): List<MusicTrack> {
-        return loadLibraryOrNull(
-            context
-        ) ?: emptyList()
-    }
 
     fun loadLibraryOrNull(
         context: Context

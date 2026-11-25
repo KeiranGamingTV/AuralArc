@@ -1,17 +1,70 @@
 package com.keiranhaas.auralarc.ui
 
+import android.app.Activity
+import android.app.PendingIntent
 import android.content.Context
+import android.net.Uri
 import android.util.Log
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ViewList
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LibraryMusic
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -23,14 +76,19 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.ui.graphics.Color
-import com.keiranhaas.auralarc.ui.components.AuralArcTopBar
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -45,65 +103,32 @@ import com.keiranhaas.auralarc.player.PlaybackState
 import com.keiranhaas.auralarc.player.PlayerManager
 import com.keiranhaas.auralarc.player.QueueManager
 import com.keiranhaas.auralarc.scanner.LibraryManager
-import com.keiranhaas.auralarc.storage.LibrarySourcePreferences
-import com.keiranhaas.auralarc.storage.LibraryCacheStore
-import com.keiranhaas.auralarc.storage.ListeningStatsStore
-import com.keiranhaas.auralarc.storage.TrackListeningStats
-import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlin.random.Random
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import com.keiranhaas.auralarc.storage.TodaysPicksPreferences
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import com.keiranhaas.auralarc.ui.theme.AuralArcContentTransition
-import com.keiranhaas.auralarc.ui.theme.AuralArcMotion
-import android.app.Activity
-import android.app.PendingIntent
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.IntentSenderRequest
-import androidx.activity.result.contract.ActivityResultContracts
+import com.keiranhaas.auralarc.storage.AppCacheMaintenance
 import com.keiranhaas.auralarc.storage.AudioTagEditResult
 import com.keiranhaas.auralarc.storage.AudioTagEditor
-import androidx.compose.runtime.saveable.rememberSaveable
-import com.keiranhaas.auralarc.storage.NavigationPreferences
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.snap
-import com.keiranhaas.auralarc.ui.theme.rememberAuralArcMotionEnabled
-import com.keiranhaas.auralarc.storage.AppCacheMaintenance
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilledTonalButton
-import com.keiranhaas.auralarc.ui.components.AuralArcCard
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.material.icons.automirrored.filled.ViewList
+import com.keiranhaas.auralarc.storage.LibraryCacheStore
+import com.keiranhaas.auralarc.storage.LibrarySourcePreferences
 import com.keiranhaas.auralarc.storage.LibraryViewModePreferences
+import com.keiranhaas.auralarc.storage.ListeningStatsStore
+import com.keiranhaas.auralarc.storage.NavigationPreferences
+import com.keiranhaas.auralarc.storage.TodaysPicksPreferences
+import com.keiranhaas.auralarc.ui.components.AuralArcCard
+import com.keiranhaas.auralarc.ui.components.AuralArcTopBar
+import com.keiranhaas.auralarc.ui.components.DetailPinnedBar
+import com.keiranhaas.auralarc.ui.components.PlayPauseIcon
+import com.keiranhaas.auralarc.ui.components.menuReveal
+import com.keiranhaas.auralarc.ui.components.rememberDetailPinnedAlpha
+import com.keiranhaas.auralarc.ui.theme.AuralArcMotion
+import com.keiranhaas.auralarc.ui.theme.AuralArcStackedTransition
+import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
+import com.keiranhaas.auralarc.ui.theme.AuralArcTransitionKind
 import com.keiranhaas.auralarc.ui.theme.MiniPlayerMorphState
 import com.keiranhaas.auralarc.ui.theme.MorphSlot
 import com.keiranhaas.auralarc.ui.theme.morphSlot
-import com.keiranhaas.auralarc.ui.theme.AuralArcStackedTransition
-import com.keiranhaas.auralarc.ui.theme.AuralArcTransitionKind
-import com.keiranhaas.auralarc.ui.components.PlayPauseIcon
-import com.keiranhaas.auralarc.ui.components.menuReveal
-import com.keiranhaas.auralarc.ui.components.DetailPinnedBar
-import com.keiranhaas.auralarc.ui.components.rememberDetailPinnedAlpha
+import com.keiranhaas.auralarc.ui.theme.rememberAuralArcMotionEnabled
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 private suspend fun loadTracksSafely(
     context: Context
@@ -140,30 +165,6 @@ private suspend fun loadTracksForSource(
                 context
             )
     }
-}
-
-private fun trackMatchesSearch(
-    track: MusicTrack,
-    query: String
-): Boolean {
-    if (
-        query.isBlank()
-    ) {
-        return true
-    }
-
-    val cleanQuery =
-        query.trim().lowercase()
-
-    return track.title.lowercase().contains(
-        cleanQuery
-    ) ||
-            track.artist.lowercase().contains(
-                cleanQuery
-            ) ||
-            track.album.lowercase().contains(
-                cleanQuery
-            )
 }
 
 private fun sortTracks(
@@ -233,13 +234,10 @@ private fun sortTracks(
                     it.artist.lowercase()
                 }
 
-            TrackSortMode.ALBUM ->
+            else ->
                 tracks.sortedBy {
                     it.album.lowercase()
                 }
-
-            TrackSortMode.RELEASE_DATE ->
-                tracks
         }
 
     return if (
@@ -424,9 +422,9 @@ private fun totalDurationText(
     tracks: List<MusicTrack>
 ): String {
     val totalMillis =
-        tracks.map {
+        tracks.sumOf {
             it.duration
-        }.sum()
+        }
 
     val totalSeconds =
         totalMillis / 1000
@@ -459,149 +457,9 @@ private fun albumArtistText(
                 ", "
             )
 
-    return if (
-        joined.isBlank()
-    ) {
+    return joined.ifBlank {
         "Unknown Artist"
-    } else {
-        joined
     }
-}
-
-private fun metadataKey(
-    title: String,
-    artist: String,
-    album: String
-): String {
-    return listOf(
-        title,
-        artist,
-        album
-    ).joinToString(
-        "|"
-    ) {
-        it.trim()
-            .lowercase()
-            .replace(
-                Regex("""\s+"""),
-                " "
-            )
-    }
-}
-
-private fun statForTrack(
-    track: MusicTrack,
-    statsByUri: Map<String, TrackListeningStats>,
-    statsByMetadata: Map<String, TrackListeningStats>
-): TrackListeningStats? {
-    return statsByUri[track.uri]
-        ?: statsByMetadata[
-            metadataKey(
-                track.title,
-                track.artist,
-                track.album
-            )
-        ]
-}
-
-private fun todaysLeastListenedPicks(
-    navidromeTracks: List<MusicTrack>,
-    allStats: List<TrackListeningStats>
-): List<MusicTrack> {
-    if (
-        navidromeTracks.isEmpty()
-    ) {
-        return emptyList()
-    }
-
-    val statsByUri =
-        allStats.associateBy {
-            it.trackUri
-        }
-
-    val statsByMetadata =
-        allStats.associateBy {
-            metadataKey(
-                it.title,
-                it.artist,
-                it.album
-            )
-        }
-
-    val rankedTracks =
-        navidromeTracks.map { track ->
-            val stat =
-                statForTrack(
-                    track = track,
-                    statsByUri = statsByUri,
-                    statsByMetadata = statsByMetadata
-                )
-
-            Triple(
-                track,
-                stat?.playCount ?: 0,
-                stat?.listeningMillis ?: 0L
-            )
-        }.sortedWith(
-            compareBy<Triple<MusicTrack, Int, Long>> {
-                it.second
-            }.thenBy {
-                it.third
-            }
-        )
-
-    val todaySeed =
-        System.currentTimeMillis() / 86_400_000L
-
-    val random =
-        Random(
-            todaySeed
-        )
-
-    val picks =
-        mutableListOf<MusicTrack>()
-
-    var index =
-        0
-
-    while (
-        picks.size < 30 &&
-        index < rankedTracks.size
-    ) {
-        val playCount =
-            rankedTracks[index].second
-
-        val listeningMillis =
-            rankedTracks[index].third
-
-        val group =
-            rankedTracks
-                .drop(
-                    index
-                )
-                .takeWhile {
-                    it.second == playCount &&
-                            it.third == listeningMillis
-                }
-
-        picks.addAll(
-            group
-                .map {
-                    it.first
-                }
-                .shuffled(
-                    random
-                )
-                .take(
-                    30 - picks.size
-                )
-        )
-
-        index +=
-            group.size
-    }
-
-    return picks
 }
 
 private data class ArtistAlbumGroup(
@@ -662,30 +520,6 @@ private fun artistAlbumGroups(
                 it.albumName.lowercase()
             }
         )
-}
-
-private fun sortArtistSongsForPlayAll(
-    tracks: List<MusicTrack>
-): List<MusicTrack> {
-    return tracks.sortedWith(
-        compareBy<MusicTrack> {
-            if (
-                it.releaseYear > 0
-            ) {
-                it.releaseYear
-            } else {
-                Int.MAX_VALUE
-            }
-        }.thenBy {
-            it.album.lowercase()
-        }.thenBy {
-            safeTrackNumber(
-                it
-            )
-        }.thenBy {
-            it.title.lowercase()
-        }
-    )
 }
 
 @Composable
@@ -754,34 +588,6 @@ fun MusicLibraryView(
         mutableStateOf<String?>(
             null
         )
-    }
-
-    val density = androidx.compose.ui.platform.LocalDensity.current
-    val headerCollapseThresholdPx = with(density) { 56.dp.roundToPx() }
-
-    val albumDetailListState = rememberLazyListState()
-    val artistDetailListState = rememberLazyListState()
-
-    val albumHeaderCollapsed by remember(
-        albumDetailListState,
-        headerCollapseThresholdPx
-    ) {
-        derivedStateOf {
-            albumDetailListState.firstVisibleItemIndex > 0 ||
-                    albumDetailListState.firstVisibleItemScrollOffset >
-                    headerCollapseThresholdPx
-        }
-    }
-
-    val artistHeaderCollapsed by remember(
-        artistDetailListState,
-        headerCollapseThresholdPx
-    ) {
-        derivedStateOf {
-            artistDetailListState.firstVisibleItemIndex > 0 ||
-                    artistDetailListState.firstVisibleItemScrollOffset >
-                    headerCollapseThresholdPx
-        }
     }
 
     var selectedPlaylistId by rememberSaveable {
@@ -1251,7 +1057,8 @@ fun MusicLibraryView(
                     } else {
                         AuralArcTransitionKind.SLIDE_BACK
                     }
-                }
+                },
+                modifier = Modifier.fillMaxSize()
             ) { activeRootTab ->
                 when (
                     activeRootTab
@@ -1828,15 +1635,6 @@ private fun SearchTabContent(
             ) {
                 MusicLibraryScreen(
                     tracks = searchedTracks,
-                    onOpenLyrics = { track ->
-                        NowPlayingLyricsRequest.request(
-                            track
-                        )
-
-                        navController.navigate(
-                            Screen.NowPlaying.route
-                        )
-                    },
                     onOpenTrackInfo = { track ->
                         TrackInfoNavigationState.selectedTrack.value =
                             track
@@ -1877,9 +1675,6 @@ private fun LibraryTabContent(
     onSelectedPlaylistChange: (String?) -> Unit,
     librarySource: LibrarySource
 ) {
-    val density = androidx.compose.ui.platform.LocalDensity.current
-    val headerCollapseThresholdPx = with(density) { 56.dp.roundToPx() }
-
     val albumDetailListState = rememberLazyListState()
     val artistDetailListState = rememberLazyListState()
 
@@ -2371,7 +2166,8 @@ private fun LibraryTabContent(
                 ),
                 kindFor = { initial, target ->
                     libraryTransitionKind(initial, target)
-                }
+                },
+                modifier = Modifier.fillMaxSize()
             ) { viewKey ->
                 val libraryMode = viewKey.mode
                 val selectedAlbum = viewKey.album
@@ -2463,15 +2259,6 @@ private fun LibraryTabContent(
                         MusicLibraryScreen(
                             tracks = albumTracks,
                             showAddAlbumToPlaylist = true,
-                            onOpenLyrics = { track ->
-                                NowPlayingLyricsRequest.request(
-                                    track
-                                )
-
-                                navController.navigate(
-                                    Screen.NowPlaying.route
-                                )
-                            },
                             onOpenTrackInfo = { track ->
                                 TrackInfoNavigationState.selectedTrack.value =
                                     track
@@ -2508,11 +2295,6 @@ private fun LibraryTabContent(
                                 ignoreCase = true
                             )
                         }
-
-                    val artistTracksInOrder =
-                        sortArtistSongsForPlayAll(
-                            artistTracks
-                        )
 
                     val artistAlbumCount =
                         artistTracks
@@ -2594,15 +2376,6 @@ private fun LibraryTabContent(
                 libraryMode == LibraryMode.SONGS -> {
                     MusicLibraryScreen(
                         tracks = searchedTracks,
-                        onOpenLyrics = { track ->
-                            NowPlayingLyricsRequest.request(
-                                track
-                            )
-
-                            navController.navigate(
-                                Screen.NowPlaying.route
-                            )
-                        },
                         onOpenTrackInfo = { track ->
                             TrackInfoNavigationState.selectedTrack.value =
                                 track
@@ -3063,9 +2836,7 @@ private fun HomeTrackCard(
                 track = track,
                 style = MaterialTheme.typography.bodyLarge,
                 color = AuralArcStyle.TextPrimary,
-                fontWeight = FontWeight.Bold,
                 maxLines = 2,
-                fillTitleWeight = true
             )
 
             Text(
@@ -3129,9 +2900,7 @@ private fun HomeRecentlyListenedCard(
                 track = track,
                 style = MaterialTheme.typography.bodyLarge,
                 color = AuralArcStyle.TextPrimary,
-                fontWeight = FontWeight.Bold,
                 maxLines = 2,
-                fillTitleWeight = true
             )
 
             Text(
@@ -3143,78 +2912,6 @@ private fun HomeRecentlyListenedCard(
                 color = AuralArcStyle.TextMuted,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
-            )
-        }
-    }
-}
-
-@Composable
-private fun HomeWideTrackCard(
-    track: MusicTrack,
-    onClick: () -> Unit
-) {
-    AuralArcCard(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(
-                vertical = 5.dp
-            )
-            .auralArcClickable {
-                onClick()
-            },
-        shape = AuralArcStyle.CardShape,
-        backgroundColor = AuralArcStyle.SurfaceBright,
-        elevation = 8.dp
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    10.dp
-                ),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            TrackArtwork(
-                albumArtPath = track.albumArtPath,
-                size = 54.dp
-            )
-
-            Spacer(
-                modifier = Modifier.width(
-                    12.dp
-                )
-            )
-
-            Column(
-                modifier = Modifier.weight(
-                    1f
-                )
-            ) {
-                TrackTitleWithHdBadge(
-                    track = track,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = AuralArcStyle.TextPrimary,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    fillTitleWeight = true
-                )
-
-                Text(
-                    text =
-                    trackArtistAlbumText(
-                        track
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = AuralArcStyle.TextMuted,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-
-            Icon(
-                imageVector = Icons.Default.PlayArrow,
-                contentDescription = "Play",
-                tint = AuralArcStyle.PurpleBright
             )
         }
     }

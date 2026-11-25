@@ -11,10 +11,6 @@ sealed class Screen(
         "now_playing"
     )
 
-    object DrivingMode : Screen(
-        "driving_mode"
-    )
-
     object Queue : Screen(
         "queue"
     )

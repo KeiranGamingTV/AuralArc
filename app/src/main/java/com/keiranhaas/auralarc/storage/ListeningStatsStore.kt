@@ -131,46 +131,17 @@ object ListeningStatsStore {
             stats[key]
 
         stats[key] =
-            if (
-                existing == null
-            ) {
-                newLifetimeStat(
-                    track = track,
-                    trackKey = key,
-                    now = System.currentTimeMillis()
-                )
-            } else {
-                existing.withMetadataFrom(
-                    track
-                )
-            }
+            existing?.withMetadataFrom(
+                track
+            ) ?: newLifetimeStat(
+                track = track,
+                trackKey = key,
+                now = System.currentTimeMillis()
+            )
 
         saveLifetimeStats(
             context = context,
             stats = stats
-        )
-    }
-
-    fun recordListeningTime(
-        context: Context,
-        track: MusicTrack,
-        deltaMillis: Long
-    ) {
-        if (
-            deltaMillis <= 0L
-        ) {
-            return
-        }
-
-        recordActivity(
-            context = context,
-            track = track,
-            delta = StatDelta(
-                listeningMillis =
-                    deltaMillis.coerceAtMost(
-                        30_000L
-                    )
-            )
         )
     }
 
@@ -199,45 +170,6 @@ object ListeningStatsStore {
                 completedCount = completedCount.coerceAtLeast(0),
                 skipCount = skipCount.coerceAtLeast(0),
                 listeningMillis = listeningMillis.coerceAtLeast(0L)
-            )
-        )
-    }
-
-    fun recordCountedPlay(
-        context: Context,
-        track: MusicTrack
-    ) {
-        recordActivity(
-            context = context,
-            track = track,
-            delta = StatDelta(
-                playCount = 1
-            )
-        )
-    }
-
-    fun recordCompletedPlay(
-        context: Context,
-        track: MusicTrack
-    ) {
-        recordActivity(
-            context = context,
-            track = track,
-            delta = StatDelta(
-                completedCount = 1
-            )
-        )
-    }
-
-    fun recordSkip(
-        context: Context,
-        track: MusicTrack
-    ) {
-        recordActivity(
-            context = context,
-            track = track,
-            delta = StatDelta(
-                skipCount = 1
             )
         )
     }

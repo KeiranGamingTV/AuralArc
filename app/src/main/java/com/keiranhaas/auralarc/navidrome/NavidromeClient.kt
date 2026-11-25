@@ -6,6 +6,9 @@ import com.keiranhaas.auralarc.data.MusicTrack
 import com.keiranhaas.auralarc.data.Playlist
 import com.keiranhaas.auralarc.storage.EmbeddedLyricsResult
 import com.keiranhaas.auralarc.storage.EmbeddedLyricsType
+import com.keiranhaas.auralarc.storage.PowerSavingPreferences
+import com.keiranhaas.auralarc.utils.codecLabelFromMimeOrName
+import com.keiranhaas.auralarc.utils.inferLossless
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.BufferedReader
@@ -13,9 +16,6 @@ import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
-import com.keiranhaas.auralarc.utils.codecLabelFromMimeOrName
-import com.keiranhaas.auralarc.utils.inferLossless
-import com.keiranhaas.auralarc.storage.PowerSavingPreferences
 
 class NavidromeClient(
     private val credentials: NavidromeCredentials
@@ -293,7 +293,6 @@ class NavidromeClient(
         ) {
             val albums =
                 getAlbumListPage(
-                    size = pageSize,
                     offset = offset
                 )
 
@@ -1043,7 +1042,6 @@ class NavidromeClient(
     }
 
     private fun getAlbumListPage(
-        size: Int,
         offset: Int
     ): JSONArray {
         val response =
@@ -1051,7 +1049,7 @@ class NavidromeClient(
                 endpoint = "getAlbumList2.view",
                 extraParams = mapOf(
                     "type" to "alphabeticalByName",
-                    "size" to size.toString(),
+                    "size" to 500.toString(),
                     "offset" to offset.toString()
                 )
             )

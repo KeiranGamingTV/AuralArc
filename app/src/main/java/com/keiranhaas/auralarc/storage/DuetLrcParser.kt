@@ -24,14 +24,6 @@ data class ParsedDuetLrc(
             key.trim().lowercase()
         ] ?: emptyList()
     }
-
-    fun lastMetadataValue(
-        key: String
-    ): String? {
-        return metadataValues(
-            key
-        ).lastOrNull()
-    }
 }
 
 object DuetLrcParser {

@@ -1,11 +1,14 @@
 package com.keiranhaas.auralarc.widget
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.glance.appwidget.updateAll
 import com.keiranhaas.auralarc.player.AuralArcRepeatMode
 import com.keiranhaas.auralarc.player.PlaybackState
 import com.keiranhaas.auralarc.player.PlayerManager
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
@@ -14,9 +17,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import androidx.compose.runtime.snapshots.Snapshot
-import android.util.Log
-import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlin.time.Duration.Companion.milliseconds
 
 object AuralArcWidgetUpdater {
 
@@ -40,9 +41,6 @@ object AuralArcWidgetUpdater {
                             error
                         )
 
-                        /*
-                         * Allow the next start() call to try again.
-                         */
                         watchJob =
                             null
                     }
@@ -89,7 +87,7 @@ object AuralArcWidgetUpdater {
                 }
                     .distinctUntilChanged()
                     .debounce(
-                        250L
+                        250.milliseconds
                     )
                     .collect {
                         updateAllWidgets(

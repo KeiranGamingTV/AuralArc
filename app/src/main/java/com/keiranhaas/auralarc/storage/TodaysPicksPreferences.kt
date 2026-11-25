@@ -237,22 +237,4 @@ object TodaysPicksPreferences {
             )
             .apply()
     }
-
-    fun clearSavedPicks(
-        context: Context
-    ) {
-        context.applicationContext
-            .getSharedPreferences(
-                PREFS_NAME,
-                Context.MODE_PRIVATE
-            )
-            .edit()
-            .remove(
-                KEY_PICK_DATE
-            )
-            .remove(
-                KEY_PICK_TRACK_IDS
-            )
-            .apply()
-    }
 }

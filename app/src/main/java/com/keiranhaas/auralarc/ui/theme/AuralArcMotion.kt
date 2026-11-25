@@ -3,83 +3,51 @@ package com.keiranhaas.auralarc.ui.theme
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.animation.togetherWith
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.IntSize
-import com.keiranhaas.auralarc.storage.AppearancePreferences
-import androidx.compose.animation.core.VisibilityThreshold
-import androidx.compose.animation.core.snap
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntOffset
+import com.keiranhaas.auralarc.storage.AppearancePreferences
 
 object AuralArcMotion {
 
     const val MORPH =
         180
 
-    /*
-     * General timing values.
-     *
-     * Most size/movement animations now use springs instead
-     * of fixed tweens, but these remain useful for fades.
-     */
     const val FAST =
         120
 
     const val NORMAL =
         200
 
-    const val SLOW =
-        320
-
-    const val PAGE =
-        340
-
-    /*
-     * Global spring behavior.
-     *
-     * This is slightly softer than a standard Material spring
-     * so resizing feels fluid without looking bouncy.
-     */
     const val DAMPING_RATIO =
         0.92f
 
     const val STIFFNESS =
         600f
 
-    /*
-     * Content transforms.
-     *
-     * 0.90 is intentionally much more noticeable than the
-     * old 0.985 scale.
-     */
     const val CONTENT_ENTER_SCALE =
         0.90f
 
     const val CONTENT_EXIT_SCALE =
         0.96f
 
-    /*
-     * Touch feedback scales.
-     */
     const val CARD_PRESS_SCALE =
         0.97f
-
-    const val BUTTON_PRESS_SCALE =
-        0.94f
 
     const val NAV_DAMPING_RATIO =
         0.9f
@@ -115,19 +83,6 @@ fun rememberAuralArcMotionEnabled(): Boolean {
     return enabled
 }
 
-/*
- * Main fluid content transition.
- *
- * Unlike the old crossfade-heavy transition, this:
- *
- * 1. Grows the incoming content from 90% -> 100%.
- * 2. Shrinks the outgoing content from 100% -> 96%.
- * 3. Animates the measured container size between states.
- * 4. Uses only a short fade to hide compositing overlap.
- *
- * SizeTransform is especially important for components whose
- * old and new states have different dimensions.
- */
 @Composable
 fun <T> AuralArcContentTransition(
     targetState: T,
@@ -186,7 +141,7 @@ fun <T> AuralArcContentTransition(
                     SizeTransform(
                         clip = false,
                         sizeAnimationSpec = { _, _ ->
-                            spring<IntSize>(
+                            spring(
                                 dampingRatio =
                                     AuralArcMotion.DAMPING_RATIO,
                                 stiffness =
@@ -238,7 +193,7 @@ enum class AuralArcTransitionKind {
 fun <T> AuralArcStackedTransition(
     targetState: T,
     kindFor: (initial: T, target: T) -> AuralArcTransitionKind,
-    modifier: Modifier = Modifier.fillMaxSize(),
+    modifier: Modifier = Modifier,
     content: @Composable (T) -> Unit
 ) {
     val motionEnabled =
@@ -252,7 +207,7 @@ fun <T> AuralArcStackedTransition(
     }
 
     val offsetSpec =
-        spring<IntOffset>(
+        spring(
             dampingRatio =
                 AuralArcMotion.NAV_DAMPING_RATIO,
             stiffness =

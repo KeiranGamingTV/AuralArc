@@ -10,7 +10,7 @@ enum class TrackSortMode(
 
     fun next(): TrackSortMode {
         val allModes =
-            values()
+            entries
 
         val nextIndex =
             (ordinal + 1) % allModes.size

@@ -1,35 +1,33 @@
 package com.keiranhaas.auralarc
 
 import android.content.Intent
+import android.content.res.Configuration
+import android.graphics.Color
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.mutableStateOf
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.keiranhaas.auralarc.navigation.AuralArcNavigation
 import com.keiranhaas.auralarc.player.PlayerManager
 import com.keiranhaas.auralarc.player.QueueManager
 import com.keiranhaas.auralarc.storage.FolderManager
 import com.keiranhaas.auralarc.storage.FolderPreferences
-import com.keiranhaas.auralarc.ui.theme.AuralArcTheme
-import com.keiranhaas.auralarc.utils.createExternalAudioTrack
-import com.keiranhaas.auralarc.utils.getAudioUriFromIntent
 import com.keiranhaas.auralarc.storage.LyricsPreferences
-import com.keiranhaas.auralarc.ui.LibraryRuntimeState
-import android.content.res.Configuration
-import android.graphics.Color
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsControllerCompat
-import com.keiranhaas.auralarc.storage.SetupPreferences
 import com.keiranhaas.auralarc.storage.PowerSavingPreferences
-import com.keiranhaas.auralarc.ui.setup.FirstRunSetupScreen
-import com.keiranhaas.auralarc.utils.ArtworkBitmapLoader
-import androidx.compose.runtime.mutableStateOf
 import com.keiranhaas.auralarc.storage.ReleaseNotesPreferences
+import com.keiranhaas.auralarc.storage.SetupPreferences
+import com.keiranhaas.auralarc.ui.LibraryRuntimeState
 import com.keiranhaas.auralarc.ui.WhatsNewDialogHost
 import com.keiranhaas.auralarc.ui.getAppVersionName
-
+import com.keiranhaas.auralarc.ui.setup.FirstRunSetupScreen
+import com.keiranhaas.auralarc.ui.theme.AuralArcTheme
+import com.keiranhaas.auralarc.utils.ArtworkBitmapLoader
+import com.keiranhaas.auralarc.utils.createExternalAudioTrack
+import com.keiranhaas.auralarc.utils.getAudioUriFromIntent
 import com.keiranhaas.auralarc.widget.AuralArcWidgetUpdater
 
 class MainActivity : ComponentActivity() {
@@ -76,7 +74,7 @@ class MainActivity : ComponentActivity() {
         if (openDrivingModeRequest.value) {
             (
                     getSystemService(
-                        android.content.Context.NOTIFICATION_SERVICE
+                        Context.NOTIFICATION_SERVICE
                     ) as android.app.NotificationManager
                     ).cancel(4102)
         }
@@ -152,7 +150,7 @@ class MainActivity : ComponentActivity() {
         if (openDrivingModeRequest.value) {
             (
                     getSystemService(
-                        android.content.Context.NOTIFICATION_SERVICE
+                        Context.NOTIFICATION_SERVICE
                     ) as android.app.NotificationManager
                     ).cancel(4102)
         }
@@ -202,21 +200,11 @@ class MainActivity : ComponentActivity() {
         window.navigationBarColor =
             Color.TRANSPARENT
 
-        if (
-            Build.VERSION.SDK_INT >=
-            Build.VERSION_CODES.O_MR1
-        ) {
-            window.navigationBarDividerColor =
-                Color.TRANSPARENT
-        }
+        window.navigationBarDividerColor =
+            Color.TRANSPARENT
 
-        if (
-            Build.VERSION.SDK_INT >=
-            Build.VERSION_CODES.Q
-        ) {
-            window.isNavigationBarContrastEnforced =
-                false
-        }
+        window.isNavigationBarContrastEnforced =
+            false
 
         WindowInsetsControllerCompat(
             window,

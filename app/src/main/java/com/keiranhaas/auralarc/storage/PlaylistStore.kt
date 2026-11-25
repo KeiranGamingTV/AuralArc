@@ -5,7 +5,7 @@ import com.keiranhaas.auralarc.data.MusicTrack
 import com.keiranhaas.auralarc.data.Playlist
 import org.json.JSONArray
 import org.json.JSONObject
-import java.util.*
+import java.util.UUID
 
 object PlaylistStore {
 
@@ -29,52 +29,6 @@ object PlaylistStore {
         ).firstOrNull {
             it.id == playlistId
         }
-    }
-
-    fun createPlaylistFromTrackKeys(
-        context: Context,
-        rawName: String,
-        trackKeys: List<String>
-    ): Playlist {
-        val playlist =
-            createPlaylist(
-                context,
-                rawName
-            )
-
-        val playlists =
-            loadPlaylists(
-                context
-            ).map { existing ->
-                if (
-                    existing.id == playlist.id
-                ) {
-                    val cleanKeys =
-                        trackKeys
-                            .filter {
-                                it.isNotBlank()
-                            }
-                            .distinct()
-
-                    existing.copy(
-                        trackKeys = cleanKeys,
-                        trackCount = cleanKeys.size,
-                        updatedAt = System.currentTimeMillis()
-                    )
-                } else {
-                    existing
-                }
-            }
-
-        savePlaylists(
-            context,
-            playlists
-        )
-
-        return getPlaylist(
-            context,
-            playlist.id
-        ) ?: playlist
     }
 
     fun createPlaylist(
@@ -139,42 +93,6 @@ object PlaylistStore {
         ) ?: playlist
     }
 
-    fun duplicatePlaylist(
-        context: Context,
-        playlistId: String
-    ): Playlist? {
-        val playlists =
-            loadPlaylists(
-                context
-            ).toMutableList()
-
-        val sourcePlaylist =
-            playlists.firstOrNull {
-                it.id == playlistId
-            } ?: return null
-
-        val copy =
-            sourcePlaylist.copy(
-                id = UUID.randomUUID().toString(),
-                name = "${sourcePlaylist.name} Copy",
-                source = "LOCAL",
-                remoteId = null,
-                createdAt = System.currentTimeMillis(),
-                updatedAt = System.currentTimeMillis()
-            )
-
-        playlists.add(
-            copy
-        )
-
-        savePlaylists(
-            context,
-            playlists
-        )
-
-        return copy
-    }
-
     fun renamePlaylist(
         context: Context,
         playlistId: String,
@@ -227,20 +145,6 @@ object PlaylistStore {
         savePlaylists(
             context,
             playlists
-        )
-    }
-
-    fun addTrackToPlaylist(
-        context: Context,
-        playlistId: String,
-        track: MusicTrack
-    ) {
-        addTracksToPlaylist(
-            context = context,
-            playlistId = playlistId,
-            tracks = listOf(
-                track
-            )
         )
     }
 

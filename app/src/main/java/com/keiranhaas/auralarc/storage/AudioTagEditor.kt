@@ -4,13 +4,10 @@ import android.app.PendingIntent
 import android.app.RecoverableSecurityException
 import android.content.ContentValues
 import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
-import android.os.Process
 import android.provider.MediaStore
 import android.provider.OpenableColumns
 import com.keiranhaas.auralarc.data.MusicTrack
@@ -19,21 +16,21 @@ import com.keiranhaas.auralarc.utils.extractEmbeddedAlbumArt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jaudiotagger.audio.AudioFileIO
+import org.jaudiotagger.audio.flac.metadatablock.MetadataBlockDataPicture
 import org.jaudiotagger.tag.FieldKey
 import org.jaudiotagger.tag.Tag
+import org.jaudiotagger.tag.flac.FlacTag
 import org.jaudiotagger.tag.images.ArtworkFactory
+import org.jaudiotagger.tag.reference.PictureTypes
+import org.jaudiotagger.tag.vorbiscomment.VorbisCommentFieldKey
+import org.jaudiotagger.tag.vorbiscomment.VorbisCommentTag
+import org.jaudiotagger.tag.vorbiscomment.util.Base64Coder
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.UUID
-import org.jaudiotagger.audio.flac.metadatablock.MetadataBlockDataPicture
-import org.jaudiotagger.tag.flac.FlacTag
-import org.jaudiotagger.tag.reference.PictureTypes
-import org.jaudiotagger.tag.vorbiscomment.VorbisCommentFieldKey
-import org.jaudiotagger.tag.vorbiscomment.VorbisCommentTag
-import org.jaudiotagger.tag.vorbiscomment.util.Base64Coder
 
 data class EditableTrackMetadata(
     val title: String,
@@ -70,7 +67,7 @@ object AudioTagEditor {
     private const val BUFFER_SIZE =
         256 * 1024
 
-    private data class PreparedArtwork(
+    private class PreparedArtwork(
         val binaryData: ByteArray,
         val mimeType: String,
         val width: Int,
@@ -432,7 +429,6 @@ object AudioTagEditor {
             ) {
                 AudioTagEditResult.Failure(
                     editFailureMessage(
-                        operation = "Metadata editing",
                         track = track,
                         exception = exception
                     )
@@ -1360,7 +1356,7 @@ object AudioTagEditor {
                 val encodedPicture =
                     String(
                         Base64Coder.encode(
-                            pictureBlock.getRawContent()
+                            pictureBlock.rawContent
                         )
                     )
 
@@ -1385,29 +1381,23 @@ object AudioTagEditor {
                 val genericArtwork =
                     ArtworkFactory.getNew()
 
-                genericArtwork.setBinaryData(
+                genericArtwork.binaryData =
                     artwork.binaryData
-                )
 
-                genericArtwork.setMimeType(
+                genericArtwork.mimeType =
                     artwork.mimeType
-                )
 
-                genericArtwork.setDescription(
+                genericArtwork.description =
                     "Front Cover"
-                )
 
-                genericArtwork.setPictureType(
+                genericArtwork.pictureType =
                     PictureTypes.DEFAULT_ID
-                )
 
-                genericArtwork.setWidth(
+                genericArtwork.width =
                     artwork.width
-                )
 
-                genericArtwork.setHeight(
+                genericArtwork.height =
                     artwork.height
-                )
 
                 tag.setField(
                     genericArtwork
@@ -1604,13 +1594,12 @@ object AudioTagEditor {
     }
 
     private fun editFailureMessage(
-        operation: String,
         track: MusicTrack,
         exception: Exception
     ): String {
         return buildString {
             append(
-                operation
+                "Metadata editing"
             )
 
             append(

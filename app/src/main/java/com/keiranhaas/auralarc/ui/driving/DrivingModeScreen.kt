@@ -23,8 +23,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.RepeatOne
 import androidx.compose.material.icons.filled.Shuffle
@@ -65,11 +63,11 @@ import com.keiranhaas.auralarc.player.PlaybackState
 import com.keiranhaas.auralarc.player.PlayerManager
 import com.keiranhaas.auralarc.player.QueueManager
 import com.keiranhaas.auralarc.storage.LikedSongsStore
+import com.keiranhaas.auralarc.ui.components.PlayPauseIcon
+import com.keiranhaas.auralarc.ui.components.PopIcon
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
 import com.keiranhaas.auralarc.utils.ArtworkBitmapLoader
 import com.keiranhaas.auralarc.utils.formatTime
-import com.keiranhaas.auralarc.ui.components.PlayPauseIcon
-import com.keiranhaas.auralarc.ui.components.PopIcon
 
 private val DrivingControlColor =
     Color(0xFF292929)

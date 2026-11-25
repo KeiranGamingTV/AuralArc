@@ -4,6 +4,8 @@ import android.content.Context
 import android.media.audiofx.BassBoost
 import android.media.audiofx.LoudnessEnhancer
 import android.media.audiofx.Virtualizer
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import com.keiranhaas.auralarc.storage.AudioEffectsPreferences
 import kotlin.math.roundToInt
@@ -38,7 +40,7 @@ object AudioEffectsManager {
         )
 
     val bassStrength =
-        mutableStateOf(
+        mutableIntStateOf(
             500
         )
 
@@ -48,12 +50,12 @@ object AudioEffectsManager {
         )
 
     val virtualizerStrength =
-        mutableStateOf(
+        mutableIntStateOf(
             500
         )
 
     val loudnessBoostDb =
-        mutableStateOf(
+        mutableFloatStateOf(
             0f
         )
 

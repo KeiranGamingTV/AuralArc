@@ -1,6 +1,8 @@
 package com.keiranhaas.auralarc.scanner
 
 import android.content.Context
+import android.os.SystemClock
+import android.util.Log
 import com.keiranhaas.auralarc.data.LibrarySource
 import com.keiranhaas.auralarc.data.MusicTrack
 import com.keiranhaas.auralarc.storage.LibraryCacheStore
@@ -9,8 +11,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
-import android.os.SystemClock
-import android.util.Log
 
 object LibraryManager {
 

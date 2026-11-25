@@ -15,8 +15,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -31,11 +31,9 @@ fun TrackTitleWithHdBadge(
     modifier: Modifier = Modifier,
     style: TextStyle = MaterialTheme.typography.bodyLarge,
     color: Color = AuralArcStyle.TextPrimary,
-    fontWeight: FontWeight? = FontWeight.Bold,
     maxLines: Int = 1,
     horizontalArrangement: Arrangement.Horizontal =
         Arrangement.Start,
-    fillTitleWeight: Boolean = false,
     marqueeWhenOverflow: Boolean = false,
     textAlign: TextAlign = TextAlign.Start,
     centerTitleIndependently: Boolean = false
@@ -75,16 +73,9 @@ fun TrackTitleWithHdBadge(
         }
 
         val titleModifier =
-            if (
-                fillTitleWeight ||
-                track.isHighResolution
-            ) {
-                Modifier.weight(
-                    1f
-                )
-            } else {
-                Modifier
-            }
+            Modifier.weight(
+                1f
+            )
 
         if (
             marqueeWhenOverflow &&
@@ -95,7 +86,6 @@ fun TrackTitleWithHdBadge(
                 modifier = titleModifier,
                 style = style,
                 color = color,
-                fontWeight = fontWeight,
                 textAlign = textAlign
             )
         } else {
@@ -103,7 +93,6 @@ fun TrackTitleWithHdBadge(
                 text = track.title,
                 modifier = titleModifier,
                 style = style,
-                fontWeight = fontWeight,
                 color = color,
                 maxLines = maxLines,
                 overflow = TextOverflow.Ellipsis,

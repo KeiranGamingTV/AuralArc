@@ -1,6 +1,6 @@
 package com.keiranhaas.auralarc.player
 
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import com.keiranhaas.auralarc.data.MusicTrack
 import com.keiranhaas.auralarc.data.TrackIdentity
 import java.util.UUID
@@ -13,7 +13,7 @@ data class QueueShuffleSnapshot(
 object QueueManager {
 
     val revision =
-        mutableStateOf(
+        mutableLongStateOf(
             0L
         )
 
@@ -305,94 +305,6 @@ object QueueManager {
             }.takeIf { index ->
                 index >= 0
             } ?: 0
-
-        notifyQueueChanged()
-    }
-
-    fun rebuildForCurrentShuffleState(
-        currentTrack: MusicTrack?
-    ) {
-        if (
-            currentTrack == null
-        ) {
-            return
-        }
-
-        if (
-            normalQueue.isEmpty()
-        ) {
-            normalQueue.addAll(
-                queue
-            )
-        }
-
-        if (
-            normalQueue.isEmpty()
-        ) {
-            return
-        }
-
-        val currentEntry =
-            currentEntry()
-                ?: normalQueue.firstOrNull { entry ->
-                    TrackIdentity.getStableId(
-                        entry.track
-                    ) ==
-                            TrackIdentity.getStableId(
-                                currentTrack
-                            )
-                }
-                ?: return
-
-        if (
-            PlaybackState.shuffleEnabled.value
-        ) {
-            val remainingEntries =
-                normalQueue.filterNot { entry ->
-                    entry.entryId ==
-                            currentEntry.entryId
-                }
-
-            val shuffledEntries =
-                SmartShuffleState.smartShuffleEntries(
-                    remainingEntries
-                )
-
-            queue.clear()
-
-            queue.add(
-                currentEntry
-            )
-
-            queue.addAll(
-                shuffledEntries
-            )
-
-            currentIndex =
-                0
-        } else {
-            queue.clear()
-
-            queue.addAll(
-                normalQueue
-            )
-
-            currentIndex =
-                queue.indexOfFirst { entry ->
-                    entry.entryId ==
-                            currentEntry.entryId
-                }
-
-            if (
-                currentIndex < 0 &&
-                queue.isNotEmpty()
-            ) {
-                currentIndex =
-                    0
-            }
-        }
-
-        resetAddToQueueInsertIndex()
 
         notifyQueueChanged()
     }
@@ -1044,10 +956,6 @@ object QueueManager {
         }
     }
 
-    fun getNormalQueueEntries(): List<QueueEntry> {
-        return normalQueue.toList()
-    }
-
     fun setCurrentQueueIndex(
         index: Int
     ) {
@@ -1092,63 +1000,7 @@ object QueueManager {
         return currentTrack()
     }
 
-    fun playFromQueueEntry(
-        entryId: String
-    ): MusicTrack? {
-        val index =
-            queue.indexOfFirst { entry ->
-                entry.entryId ==
-                        entryId
-            }
-
-        if (
-            index < 0
-        ) {
-            return null
-        }
-
-        currentIndex =
-            index
-
-        resetAddToQueueInsertIndex()
-
-        return currentTrack()
-    }
-
     fun getCurrentEntryId(): String? {
         return currentEntry()?.entryId
-    }
-
-    fun setQueueFromUris(
-        allTracks: List<MusicTrack>,
-        queueUris: List<String>,
-        startUri: String
-    ): MusicTrack? {
-        val rebuiltQueue =
-            queueUris.mapNotNull { uri ->
-                allTracks.firstOrNull { track ->
-                    track.uri ==
-                            uri
-                }
-            }
-
-        if (
-            rebuiltQueue.isEmpty()
-        ) {
-            return null
-        }
-
-        val startTrack =
-            rebuiltQueue.firstOrNull { track ->
-                track.uri ==
-                        startUri
-            } ?: rebuiltQueue.first()
-
-        setQueuePreservingOrder(
-            rebuiltQueue,
-            startTrack
-        )
-
-        return startTrack
     }
 }

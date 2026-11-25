@@ -1,14 +1,14 @@
 package com.keiranhaas.auralarc.player
 
 import android.content.Context
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import com.keiranhaas.auralarc.data.MusicTrack
 import com.keiranhaas.auralarc.storage.AudioBehaviorPreferences
 import com.keiranhaas.auralarc.storage.ListeningStatsStore
 import com.keiranhaas.auralarc.storage.TrackListeningStats
-import kotlin.random.Random
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlin.random.Random
 
 object SmartShuffleState {
 
@@ -24,7 +24,7 @@ object SmartShuffleState {
         )
 
     val level =
-        mutableStateOf(
+        mutableIntStateOf(
             2
         )
 
@@ -118,17 +118,6 @@ object SmartShuffleState {
             statsByMetadata =
                 loadedStats.statsByMetadata
         }
-    }
-
-    fun smartShuffle(
-        tracks: List<MusicTrack>
-    ): List<MusicTrack> {
-        return smartShuffleItems(
-            items = tracks,
-            trackProvider = { track ->
-                track
-            }
-        )
     }
 
     fun smartShuffleEntries(

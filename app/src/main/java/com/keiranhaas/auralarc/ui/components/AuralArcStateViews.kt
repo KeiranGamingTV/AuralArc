@@ -3,15 +3,14 @@ package com.keiranhaas.auralarc.ui
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.keiranhaas.auralarc.ui.AuralArcButton
 import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
-import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun AuralArcMessageCard(
@@ -97,18 +96,4 @@ fun AuralArcMessageCard(
             }
         }
     }
-}
-
-@Composable
-fun AuralArcLoadingCard(
-    title: String = "Loading...",
-    message: String = "Please wait."
-) {
-    AuralArcMessageCard(
-        title =
-            title,
-
-        message =
-            message
-    )
 }

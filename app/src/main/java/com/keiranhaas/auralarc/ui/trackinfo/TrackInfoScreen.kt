@@ -1,30 +1,69 @@
 package com.keiranhaas.auralarc.ui
 
-import androidx.compose.foundation.layout.*
+import android.app.Activity
+import android.app.PendingIntent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Audiotrack
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Memory
+import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Storage
-import androidx.compose.material.icons.filled.GraphicEq
-import androidx.compose.material.icons.filled.Audiotrack
-import androidx.compose.material.icons.filled.Memory
-import androidx.compose.material.icons.filled.Speed
-import androidx.compose.material.icons.filled.Code
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.keiranhaas.auralarc.data.MusicTrack
+import com.keiranhaas.auralarc.player.AudioProcessingState
+import com.keiranhaas.auralarc.storage.AudioTagEditResult
+import com.keiranhaas.auralarc.storage.AudioTagEditor
+import com.keiranhaas.auralarc.storage.EditableTrackMetadata
+import com.keiranhaas.auralarc.ui.components.AuralArcBackButton
+import com.keiranhaas.auralarc.ui.components.AuralArcCard
+import com.keiranhaas.auralarc.ui.components.AuralArcTopBar
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
 import com.keiranhaas.auralarc.utils.audioDetailRows
 import com.keiranhaas.auralarc.utils.audioQualitySummary
@@ -32,30 +71,7 @@ import com.keiranhaas.auralarc.utils.musicMetadataRows
 import com.keiranhaas.auralarc.utils.replayGainRows
 import com.keiranhaas.auralarc.utils.sourceAndFileRows
 import com.keiranhaas.auralarc.utils.technicalAudioRows
-import com.keiranhaas.auralarc.player.AudioProcessingState
-import android.app.Activity
-import android.app.PendingIntent
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.IntentSenderRequest
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.TextButton
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.runtime.*
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.KeyboardType
-import com.keiranhaas.auralarc.storage.AudioTagEditResult
-import com.keiranhaas.auralarc.storage.AudioTagEditor
-import com.keiranhaas.auralarc.storage.EditableTrackMetadata
-import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import kotlinx.coroutines.launch
-import androidx.compose.ui.graphics.Color
-import com.keiranhaas.auralarc.ui.components.AuralArcBackButton
-import com.keiranhaas.auralarc.ui.components.AuralArcTopBar
-import androidx.compose.foundation.background
 
 @Composable
 fun TrackInfoScreen(
@@ -999,9 +1015,7 @@ private fun TrackInfoHeaderCard(
                     track = track,
                     style = MaterialTheme.typography.titleLarge,
                     color = AuralArcStyle.TextPrimary,
-                    fontWeight = FontWeight.Bold,
                     maxLines = 2,
-                    fillTitleWeight = true
                 )
 
                 Spacer(

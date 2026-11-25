@@ -2,8 +2,8 @@ package com.keiranhaas.auralarc.ui
 
 import android.content.Context
 import android.net.Uri
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
 import com.keiranhaas.auralarc.data.MusicTrack
 import com.keiranhaas.auralarc.navidrome.NavidromeClient
 import com.keiranhaas.auralarc.navidrome.NavidromePreferences
@@ -15,6 +15,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.time.Duration.Companion.milliseconds
 
 object LyricsState {
 
@@ -22,7 +23,7 @@ object LyricsState {
         mutableStateMapOf<String, EmbeddedLyricsResult?>()
 
     val cacheRevision =
-        mutableStateOf(
+        mutableIntStateOf(
             0
         )
 
@@ -35,13 +36,6 @@ object LyricsState {
                 CompletableDeferred<EmbeddedLyricsResult?>
                 >()
 
-    /*
-     * A null result can happen because the track's metadata, MediaStore,
-     * or SAF storage is not ready yet when Now Playing first opens.
-     *
-     * Do not retry continuously, but also do not treat a null result
-     * as a permanent "no lyrics" state.
-     */
     private val retryAfterElapsedTime =
         ConcurrentHashMap<String, Long>()
 
@@ -59,13 +53,6 @@ object LyricsState {
             return
         }
 
-        /*
-         * Reuse an already successful result.
-         *
-         * A cached null is different: it may have been caused by a
-         * temporary lookup race, so allow another attempt after the
-         * short retry delay.
-         */
         if (
             !forceReload &&
             lyricsCache.containsKey(
@@ -148,7 +135,7 @@ object LyricsState {
                     delayMs > 0L
                 ) {
                     kotlinx.coroutines.delay(
-                        delayMs
+                        delayMs.milliseconds
                     )
                 }
 
@@ -268,14 +255,6 @@ object LyricsState {
         LrcLyricsFinder.invalidateIndex()
 
         clearCache()
-    }
-
-    fun isNavidromeTrack(
-        trackUri: String
-    ): Boolean {
-        return getNavidromeSongIdFromStreamUrl(
-            trackUri
-        ) != null
     }
 
     private fun loadLyricsInternal(

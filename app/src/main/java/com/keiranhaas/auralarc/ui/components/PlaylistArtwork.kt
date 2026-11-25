@@ -2,31 +2,41 @@ package com.keiranhaas.auralarc.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Icon
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.keiranhaas.auralarc.data.MusicTrack
 import com.keiranhaas.auralarc.data.Playlist
-import com.keiranhaas.auralarc.storage.PlaylistArtworkStore
-import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
-import android.graphics.Bitmap
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalDensity
-import com.keiranhaas.auralarc.ui.components.AuralArcCard
-import com.keiranhaas.auralarc.utils.ArtworkBitmapLoader
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.Brush
 import com.keiranhaas.auralarc.storage.LikedSongsStore
+import com.keiranhaas.auralarc.storage.PlaylistArtworkStore
+import com.keiranhaas.auralarc.ui.components.AuralArcCard
+import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
+import com.keiranhaas.auralarc.utils.ArtworkBitmapLoader
 
 @Composable
 fun PlaylistArtwork(
@@ -340,13 +350,6 @@ private fun PlaylistArtworkImage(
         val density =
             LocalDensity.current
 
-        /*
-         * Determine how large this individual tile is actually
-         * being drawn.
-         *
-         * A four-image playlist mosaic therefore requests
-         * much smaller bitmaps than a full-size single cover.
-         */
         val targetSizePx =
             maxOf(
                 with(
@@ -367,7 +370,7 @@ private fun PlaylistArtworkImage(
             artworkPath,
             targetSizePx
         ) {
-            mutableStateOf<Bitmap?>(
+            mutableStateOf(
                 ArtworkBitmapLoader.peek(
                     artworkPath =
                         artworkPath,

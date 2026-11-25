@@ -4,19 +4,22 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
@@ -31,9 +34,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.ui.graphics.TransformOrigin
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(
     ExperimentalTextApi::class
@@ -88,16 +89,6 @@ fun OscillatingMarqueeText(
             ).size.width
         }
 
-    /*
-     * Leave a small amount of invisible space on both sides
-     * of the moving text.
-     *
-     * TextMeasurer reports the layout width, but individual
-     * glyphs can visually extend slightly outside those bounds.
-     * Without this padding, clipToBounds() can shave off the
-     * beginning of the first character when the marquee is at
-     * its starting position.
-     */
     val marqueeEdgePadding =
         6.dp
 
@@ -117,7 +108,7 @@ fun OscillatingMarqueeText(
             )
 
     var availableWidthPx by remember {
-        mutableStateOf(
+        mutableIntStateOf(
             0
         )
     }
@@ -171,7 +162,7 @@ fun OscillatingMarqueeText(
             true
         ) {
             delay(
-                startDelayMillis
+                startDelayMillis.milliseconds
             )
 
             animatedOffset.animateTo(
@@ -187,7 +178,7 @@ fun OscillatingMarqueeText(
             )
 
             delay(
-                endPauseMillis
+                endPauseMillis.milliseconds
             )
 
             animatedOffset.animateTo(

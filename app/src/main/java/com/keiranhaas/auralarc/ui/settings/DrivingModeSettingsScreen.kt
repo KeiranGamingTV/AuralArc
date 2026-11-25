@@ -34,7 +34,6 @@ import com.keiranhaas.auralarc.ui.components.AuralArcSwitch
 import com.keiranhaas.auralarc.ui.components.AuralArcTopBar
 import com.keiranhaas.auralarc.ui.driving.BluetoothDevicePicker
 import com.keiranhaas.auralarc.ui.driving.BluetoothDevices
-import com.keiranhaas.auralarc.ui.driving.BluetoothPickerState
 import com.keiranhaas.auralarc.ui.driving.PairedBluetoothDevice
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
 
@@ -221,7 +220,6 @@ fun DrivingModeSettingsScreen(
                 )
 
                 SettingsCardRow(
-                    title = "Open when Bluetooth connects",
                     subtitle = if (
                         autoEnabled
                     ) {
@@ -478,7 +476,6 @@ fun DrivingModeSettingsScreen(
 
 @Composable
 private fun SettingsCardRow(
-    title: String,
     subtitle: String,
     trailing: @Composable () -> Unit
 ) {
@@ -506,7 +503,7 @@ private fun SettingsCardRow(
                 )
             ) {
                 Text(
-                    text = title,
+                    text = "Open when Bluetooth connects",
                     color = AuralArcStyle.TextPrimary,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold

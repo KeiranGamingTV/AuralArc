@@ -5,8 +5,8 @@ import android.media.audiofx.Equalizer
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import com.keiranhaas.auralarc.storage.EqualizerPreferences
-import kotlin.math.roundToInt
 import kotlin.math.abs
+import kotlin.math.roundToInt
 
 object EqualizerManager {
 

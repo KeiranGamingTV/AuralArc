@@ -35,21 +35,12 @@ import com.keiranhaas.auralarc.navigation.Screen
 import com.keiranhaas.auralarc.player.PlayerManager
 import com.keiranhaas.auralarc.ui.TrackArtwork
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.roundToInt
-import kotlinx.coroutines.cancelAndJoin
-
-/*
- * Mini player <-> Now Playing morph.
- *
- * Both screens register where their album art, title and artist are
- * ("slots"). A transparent overlay above the whole NavHost draws a copy
- * of those three elements and animates it between the two layouts, while
- * the real elements are hidden. Because the overlay lives outside the
- * screens, it keeps moving while the screens fade underneath it.
- */
+import kotlin.time.Duration.Companion.milliseconds
 
 enum class MorphSlot {
     MiniArt,
@@ -71,11 +62,6 @@ object MiniPlayerMorphState {
     val slots =
         mutableStateMapOf<MorphSlot, Rect>()
 
-    /*
-     * True between tapping the mini player and Now Playing finishing
-     * its entrance. Navigation reads it to choose a fade instead of
-     * the slide-up.
-     */
     @Volatile
     var armed: Boolean =
         false
@@ -138,7 +124,7 @@ object MiniPlayerMorphState {
         timeoutMs: Long,
         read: () -> T?
     ): T? =
-        withTimeoutOrNull(timeoutMs) {
+        withTimeoutOrNull(timeoutMs.milliseconds) {
             snapshotFlow { read() }.first { it != null }
         }
 
@@ -234,10 +220,6 @@ object MiniPlayerMorphState {
     }
 }
 
-/**
- * Marks an element as one end of the morph and hides it while the
- * overlay is flying.
- */
 @Composable
 fun Modifier.morphSlot(
     slot: MorphSlot
@@ -269,9 +251,6 @@ fun Modifier.morphSlot(
         }
 }
 
-/**
- * Place once, above the NavHost, inside the same full-screen Box.
- */
 @Composable
 fun MiniPlayerMorphOverlay(
     navController: NavHostController
@@ -344,10 +323,6 @@ fun MiniPlayerMorphOverlay(
     val typography =
         MaterialTheme.typography
 
-    /*
-     * Mini player text is smaller than Now Playing text; scale the
-     * copies by the real font-size ratio so the sizes match at both ends.
-     */
     val titleRatio =
         typography.bodyLarge.fontSize.value /
                 typography.headlineLarge.fontSize.value
@@ -492,10 +467,6 @@ private fun MorphElement(
                 scaleY =
                     scale
 
-                /*
-                 * Left edges line up; vertical centers line up so the
-                 * text lands on the real text's baseline.
-                 */
                 val startX =
                     target.left - fromRect.left
 

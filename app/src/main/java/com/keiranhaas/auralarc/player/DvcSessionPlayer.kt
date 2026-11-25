@@ -158,9 +158,9 @@ class DvcSessionPlayer(
 
         return base.buildUpon()
             .addAll(
-                Player.COMMAND_GET_DEVICE_VOLUME,
-                Player.COMMAND_SET_DEVICE_VOLUME_WITH_FLAGS,
-                Player.COMMAND_ADJUST_DEVICE_VOLUME_WITH_FLAGS
+                COMMAND_GET_DEVICE_VOLUME,
+                COMMAND_SET_DEVICE_VOLUME_WITH_FLAGS,
+                COMMAND_ADJUST_DEVICE_VOLUME_WITH_FLAGS
             )
             .build()
     }

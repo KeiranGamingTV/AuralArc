@@ -4,7 +4,6 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import androidx.media3.session.MediaSessionService
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -19,26 +18,25 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.CommandButton
 import androidx.media3.session.MediaController
 import androidx.media3.session.MediaSession
+import androidx.media3.session.MediaSessionService
 import androidx.media3.session.MediaStyleNotificationHelper
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
-import com.keiranhaas.auralarc.MainActivity
-import com.keiranhaas.auralarc.R
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
-import android.os.Handler
-import android.os.Looper
+import com.keiranhaas.auralarc.MainActivity
+import com.keiranhaas.auralarc.R
 import com.keiranhaas.auralarc.storage.AudioBehaviorPreferences
+import com.keiranhaas.auralarc.storage.LibraryCacheStore
+import com.keiranhaas.auralarc.storage.LibrarySourcePreferences
 import com.keiranhaas.auralarc.utils.ArtworkBitmapLoader
+import com.keiranhaas.auralarc.widget.AuralArcWidgetUpdater
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import com.keiranhaas.auralarc.storage.LibraryCacheStore
-import com.keiranhaas.auralarc.storage.LibrarySourcePreferences
-import com.keiranhaas.auralarc.widget.AuralArcWidgetUpdater
 import kotlinx.coroutines.withContext
 
 @UnstableApi
@@ -141,11 +139,6 @@ class PlaybackService :
     @Volatile
     private var serviceDestroyed =
         false
-
-    private val mainHandler =
-        Handler(
-            Looper.getMainLooper()
-        )
 
     private val shuffleSessionCommand =
         SessionCommand(
@@ -446,6 +439,12 @@ class PlaybackService :
         flags: Int,
         startId: Int
     ): Int {
+        super.onStartCommand(
+            intent,
+            flags,
+            startId
+        )
+
         PlayerManager.getPlayer(
             this
         )
@@ -1059,15 +1058,8 @@ class PlaybackService :
             }
 
         val flags =
-            if (
-                Build.VERSION.SDK_INT >=
-                Build.VERSION_CODES.M
-            ) {
-                PendingIntent.FLAG_UPDATE_CURRENT or
-                        PendingIntent.FLAG_IMMUTABLE
-            } else {
-                PendingIntent.FLAG_UPDATE_CURRENT
-            }
+            PendingIntent.FLAG_UPDATE_CURRENT or
+                    PendingIntent.FLAG_IMMUTABLE
 
         return PendingIntent.getActivity(
             this,
@@ -1101,57 +1093,40 @@ class PlaybackService :
                 PendingIntent.FLAG_UPDATE_CURRENT
             }
 
-        return if (
-            Build.VERSION.SDK_INT >=
-            Build.VERSION_CODES.O
-        ) {
-            PendingIntent.getForegroundService(
-                this,
-                requestCode,
-                intent,
-                flags
-            )
-        } else {
-            PendingIntent.getService(
-                this,
-                requestCode,
-                intent,
-                flags
-            )
-        }
+        return PendingIntent.getForegroundService(
+            this,
+            requestCode,
+            intent,
+            flags
+        )
     }
 
     private fun createNotificationChannel() {
-        if (
-            Build.VERSION.SDK_INT >=
-            Build.VERSION_CODES.O
-        ) {
-            val channel =
-                NotificationChannel(
-                    CHANNEL_ID,
-                    CHANNEL_NAME,
-                    NotificationManager.IMPORTANCE_LOW
-                ).apply {
-                    description =
-                        "AuralArc music playback controls"
+        val channel =
+            NotificationChannel(
+                CHANNEL_ID,
+                CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description =
+                    "AuralArc music playback controls"
 
-                    setShowBadge(
-                        false
-                    )
-
-                    lockscreenVisibility =
-                        Notification.VISIBILITY_PUBLIC
-                }
-
-            val notificationManager =
-                getSystemService(
-                    NotificationManager::class.java
+                setShowBadge(
+                    false
                 )
 
-            notificationManager.createNotificationChannel(
-                channel
+                lockscreenVisibility =
+                    Notification.VISIBILITY_PUBLIC
+            }
+
+        val notificationManager =
+            getSystemService(
+                NotificationManager::class.java
             )
-        }
+
+        notificationManager.createNotificationChannel(
+            channel
+        )
     }
 
     private fun getCurrentArtwork(): Bitmap? {

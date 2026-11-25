@@ -1,6 +1,7 @@
 package com.keiranhaas.auralarc.player
 
 import android.content.Context
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import com.keiranhaas.auralarc.data.MusicTrack
 import com.keiranhaas.auralarc.storage.AdvancedAudioPreferences
@@ -9,12 +10,12 @@ import kotlin.math.pow
 object AudioProcessingState {
 
     val replayGainDb =
-        mutableStateOf(
+        mutableFloatStateOf(
             0f
         )
 
     val replayGainMultiplier =
-        mutableStateOf(
+        mutableFloatStateOf(
             1f
         )
 
@@ -47,10 +48,6 @@ object AudioProcessingState {
         mutableStateOf(
             "AudioTrack / Android default"
         )
-
-    fun reset() {
-        replayGainMultiplier.value = 1f
-    }
 
     fun refresh(
         context: Context,

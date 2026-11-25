@@ -3,6 +3,7 @@ package com.keiranhaas.auralarc.ui
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,26 +23,24 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import com.keiranhaas.auralarc.ui.components.AuralArcBackButton
-import com.keiranhaas.auralarc.ui.components.AuralArcTopBar
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.RepeatOne
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -49,9 +48,12 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -68,26 +70,22 @@ import com.keiranhaas.auralarc.player.QueueManager
 import com.keiranhaas.auralarc.storage.DuetLrcParser
 import com.keiranhaas.auralarc.storage.DuetLyricRow
 import com.keiranhaas.auralarc.storage.EmbeddedLyricsType
+import com.keiranhaas.auralarc.storage.LikedSongsStore
 import com.keiranhaas.auralarc.storage.LyricsPreferences
+import com.keiranhaas.auralarc.storage.PowerSavingPreferences
+import com.keiranhaas.auralarc.ui.components.AuralArcBackButton
 import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import com.keiranhaas.auralarc.ui.components.AuralArcSlider
+import com.keiranhaas.auralarc.ui.components.AuralArcTopBar
+import com.keiranhaas.auralarc.ui.components.PlayPauseIcon
+import com.keiranhaas.auralarc.ui.components.PopIcon
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
+import com.keiranhaas.auralarc.ui.theme.MorphSlot
+import com.keiranhaas.auralarc.ui.theme.morphSlot
 import com.keiranhaas.auralarc.utils.audioQualitySummary
 import kotlinx.coroutines.delay
 import kotlin.math.abs
-import com.keiranhaas.auralarc.storage.PowerSavingPreferences
-import androidx.compose.foundation.gestures.scrollBy
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
-import com.keiranhaas.auralarc.storage.LikedSongsStore
-import com.keiranhaas.auralarc.ui.theme.MorphSlot
-import com.keiranhaas.auralarc.ui.theme.morphSlot
-import com.keiranhaas.auralarc.ui.components.PlayPauseIcon
-import com.keiranhaas.auralarc.ui.components.PopIcon
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.text.TextStyle
+import kotlin.time.Duration.Companion.milliseconds
 
 private val DuetSingerOneColor =
     Color(
@@ -205,9 +203,6 @@ fun NowPlayingScreen(
     val currentTrack =
         QueueManager.currentTrack()
 
-    val lyricsTrack =
-        currentTrack
-
     val queue =
         QueueManager.getQueue()
 
@@ -218,7 +213,7 @@ fun NowPlayingScreen(
     }
 
     var sliderPosition by remember {
-        mutableStateOf(
+        mutableFloatStateOf(
             0f
         )
     }
@@ -333,10 +328,10 @@ fun NowPlayingScreen(
             ) {
                 if (
                     showLyricsCard &&
-                    lyricsTrack != null
+                    currentTrack != null
                 ) {
                     NowPlayingLyricsCard(
-                        track = lyricsTrack
+                        track = currentTrack
                     )
                 } else if (
                     PlayerManager.currentTitle.value.isBlank()
@@ -389,7 +384,7 @@ private fun NowPlayingMainContent(
     var latestDraggedPosition by remember(
         currentTrack?.uri
     ) {
-        mutableStateOf(
+        mutableFloatStateOf(
             sliderPosition
         )
     }
@@ -483,11 +478,9 @@ private fun NowPlayingMainContent(
                             ),
                         style = MaterialTheme.typography.headlineLarge,
                         color = AuralArcStyle.TextPrimary,
-                        fontWeight = FontWeight.Bold,
                         maxLines = 1,
                         horizontalArrangement =
                             Arrangement.Start,
-                        fillTitleWeight = true,
                         marqueeWhenOverflow = true,
                         textAlign = TextAlign.Start
                     )
@@ -881,15 +874,11 @@ private fun NowPlayingMainContent(
                     MoreOptionsButton(
                         track = currentTrack,
                         queueTracks =
-                        if (
-                            queue.isNotEmpty()
-                        ) {
-                            queue
-                        } else {
-                            listOf(
-                                currentTrack
-                            )
-                        },
+                            queue.ifEmpty {
+                                listOf(
+                                    currentTrack
+                                )
+                            },
                         showAddToQueue = false,
                         showPlayNext = false,
                         onOpenTrackInfo = { track ->
@@ -1398,8 +1387,7 @@ private fun NowPlayingLyricsCard(
             if (
                 result != null &&
                 result.type !=
-                com.keiranhaas.auralarc.storage
-                    .EmbeddedLyricsType.SYNCED
+                EmbeddedLyricsType.SYNCED
             ) {
                 cleanLyricsForDisplay(
                     result.text
@@ -1454,8 +1442,7 @@ private fun NowPlayingLyricsCard(
 
                 result != null &&
                         result.type ==
-                        com.keiranhaas.auralarc.storage
-                            .EmbeddedLyricsType.SYNCED -> {
+                        EmbeddedLyricsType.SYNCED -> {
                     SyncedLyricsText(
                         rawLyrics = result.text,
                         currentPositionMs =
@@ -1701,7 +1688,7 @@ private fun DuetSyncedLyricsText(
                 userIsManuallyScrolling
             ) {
                 delay(
-                    1_800L
+                    1_800.milliseconds
                 )
 
                 if (
@@ -1727,7 +1714,7 @@ private fun DuetSyncedLyricsText(
         }
 
         delay(
-            80L
+            80.milliseconds
         )
 
         automaticScrollInProgress =
@@ -1766,7 +1753,7 @@ private fun DuetSyncedLyricsText(
                                 viewportCenter
 
                     if (
-                        kotlin.math.abs(
+                        abs(
                             scrollDistance
                         ) > 4
                     ) {
@@ -2049,9 +2036,6 @@ private fun SyncedLyricsText(
     val listState =
         rememberLazyListState()
 
-    val density =
-        LocalDensity.current
-
     val centerLockIndex =
         4
 
@@ -2216,7 +2200,7 @@ private fun SyncedLyricsText(
                 }
 
                 delay(
-                    16L
+                    16.milliseconds
                 )
 
                 val refreshedLayout =

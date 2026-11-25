@@ -1,9 +1,35 @@
 package com.keiranhaas.auralarc.ui
 
 import android.content.Context
-import androidx.compose.foundation.layout.*
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -12,11 +38,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.QueueMusic
-import androidx.compose.material.icons.filled.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -30,28 +59,17 @@ import com.keiranhaas.auralarc.navidrome.NavidromePlaylistManager
 import com.keiranhaas.auralarc.player.PlaybackState
 import com.keiranhaas.auralarc.player.PlayerManager
 import com.keiranhaas.auralarc.player.QueueManager
+import com.keiranhaas.auralarc.storage.LikedSongsStore
+import com.keiranhaas.auralarc.storage.PlaylistArtworkStore
 import com.keiranhaas.auralarc.storage.PlaylistStore
+import com.keiranhaas.auralarc.ui.components.AuralArcCard
+import com.keiranhaas.auralarc.ui.components.DetailPinnedBar
+import com.keiranhaas.auralarc.ui.components.menuReveal
+import com.keiranhaas.auralarc.ui.components.rememberDetailPinnedAlpha
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.lazy.rememberLazyListState
-import com.keiranhaas.auralarc.storage.PlaylistArtworkStore
-import com.keiranhaas.auralarc.ui.components.AuralArcCard
 import kotlinx.coroutines.launch
-import androidx.compose.animation.animateContentSize
-import com.keiranhaas.auralarc.storage.LikedSongsStore
-import com.keiranhaas.auralarc.ui.components.menuReveal
-import com.keiranhaas.auralarc.ui.components.DetailPinnedBar
-import com.keiranhaas.auralarc.ui.components.rememberDetailPinnedAlpha
+import kotlinx.coroutines.withContext
 
 @Composable
 fun PlaylistDetailScreen(
@@ -119,7 +137,7 @@ fun PlaylistDetailScreen(
         playlistId,
         librarySource
     ) {
-        mutableStateOf(
+        mutableIntStateOf(
             0
         )
     }
@@ -727,15 +745,6 @@ private fun PlaylistDetailHeader(
     onPlay: () -> Unit,
     onShuffle: () -> Unit
 ) {
-    val sourceLabel =
-        if (
-            playlist.source == "NAVIDROME"
-        ) {
-            "Navidrome"
-        } else {
-            "Local"
-        }
-
     val songCountText =
         if (
             trackCount == 1
@@ -1166,9 +1175,7 @@ private fun PlaylistTrackRow(
                     track = track,
                     style = MaterialTheme.typography.bodyLarge,
                     color = AuralArcStyle.TextPrimary,
-                    fontWeight = FontWeight.Bold,
                     maxLines = 1,
-                    fillTitleWeight = true
                 )
 
                 Text(
@@ -1505,9 +1512,9 @@ private fun playlistDurationText(
     tracks: List<MusicTrack>
 ): String {
     val totalMillis =
-        tracks.map {
+        tracks.sumOf {
             it.duration
-        }.sum()
+        }
 
     val totalSeconds =
         totalMillis / 1000L
