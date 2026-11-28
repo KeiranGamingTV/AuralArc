@@ -25,6 +25,14 @@ object ReleaseNotes {
     val entries: List<ReleaseNoteEntry> =
         listOf(
             ReleaseNoteEntry(
+                version = "1.4.2",
+                notes = listOf(
+                    "Added Send Feedback to About, which opens a GitHub issue with your app and device info filled in.",
+                    "Added Share Crash Log to About, so you can send the details if the app ever crashes.",
+                    "Added Check for Updates to About, which looks for a newer release on GitHub when you tap it."
+                )
+            ),
+            ReleaseNoteEntry(
                 version = "1.4.1",
                 notes = listOf(
                     "Fixed song titles no longer being bold in the library.",

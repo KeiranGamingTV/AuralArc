@@ -9,6 +9,7 @@ import android.os.Build
 import android.view.View
 import android.view.ViewOutlineProvider
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -51,6 +52,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -82,7 +84,11 @@ import com.keiranhaas.auralarc.ui.components.AuralArcSlider
 import com.keiranhaas.auralarc.ui.components.AuralArcSwitch
 import com.keiranhaas.auralarc.ui.components.AuralArcTopBar
 import com.keiranhaas.auralarc.ui.theme.AuralArcStyle
+import com.keiranhaas.auralarc.utils.CrashLogger
+import com.keiranhaas.auralarc.utils.UpdateChecker
+import com.keiranhaas.auralarc.utils.UpdateResult
 import kotlin.math.roundToInt
+import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen(
@@ -635,6 +641,27 @@ fun AboutSettingsScreen(
     val releaseNotes =
         ReleaseNotes.entries
 
+    val coroutineScope =
+        rememberCoroutineScope()
+
+    var updateStatus by remember {
+        mutableStateOf(
+            "Check GitHub for a newer version"
+        )
+    }
+
+    var updateUrl by remember {
+        mutableStateOf<String?>(
+            null
+        )
+    }
+
+    var checkingForUpdate by remember {
+        mutableStateOf(
+            false
+        )
+    }
+
     SettingsMenuScaffold(
         title = "About AuralArc",
         navController = navController
@@ -846,6 +873,109 @@ fun AboutSettingsScreen(
 
             Spacer(
                 modifier = Modifier.height(
+                    16.dp
+                )
+            )
+
+            AuralArcCard(
+                modifier = Modifier.fillMaxWidth(),
+                shape = AuralArcStyle.CardShape,
+                backgroundColor = AuralArcStyle.Surface,
+                elevation = 6.dp
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    AboutActionRow(
+                        title = "Send Feedback",
+                        subtitle = "Opens a GitHub issue with your app and device info filled in",
+                        onClick = {
+                            openFeedback(
+                                context
+                            )
+                        }
+                    )
+
+                    HorizontalDivider(
+                        color = AuralArcStyle.TextMuted.copy(
+                            alpha = 0.25f
+                        )
+                    )
+
+                    AboutActionRow(
+                        title = "Share Crash Log",
+                        subtitle = "Send the crash reports saved on this device",
+                        onClick = {
+                            shareCrashLog(
+                                context
+                            )
+                        }
+                    )
+
+                    HorizontalDivider(
+                        color = AuralArcStyle.TextMuted.copy(
+                            alpha = 0.25f
+                        )
+                    )
+
+                    AboutActionRow(
+                        title = "Check for Updates",
+                        subtitle = updateStatus,
+                        onClick = {
+                            val url =
+                                updateUrl
+
+                            if (url != null) {
+                                openUrl(
+                                    context,
+                                    url
+                                )
+                            } else if (!checkingForUpdate) {
+                                checkingForUpdate =
+                                    true
+
+                                updateStatus =
+                                    "Checking..."
+
+                                coroutineScope.launch {
+                                    when (
+                                        val result =
+                                            UpdateChecker.check(
+                                                appVersion
+                                            )
+                                    ) {
+                                        is UpdateResult.Available -> {
+                                            updateUrl =
+                                                result.url
+
+                                            updateStatus =
+                                                "Version ${result.version} is available. Tap to open the download page."
+                                        }
+
+                                        UpdateResult.UpToDate ->
+                                            updateStatus =
+                                                "You're on the latest version."
+
+                                        UpdateResult.NoReleases ->
+                                            updateStatus =
+                                                "No releases have been published yet."
+
+                                        UpdateResult.Failed ->
+                                            updateStatus =
+                                                "Couldn't check for updates. Check your connection and try again."
+                                    }
+
+                                    checkingForUpdate =
+                                        false
+                                }
+                            }
+                        }
+                    )
+                }
+            }
+
+            Spacer(
+                modifier = Modifier.height(
                     30.dp
                 )
             )
@@ -882,6 +1012,142 @@ fun AboutSettingsScreen(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun AboutActionRow(
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .auralArcClickable(
+                onClick = onClick
+            )
+            .padding(
+                horizontal = 16.dp,
+                vertical = 14.dp
+            )
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = AuralArcStyle.TextPrimary
+        )
+
+        Spacer(
+            modifier = Modifier.height(
+                4.dp
+            )
+        )
+
+        Text(
+            text = subtitle,
+            style = MaterialTheme.typography.bodySmall,
+            color = AuralArcStyle.TextMuted
+        )
+    }
+}
+
+private fun openUrl(
+    context: Context,
+    url: String
+) {
+    try {
+        context.startActivity(
+            Intent(
+                Intent.ACTION_VIEW,
+                Uri.parse(
+                    url
+                )
+            )
+        )
+    } catch (_: Exception) {
+        Toast.makeText(
+            context,
+            "No app found to open this link",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+}
+
+private fun openFeedback(
+    context: Context
+) {
+    val uri =
+        Uri.parse(
+            "https://github.com/KeiranGamingTV/AuralArc/issues/new"
+        ).buildUpon()
+            .appendQueryParameter(
+                "title",
+                "Feedback"
+            )
+            .appendQueryParameter(
+                "body",
+                "What happened, or what would you like to see?\n\n---\n" +
+                        CrashLogger.deviceSummary()
+            )
+            .build()
+
+    openUrl(
+        context,
+        uri.toString()
+    )
+}
+
+private fun shareCrashLog(
+    context: Context
+) {
+    val log =
+        CrashLogger.readLog(
+            context
+        )
+
+    if (log.isBlank()) {
+        Toast.makeText(
+            context,
+            "No crashes have been recorded",
+            Toast.LENGTH_SHORT
+        ).show()
+
+        return
+    }
+
+    val sendIntent =
+        Intent(
+            Intent.ACTION_SEND
+        ).apply {
+            type =
+                "text/plain"
+
+            putExtra(
+                Intent.EXTRA_SUBJECT,
+                "AuralArc crash log"
+            )
+
+            putExtra(
+                Intent.EXTRA_TEXT,
+                log
+            )
+        }
+
+    try {
+        context.startActivity(
+            Intent.createChooser(
+                sendIntent,
+                "Share crash log"
+            )
+        )
+    } catch (_: Exception) {
+        Toast.makeText(
+            context,
+            "No app found to share with",
+            Toast.LENGTH_SHORT
+        ).show()
     }
 }
 
