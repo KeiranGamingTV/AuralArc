@@ -15,7 +15,7 @@
   <img alt="Jetpack Compose" src="https://img.shields.io/badge/Jetpack%20Compose-2024.06-4285F4?logo=jetpackcompose&logoColor=white" />
   <img alt="Media3" src="https://img.shields.io/badge/AndroidX%20Media3-1.10.1-4285F4" />
   <img alt="Status" src="https://img.shields.io/badge/status-active%20development-orange" />
-  <img alt="License" src="https://img.shields.io/badge/license-TBD-lightgrey" />
+  <img alt="License" src="https://img.shields.io/badge/license-GPL%203.0-lightgrey" />
 </p>
 
 <p align="center">
