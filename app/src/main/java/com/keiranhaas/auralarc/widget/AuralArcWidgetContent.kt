@@ -291,10 +291,29 @@ private fun ColumnLayout(
         verticalAlignment = Alignment.CenterVertically,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        WidgetArtwork(
-            snapshot = snapshot,
-            size = art.dp
-        )
+        Box(
+            modifier = GlanceModifier
+                .fillMaxWidth()
+                .defaultWeight(),
+            contentAlignment = Alignment.Center
+        ) {
+            val artwork =
+                snapshot.artwork
+
+            if (artwork != null) {
+                Image(
+                    provider = ImageProvider(artwork),
+                    contentDescription = "Album artwork",
+                    contentScale = ContentScale.Fit,
+                    modifier = GlanceModifier.fillMaxSize()
+                )
+            } else {
+                WidgetArtwork(
+                    snapshot = snapshot,
+                    size = art.dp
+                )
+            }
+        }
 
         Spacer(
             modifier = GlanceModifier.height(12.dp)

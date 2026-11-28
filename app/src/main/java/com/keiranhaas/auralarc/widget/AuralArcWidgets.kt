@@ -7,11 +7,6 @@ import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.provideContent
 
-/*
- * Three home screen widgets that share one design language:
- * Small (2x1), Medium (4x2) and Large (4x4).
- */
-
 class AuralArcSmallWidget : GlanceAppWidget() {
 
     override val sizeMode: SizeMode =
@@ -26,7 +21,7 @@ class AuralArcSmallWidget : GlanceAppWidget() {
         val snapshot =
             WidgetSnapshot.load(
                 context = context,
-                artworkDp = 200
+                artworkDp = 96
             )
 
         provideContent {
@@ -52,7 +47,7 @@ class AuralArcMediumWidget : GlanceAppWidget() {
         val snapshot =
             WidgetSnapshot.load(
                 context = context,
-                artworkDp = 200
+                artworkDp = 240
             )
 
         provideContent {
@@ -78,7 +73,7 @@ class AuralArcLargeWidget : GlanceAppWidget() {
         val snapshot =
             WidgetSnapshot.load(
                 context = context,
-                artworkDp = 200
+                artworkDp = 320
             )
 
         provideContent {

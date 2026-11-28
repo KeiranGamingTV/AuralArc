@@ -36,11 +36,6 @@ data class WidgetSnapshot(
             val appContext =
                 context.applicationContext
 
-            /*
-             * When the widget is refreshed in a freshly started process
-             * (for example after a reboot), nothing has been loaded yet,
-             * so show the last song that was playing.
-             */
             if (
                 PlayerManager.currentTitle.value.isBlank()
             ) {
@@ -63,7 +58,7 @@ data class WidgetSnapshot(
                     .toInt()
                     .coerceIn(
                         64,
-                        512
+                        768
                     )
 
             val artwork =
@@ -96,11 +91,6 @@ data class WidgetSnapshot(
             )
         }
 
-        /**
-         * Center-crops [source] into a square with rounded corners.
-         * Widgets cannot clip images on every Android version, so the
-         * corners are baked into the bitmap itself.
-         */
         private fun roundedSquare(
             source: Bitmap,
             sizePx: Int,
