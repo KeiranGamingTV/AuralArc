@@ -25,6 +25,14 @@ object ReleaseNotes {
     val entries: List<ReleaseNoteEntry> =
         listOf(
             ReleaseNoteEntry(
+                version = "1.4.1",
+                notes = listOf(
+                    "Fixed song titles no longer being bold in the library.",
+                    "Widgets: album art is now sharper, especially on the Medium and Large widgets.",
+                    "Widgets: on the taller layouts, the album art now grows to fill the available space."
+                )
+            ),
+            ReleaseNoteEntry(
                 version = "1.4",
                 notes = listOf(
                     "Added an Equalizer screen with presets.",
